@@ -18,6 +18,6 @@ propellersLocationZ:    -0.031      # m
 actuatorMin:            [0,     0,    0,    0,    0,    -20, -20, -20]
 actuatorMax:            [1000,  1000, 1000, 1000, 1000, 20,  20,  20]
 
-accVariance:            0.005
-gyroVariance:           0.005
+accVariance:            0.0005
+gyroVariance:           0.0005
 

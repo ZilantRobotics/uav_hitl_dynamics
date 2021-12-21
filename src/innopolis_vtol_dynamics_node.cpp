@@ -34,9 +34,9 @@ static char GLOBAL_FRAME_ID[] = "world";
 static char UAV_FRAME_ID[] = "uav/enu";
 static char UAV_FIXED_FRAME_ID[] = "uav/com";
 
-static const double MAG_NOISE = 0.001;
-static const double STATIC_PRESSURE_NOISE = 0.001;
-static const double DIFF_PRESSURE_NOISE = 0.001;
+static const double MAG_NOISE = 0.0002;
+static const double STATIC_PRESSURE_NOISE = 0.1;
+static const double DIFF_PRESSURE_NOISE = 0.1;
 static const double TEMPERATURE_NOISE = 0.1;
 
 const std::string MOTOR_NAMES[5] = {"motor0",
@@ -177,14 +177,14 @@ int8_t Uav_Dynamics::initMainCommunicatorSensors(){
     armSub_ = node_.subscribe(ARM_TOPIC_NAME, 1, &Uav_Dynamics::armCallback, this);
 
     imuPub_ = node_.advertise<sensor_msgs::Imu>(IMU_TOPIC_NAME, 96);
-    gpsPositionPub_ = node_.advertise<uavcan_msgs::Fix>(GPS_POSE_TOPIC_NAME, 1);
-    attitudePub_ = node_.advertise<geometry_msgs::QuaternionStamped>(ATTITUDE_TOPIC_NAME, 1);
-    speedPub_ = node_.advertise<geometry_msgs::Twist>(VELOCITY_TOPIC_NAME, 1);
-    magPub_ = node_.advertise<sensor_msgs::MagneticField>(MAG_TOPIC_NAME, 1);
+    gpsPositionPub_ = node_.advertise<uavcan_msgs::Fix>(GPS_POSE_TOPIC_NAME, 5);
+    attitudePub_ = node_.advertise<geometry_msgs::QuaternionStamped>(ATTITUDE_TOPIC_NAME, 5);
+    speedPub_ = node_.advertise<geometry_msgs::Twist>(VELOCITY_TOPIC_NAME, 5);
+    magPub_ = node_.advertise<sensor_msgs::MagneticField>(MAG_TOPIC_NAME, 5);
 
-    rawAirDataPub_ = node_.advertise<uavcan_msgs::RawAirData>(RAW_AIR_DATA_TOPIC_NAME, 1);
-    staticTemperaturePub_ = node_.advertise<uavcan_msgs::StaticTemperature>(STATIC_TEMPERATURE_TOPIC_NAME, 1);
-    staticPressurePub_ = node_.advertise<uavcan_msgs::StaticPressure>(STATIC_PRESSURE_TOPIC_NAME, 1);
+    rawAirDataPub_ = node_.advertise<uavcan_msgs::RawAirData>(RAW_AIR_DATA_TOPIC_NAME, 5);
+    staticTemperaturePub_ = node_.advertise<uavcan_msgs::StaticTemperature>(STATIC_TEMPERATURE_TOPIC_NAME, 5);
+    staticPressurePub_ = node_.advertise<uavcan_msgs::StaticPressure>(STATIC_PRESSURE_TOPIC_NAME, 5);
 
     return 0;
 }
@@ -600,7 +600,7 @@ void Uav_Dynamics::publishUavGpsPosition(Eigen::Vector3d geoPosition, Eigen::Vec
 
     msg.sats_used = 10;
     msg.status = 3;
-    msg.pdop = 99;
+    msg.pdop = 1;
 
     gpsPositionPub_.publish(msg);
 }
