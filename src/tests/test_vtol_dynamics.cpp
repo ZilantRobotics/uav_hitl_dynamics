@@ -143,6 +143,25 @@ TEST(InnoVtolDynamicsSim, calculateCLPolynomial){
     }
 }
 
+TEST(InnoVtolDynamicsSim, calculateCSPolynomial){
+    InnoVtolDynamicsSim vtolDynamicsSim;
+
+    Eigen::VectorXd calculatedpolynomialCoeffs(7);
+    double airSpeedMod = 5;
+
+    vtolDynamicsSim.calculateCSPolynomial(airSpeedMod, calculatedpolynomialCoeffs);
+}
+
+TEST(InnoVtolDynamicsSim, calculateCDPolynomial){
+    InnoVtolDynamicsSim vtolDynamicsSim;
+
+    Eigen::VectorXd calculatedpolynomialCoeffs(7);
+    double airSpeedMod = 5;
+
+    vtolDynamicsSim.calculateCDPolynomial(airSpeedMod, calculatedpolynomialCoeffs);
+    // @todo If build type is DEBUG, Eigen generates an assert
+}
+
 TEST(InnoVtolDynamicsSim, DISABLED_calculateLiftForce){
     InnoVtolDynamicsSim vtolDynamicsSim;
     ASSERT_EQ(vtolDynamicsSim.init(), 0);
@@ -685,6 +704,7 @@ TEST(InnoVtolDynamicsSim, calculateNewStateEightComplexFull){
         EXPECT_NEAR(linAccel[idx], expectedLinAccel[idx], 1e-03);
     }
 }
+
 
 int main(int argc, char *argv[]){
     testing::InitGoogleTest(&argc, argv);
