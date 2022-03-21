@@ -2,6 +2,12 @@
     <rosparam file="$(find innopolis_vtol_dynamics)/config/uavcan_params.yaml" command="load" ns="uavcan/" />
     <node pkg="uavcan_communicator" type="uavcan_communicator" name="px4_uavcan_communicator" output="screen" required="true" ns="uavcan"/>
 
-    <rosparam file="$(find innopolis_vtol_dynamics)/config/uavcan_params_redundant_airspeed.yaml" command="load" ns="uavcan2/" />
-    <node pkg="uavcan_communicator" type="uavcan_communicator" name="px4_uavcan_communicator_redundant_airspeed" output="screen" ns="uavcan2"/>
+    <rosparam file="$(find innopolis_vtol_dynamics)/config/uavcan_params_redundant_airspeed.yaml" command="load" ns="uavcan/airspeed_redundant/" />
+    <node pkg="uavcan_communicator" type="uavcan_communicator" name="px4_uavcan_communicator_redundant_airspeed" output="screen" ns="uavcan/airspeed_redundant"/>
+
+    <rosparam file="$(find innopolis_vtol_dynamics)/config/uavcan_params_gps.yaml" command="load" ns="uavcan/gps/" />
+    <node pkg="uavcan_communicator" type="uavcan_communicator" name="px4_uavcan_communicator_gps" output="screen" ns="uavcan/gps"/>
+
+    <rosparam file="$(find innopolis_vtol_dynamics)/config/uavcan_params_mag.yaml" command="load" ns="uavcan/mag/" />
+    <node pkg="uavcan_communicator" type="uavcan_communicator" name="px4_uavcan_communicator_mag" output="screen" ns="uavcan/mag"/>
 </launch>
