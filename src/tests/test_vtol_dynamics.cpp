@@ -80,7 +80,7 @@ TEST(InnoVtolDynamicsSim, calculateAnglesOfSideslip){
     }
 }
 
-TEST(InnoVtolDynamicsSim, findRow){
+TEST(InnoVtolDynamicsSim, findPrevRowIdx){
     InnoVtolDynamicsSim vtolDynamicsSim;
     Eigen::MatrixXd table(8, 8);
     table << 5, -2.758e-11, 8.139e-09, 1.438e-07, -3.095e-05, -0.0003512, 0.05557, 0.4132,
@@ -91,15 +91,68 @@ TEST(InnoVtolDynamicsSim, findRow){
             30, -4.749e-11, 7.778e-09, 2.219e-07, -2.926e-05, -0.0004567, 0.05433, 0.4599,
             35, -5.911e-11, 7.879e-09, 2.574e-07, -2.961e-05, -0.0004838, 0.05458, 0.4637,
             40, -5.911e-11, 7.879e-09, 2.574e-07, -2.961e-05, -0.0004838, 0.05458, 0.4637;
-    ASSERT_EQ(vtolDynamicsSim.findRow(table, -1) + 1,   1);
-    ASSERT_EQ(vtolDynamicsSim.findRow(table, 10) + 1,   1);
-    ASSERT_EQ(vtolDynamicsSim.findRow(table, 10.1) + 1, 2);
-    ASSERT_EQ(vtolDynamicsSim.findRow(table, 15.1) + 1, 3);
-    ASSERT_EQ(vtolDynamicsSim.findRow(table, 34.9) + 1, 6);
-    ASSERT_EQ(vtolDynamicsSim.findRow(table, 35.1) + 1, 7);
-    ASSERT_EQ(vtolDynamicsSim.findRow(table, 39.9) + 1, 7);
-    ASSERT_EQ(vtolDynamicsSim.findRow(table, 40.1) + 1, 7);
-    ASSERT_EQ(vtolDynamicsSim.findRow(table, 50.0) + 1, 7);
+    ASSERT_EQ(vtolDynamicsSim.findPrevRowIdx(table, -1),   0);
+    ASSERT_EQ(vtolDynamicsSim.findPrevRowIdx(table, 10),   0);
+    ASSERT_EQ(vtolDynamicsSim.findPrevRowIdx(table, 10.1), 1);
+    ASSERT_EQ(vtolDynamicsSim.findPrevRowIdx(table, 15.1), 2);
+    ASSERT_EQ(vtolDynamicsSim.findPrevRowIdx(table, 34.9), 5);
+    ASSERT_EQ(vtolDynamicsSim.findPrevRowIdx(table, 35.1), 6);
+    ASSERT_EQ(vtolDynamicsSim.findPrevRowIdx(table, 39.9), 6);
+    ASSERT_EQ(vtolDynamicsSim.findPrevRowIdx(table, 40.1), 6);
+    ASSERT_EQ(vtolDynamicsSim.findPrevRowIdx(table, 50.0), 6);
+}
+
+TEST(calculatePolynomialUsingTable, test_normal_scalar){
+    InnoVtolDynamicsSim vtolDynamicsSim;
+
+    Eigen::MatrixXd table(2, 2);
+    table << 0, 0,
+             1, 1;
+    double airSpeedMod = 0.5;
+    Eigen::VectorXd polynomialCoeffs(1);
+
+    ASSERT_TRUE(vtolDynamicsSim.calculatePolynomialUsingTable(table, airSpeedMod, polynomialCoeffs));
+    ASSERT_EQ(polynomialCoeffs[0], airSpeedMod);
+}
+
+TEST(calculatePolynomialUsingTable, test_normal_vector){
+    InnoVtolDynamicsSim vtolDynamicsSim;
+    Eigen::VectorXd polynomialCoeffs(2);
+
+    Eigen::MatrixXd table(2, 3);
+    table << 0, 0, 1,
+             1, 1, 2;
+    double airSpeedMod = 0.5;
+
+    Eigen::VectorXd expectedPolynomialCoeffs(2);
+    expectedPolynomialCoeffs << 0.5, 1.5;
+
+    ASSERT_TRUE(vtolDynamicsSim.calculatePolynomialUsingTable(table, airSpeedMod, polynomialCoeffs));
+    ASSERT_EQ(polynomialCoeffs[0], expectedPolynomialCoeffs[0]);
+    ASSERT_EQ(polynomialCoeffs[1], expectedPolynomialCoeffs[1]);
+}
+
+TEST(calculatePolynomialUsingTable, test_wrong_input_size){
+    InnoVtolDynamicsSim vtolDynamicsSim;
+
+    Eigen::MatrixXd table(1, 2);
+    table << 0, 0;
+    double airSpeedMod = 0.5;
+    Eigen::VectorXd polynomialCoeffs(1);
+
+    ASSERT_FALSE(vtolDynamicsSim.calculatePolynomialUsingTable(table, airSpeedMod, polynomialCoeffs));
+}
+
+TEST(calculatePolynomialUsingTable, test_wrong_table){
+    InnoVtolDynamicsSim vtolDynamicsSim;
+
+    Eigen::MatrixXd table(2, 2);
+    table << 0, 0,
+             0, 0;
+    double airSpeedMod = 0.5;
+    Eigen::VectorXd polynomialCoeffs(1);
+
+    ASSERT_FALSE(vtolDynamicsSim.calculatePolynomialUsingTable(table, airSpeedMod, polynomialCoeffs));
 }
 
 TEST(InnoVtolDynamicsSim, calculateCLPolynomial){
