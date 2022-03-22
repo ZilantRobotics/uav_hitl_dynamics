@@ -360,10 +360,10 @@ void Uav_Dynamics::performDiagnostic(double periodSec){
 // including time and therefore runs PX4 until it has initialized and responds with an actautor
 // message.
 // But instead of waiting actuators cmd, we will wait for an arming
-void Uav_Dynamics::proceedDynamics(double period){
+void Uav_Dynamics::proceedDynamics(double periodSec){
     while(ros::ok()){
         auto crnt_time = std::chrono::system_clock::now();
-        auto sleed_period = std::chrono::milliseconds(int(1000 * period * clockScale_));
+        auto sleed_period = std::chrono::milliseconds(int(1000 * periodSec * clockScale_));
         auto time_point = crnt_time + sleed_period;
         dynamicsCounter_++;
 
@@ -374,6 +374,13 @@ void Uav_Dynamics::proceedDynamics(double period){
             auto prev_time = crnt_time;
             crnt_time = std::chrono::system_clock::now();
             auto time_dif_sec = (crnt_time - prev_time).count() / 1000000000.0;
+
+            ///< prevent big time jumping
+            const double MAX_TIME_DIFF_SEC = 10 * periodSec;
+            if (time_dif_sec > MAX_TIME_DIFF_SEC) {
+                ROS_ERROR_STREAM_THROTTLE(1, "Time jumping: " << time_dif_sec << " seconds.");
+                time_dif_sec = MAX_TIME_DIFF_SEC;
+            }
 
             uavDynamicsSim_->process(time_dif_sec, actuators_, true);
         }else{
