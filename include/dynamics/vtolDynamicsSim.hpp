@@ -191,7 +191,14 @@ class InnoVtolDynamicsSim : public UavDynamicsSimBase{
         void calculateCmxPolynomial(double airSpeedMod, Eigen::VectorXd& polynomialCoeffs) const;
         void calculateCmyPolynomial(double airSpeedMod, Eigen::VectorXd& polynomialCoeffs) const;
         void calculateCmzPolynomial(double airSpeedMod, Eigen::VectorXd& polynomialCoeffs) const;
-        void calculatePolynomialUsingTable(const Eigen::MatrixXd& table,
+
+        /**
+         * @param[in] table must have size (1 + NUM_OF_COEFFS, NUM_OF_POINTS), min size is (2, 2)
+         * @param[in] airSpeedMod should be between table(0, 0) and table(NUM_OF_COEFFS, 0)
+         * @param[in, out] polynomialCoeffs must have size should be at least NUM_OF_COEFFS
+         * @return true and modify polynomialCoeffs if input is ok, otherwise return false
+         */
+        bool calculatePolynomialUsingTable(const Eigen::MatrixXd& table,
                                            double airSpeedMod,
                                            Eigen::VectorXd& polynomialCoeffs) const;
 
@@ -201,7 +208,7 @@ class InnoVtolDynamicsSim : public UavDynamicsSimBase{
         double calculateCmyElevator(double elevator_pos, double airspeed) const;
         double calculateCmzRudder(double rudder_pos, double airspeed) const;
 
-        size_t findRow(const Eigen::MatrixXd& table, double value) const;
+        size_t findPrevRowIdx(const Eigen::MatrixXd& table, double value) const;
         double lerp(double a, double b, double f) const;
         /**
          * @note Similar to https://www.mathworks.com/help/matlab/ref/griddata.html

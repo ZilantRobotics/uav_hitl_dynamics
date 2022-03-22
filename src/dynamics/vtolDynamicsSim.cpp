@@ -502,7 +502,7 @@ void InnoVtolDynamicsSim::thruster(double actuator,
     constexpr size_t TORQUE_IDX = 2;
     constexpr size_t RPM_IDX = 4;
 
-    size_t prev_idx = findRow(tables_.prop, actuator);
+    size_t prev_idx = findPrevRowIdx(tables_.prop, actuator);
     size_t next_idx = prev_idx + 1;
     if(next_idx < tables_.prop.rows()){
         auto prev_row = tables_.prop.row(prev_idx);
@@ -688,23 +688,33 @@ double InnoVtolDynamicsSim::calculateCmzRudder(double rudder_pos, double airspee
     return griddata(tables_.actuator, tables_.airspeed, tables_.CmzRudder, rudder_pos, airspeed);
 }
 
-void InnoVtolDynamicsSim::calculatePolynomialUsingTable(const Eigen::MatrixXd& table,
+bool InnoVtolDynamicsSim::calculatePolynomialUsingTable(const Eigen::MatrixXd& table,
                                                         double airSpeedMod,
                                                         Eigen::VectorXd& polynomialCoeffs) const{
-    size_t prevRowIdx = findRow(table, airSpeedMod);
-    if(prevRowIdx + 2 <= table.rows()){
-        size_t nextRowIdx = prevRowIdx + 1;
-        Eigen::MatrixXd prevRow = table.row(prevRowIdx);
-        Eigen::MatrixXd nextRow = table.row(nextRowIdx);
-        double t = (airSpeedMod - prevRow(0, 0)) / (nextRow(0, 0) - prevRow(0, 0));
-        for(size_t idx = 0; idx < 7; idx++){
-            polynomialCoeffs[idx] = lerp(prevRow(0, idx + 1), nextRow(0, idx + 1), t);
-        }
-    }else{
-        for(size_t idx = 0; idx < 7; idx++){
-            polynomialCoeffs[idx] = 0;
-        }
+    if(table.cols() < 2 || table.rows() < 2 || polynomialCoeffs.rows() < table.cols() - 1){
+        return false; // wrong input
     }
+
+    const size_t prevRowIdx = findPrevRowIdx(table, airSpeedMod);
+    if(prevRowIdx + 2 > table.rows()){
+        return false; // wrong found row
+    }
+
+    const size_t nextRowIdx = prevRowIdx + 1;
+    const double airspeedStep = table.row(nextRowIdx)(0, 0) - table.row(prevRowIdx)(0, 0);
+    if (abs(airspeedStep) < 0.001) {
+        return false; // wrong table, prevent division on zero
+    }
+
+    double delta = (airSpeedMod - table.row(prevRowIdx)(0, 0)) / airspeedStep;
+    const size_t numberOfCoeffs = table.cols() - 1;
+    for(size_t coeff_idx = 0; coeff_idx < numberOfCoeffs; coeff_idx++){
+        const double prevValue = table.row(prevRowIdx)(0, coeff_idx + 1);
+        const double nextValue = table.row(nextRowIdx)(0, coeff_idx + 1);
+        polynomialCoeffs[coeff_idx] = lerp(prevValue, nextValue, delta);
+    }
+
+    return true;
 }
 
 /**
@@ -732,7 +742,7 @@ size_t InnoVtolDynamicsSim::search(const Eigen::MatrixXd& matrix, double key) co
 }
 
 // first collomn of the table must be sorted!
-size_t InnoVtolDynamicsSim::findRow(const Eigen::MatrixXd& table, double value) const{
+size_t InnoVtolDynamicsSim::findPrevRowIdx(const Eigen::MatrixXd& table, double value) const{
     size_t row = 0;
     size_t c = table.rows();
     while(row + 2 < c && table(row + 1, 0) < value){
