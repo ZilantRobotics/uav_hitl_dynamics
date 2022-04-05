@@ -72,7 +72,7 @@ void InnoVtolDynamicsSim::loadTables(const std::string& path){
 }
 
 void InnoVtolDynamicsSim::loadParams(const std::string& path){
-    double propLocX, propLocY, propLocZ;
+    double propLocX, propLocY, propLocZ, mainEngineLocX;
 
     if(!ros::param::get(path + "mass", params_.mass) ||
         !ros::param::get(path + "gravity", params_.gravity) ||
@@ -82,16 +82,17 @@ void InnoVtolDynamicsSim::loadParams(const std::string& path){
         !ros::param::get(path + "propellersLocationX", propLocX) ||
         !ros::param::get(path + "propellersLocationY", propLocY) ||
         !ros::param::get(path + "propellersLocationZ", propLocZ) ||
+        !ros::param::get(path + "mainEngineLocationX", mainEngineLocX) ||
         !ros::param::get(path + "actuatorMin", params_.actuatorMin) ||
         !ros::param::get(path + "actuatorMax", params_.actuatorMax) ||
         !ros::param::get(path + "accVariance", params_.accVariance) ||
         !ros::param::get(path + "gyroVariance", params_.gyroVariance));
 
-    params_.propellersLocation[0] << propLocX * sin(3.1415/4),  propLocY * sin(3.1415/4), propLocZ;
-    params_.propellersLocation[1] <<-propLocX * sin(3.1415/4), -propLocY * sin(3.1415/4), propLocZ;
-    params_.propellersLocation[2] << propLocX * sin(3.1415/4), -propLocY * sin(3.1415/4), propLocZ;
-    params_.propellersLocation[3] <<-propLocX * sin(3.1415/4),  propLocY * sin(3.1415/4), propLocZ;
-    params_.propellersLocation[4] << propLocX, 0, 0;
+    params_.propellersLocation[0] <<  propLocX,  propLocY, propLocZ;
+    params_.propellersLocation[1] << -propLocX, -propLocY, propLocZ;
+    params_.propellersLocation[2] <<  propLocX, -propLocY, propLocZ;
+    params_.propellersLocation[3] << -propLocX,  propLocY, propLocZ;
+    params_.propellersLocation[4] << mainEngineLocX, 0, 0;
     params_.inertia = getTableNew<3, 3, Eigen::RowMajor>(path, "inertia");
 }
 
