@@ -36,7 +36,7 @@ static char UAV_FIXED_FRAME_ID[] = "uav/com";
 
 static const double MAG_NOISE = 0.0002;
 static const double STATIC_PRESSURE_NOISE = 0.1;
-static const double DIFF_PRESSURE_NOISE = 0.1;
+static const double DIFF_PRESSURE_NOISE_PA = 5;
 static const double TEMPERATURE_NOISE = 0.1;
 
 const std::string MOTOR_NAMES[5] = {"motor0",
@@ -665,7 +665,7 @@ void Uav_Dynamics::publishUavAirData(float absPressureHpa,
     msg.static_air_temperature = staticTemperature;
 
     msg.static_pressure += STATIC_PRESSURE_NOISE * normalDistribution_(randomGenerator_);
-    msg.differential_pressure += DIFF_PRESSURE_NOISE * normalDistribution_(randomGenerator_);
+    msg.differential_pressure += DIFF_PRESSURE_NOISE_PA * normalDistribution_(randomGenerator_);
     msg.static_air_temperature += TEMPERATURE_NOISE * normalDistribution_(randomGenerator_);
 
     rawAirDataPub_.publish(msg);
