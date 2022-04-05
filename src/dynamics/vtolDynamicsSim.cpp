@@ -123,6 +123,10 @@ void InnoVtolDynamicsSim::land(){
     state_.attitude.coeffs() += attitudeDelta.coeffs() * 0.5 * 0.001;
     state_.attitude.normalize();
     #endif
+
+    for (auto iter = state_.motorsRpm.begin(); iter != state_.motorsRpm.end(); iter++) {
+        *iter = 0.0;
+    }
 }
 
 int8_t InnoVtolDynamicsSim::calibrate(CalibrationType_t calType){

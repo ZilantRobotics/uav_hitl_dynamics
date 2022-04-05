@@ -3,8 +3,6 @@ uavcan_node_name:         "inno.dynamics"
 bridges:                  ["ActuatorsUavcanToRos",              "/uav/actuators_raw",
                            "ArmUavcanToRos",                    "/uav/arm",
 
-                           "BaroStaticPressureRosToUavcan",     "/uav/static_pressure",
-                           "BaroStaticTemperatureRosToUavcan",  "/uav/static_temperature",
                            "DiffPressureRosToUavcan",           "/uav/raw_air_data",
                            "ImuRosToUavcan",                    "/uav/imu",
 
