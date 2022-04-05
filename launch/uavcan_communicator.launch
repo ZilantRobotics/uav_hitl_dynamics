@@ -10,4 +10,7 @@
 
     <rosparam file="$(find innopolis_vtol_dynamics)/config/uavcan_params_mag.yaml" command="load" ns="uavcan/mag/" />
     <node pkg="uavcan_communicator" type="uavcan_communicator" name="px4_uavcan_communicator_mag" output="screen" ns="uavcan/mag"/>
+
+    <rosparam file="$(find innopolis_vtol_dynamics)/config/uavcan_params_baro.yaml" command="load" ns="uavcan/baro/" />
+    <node pkg="uavcan_communicator" type="uavcan_communicator" name="px4_uavcan_communicator_baro" output="screen" ns="uavcan/baro"/>
 </launch>

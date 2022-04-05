@@ -1,0 +1,5 @@
+uavcan_node_id:           30
+uavcan_node_name:         "hitl.baro"
+bridges:                  ["BaroStaticPressureRosToUavcan",     "/uav/static_pressure",
+                           "BaroStaticTemperatureRosToUavcan",  "/uav/static_temperature",
+]
