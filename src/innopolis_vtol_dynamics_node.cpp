@@ -344,6 +344,7 @@ void Uav_Dynamics::performDiagnostic(double periodSec){
                    << enuPosition[1] << ", "
                    << enuPosition[2] << "]";
         ROS_INFO_STREAM(infoStream.str());
+        fflush(stdout);
 
         std::this_thread::sleep_until(crnt_time + sleed_period);
     }
