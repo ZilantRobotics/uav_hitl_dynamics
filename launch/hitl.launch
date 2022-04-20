@@ -13,5 +13,7 @@
         <arg name="run_inno_sim_bridge"     value="$(arg run_inno_sim_bridge)"/>
 
         <arg name="run_sitl_flight_stack"   value="false"/>
+        <arg name="run_sitl_communicator"   value="false"/>
+        <arg name="run_hitl_communicator"   value="true"/>
     </include>
 </launch>

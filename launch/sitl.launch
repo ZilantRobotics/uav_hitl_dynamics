@@ -4,6 +4,7 @@
     <arg name="dynamics"                default="inno_vtol"                     doc="[inno_vtol, flightgoggles_multicopter]"/>
     <arg name="run_rviz"                default="false"                         doc="[true, false]"/>
     <arg name="run_inno_sim_bridge"     default="true"                          doc="[true, false]"/>
+    <arg name="run_sitl_flight_stack"   default="true"                          doc="[true, false]"/>
 
     <include file="$(find innopolis_vtol_dynamics)/launch/dynamics.launch">
         <arg name="vehicle"                 value="$(arg vehicle)"/>
@@ -12,6 +13,8 @@
         <arg name="run_rviz"                value="$(arg run_rviz)"/>
         <arg name="run_inno_sim_bridge"     value="$(arg run_inno_sim_bridge)"/>
 
-        <arg name="run_sitl_flight_stack"   value="true"/>
+        <arg name="run_sitl_flight_stack"   value="$(arg run_sitl_flight_stack)"/>
+        <arg name="run_sitl_communicator"   value="true"/>
+        <arg name="run_hitl_communicator"   value="false"/>
     </include>
 </launch>
