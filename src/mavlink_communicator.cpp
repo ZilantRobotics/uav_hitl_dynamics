@@ -42,13 +42,12 @@
  * PX4 communication socket.
  */
 
+#include "mavlink_communicator.h"
 #include <iostream>
 #include <ros/ros.h>
 #include <mavlink/v2.0/common/mavlink.h>
 #include <poll.h>
 #include <netinet/tcp.h>
-
-#include "mavlink_communicator.h"
 
 
 const std::string NODE_NAME = "Mavlink PX4 Communicator";
@@ -512,7 +511,7 @@ int MavlinkCommunicator::Receive(bool blocking, bool &armed, std::vector<double>
                 }
             }
         }
-        ROS_WARN_STREAM(NODE_NAME << ": No cmd");
+        ROS_WARN_STREAM_THROTTLE(1, NODE_NAME << ": No cmd");
         return 0;
     }
     return -1;

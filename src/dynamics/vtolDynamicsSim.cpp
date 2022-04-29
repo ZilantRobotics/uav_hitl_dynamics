@@ -11,6 +11,7 @@
 #include <ros/package.h>
 #include <array>
 #include "cs_converter.hpp"
+#include "common_math.hpp"
 
 #define STORE_SIM_PARAMETERS    true
 
@@ -422,30 +423,30 @@ void InnoVtolDynamicsSim::calculateAerodynamics(const Eigen::Vector3d& airspeed,
     Eigen::VectorXd polynomialCoeffs(7);
 
     calculateCLPolynomial(airspeedModClamped, polynomialCoeffs);
-    double CL = polyval(polynomialCoeffs, AoA_deg);
+    double CL = Math::polyval(polynomialCoeffs, AoA_deg);
     Eigen::Vector3d FL = (Eigen::Vector3d(0, 1, 0).cross(airspeed.normalized())) * CL;
 
     calculateCSPolynomial(airspeedModClamped, polynomialCoeffs);
-    double CS = polyval(polynomialCoeffs, AoA_deg);
+    double CS = Math::polyval(polynomialCoeffs, AoA_deg);
     double CS_rudder = calculateCSRudder(rudder_pos, airspeedModClamped);
     double CS_beta = calculateCSBeta(AoS_deg, airspeedModClamped);
     Eigen::Vector3d FS = airspeed.cross(Eigen::Vector3d(0, 1, 0).cross(airspeed.normalized())) * (CS + CS_rudder + CS_beta);
 
     calculateCDPolynomial(airspeedModClamped, polynomialCoeffs);
-    double CD = polyval(polynomialCoeffs.block<5, 1>(0, 0), AoA_deg);
+    double CD = Math::polyval(polynomialCoeffs.block<5, 1>(0, 0), AoA_deg);
     Eigen::Vector3d FD = (-1 * airspeed).normalized() * CD;
 
     Faero = 0.5 * dynamicPressure * (FL + FS + FD);
 
     // 2. Calculate aero moment
     calculateCmxPolynomial(airspeedModClamped, polynomialCoeffs);
-    auto Cmx = polyval(polynomialCoeffs, AoA_deg);
+    auto Cmx = Math::polyval(polynomialCoeffs, AoA_deg);
 
     calculateCmyPolynomial(airspeedModClamped, polynomialCoeffs);
-    auto Cmy = polyval(polynomialCoeffs, AoA_deg);
+    auto Cmy = Math::polyval(polynomialCoeffs, AoA_deg);
 
     calculateCmzPolynomial(airspeedModClamped, polynomialCoeffs);
-    auto Cmz = -polyval(polynomialCoeffs, AoA_deg);
+    auto Cmz = -Math::polyval(polynomialCoeffs, AoA_deg);
 
     double Cmx_aileron = calculateCmxAileron(aileron_pos, airspeedModClamped);
     /**
@@ -480,15 +481,15 @@ void InnoVtolDynamicsSim::thruster(double actuator,
     constexpr size_t TORQUE_IDX = 2;
     constexpr size_t RPM_IDX = 4;
 
-    size_t prev_idx = findPrevRowIdx(tables_.prop, actuator);
+    size_t prev_idx = Math::findPrevRowIdxInMonotonicSequence(tables_.prop, actuator);
     size_t next_idx = prev_idx + 1;
     if(next_idx < tables_.prop.rows()){
         auto prev_row = tables_.prop.row(prev_idx);
         auto next_row = tables_.prop.row(next_idx);
         auto t = (actuator - prev_row(CONTROL_IDX)) / (next_row(CONTROL_IDX) - prev_row(CONTROL_IDX));
-        thrust = lerp(prev_row(THRUST_IDX), next_row(THRUST_IDX), t);
-        torque = lerp(prev_row(TORQUE_IDX), next_row(TORQUE_IDX), t);
-        rpm = lerp(prev_row(RPM_IDX), next_row(RPM_IDX), t);
+        thrust = Math::lerp(prev_row(THRUST_IDX), next_row(THRUST_IDX), t);
+        torque = Math::lerp(prev_row(TORQUE_IDX), next_row(TORQUE_IDX), t);
+        rpm = Math::lerp(prev_row(RPM_IDX), next_row(RPM_IDX), t);
     }
 }
 
@@ -602,7 +603,7 @@ bool InnoVtolDynamicsSim::calculatePolynomialUsingTable(const Eigen::MatrixXd& t
         return false; // wrong input
     }
 
-    const size_t prevRowIdx = findPrevRowIdx(table, airSpeedMod);
+    const size_t prevRowIdx = Math::findPrevRowIdxInMonotonicSequence(table, airSpeedMod);
     if(prevRowIdx + 2 > table.rows()){
         return false; // wrong found row
     }
@@ -618,57 +619,20 @@ bool InnoVtolDynamicsSim::calculatePolynomialUsingTable(const Eigen::MatrixXd& t
     for(size_t coeff_idx = 0; coeff_idx < numberOfCoeffs; coeff_idx++){
         const double prevValue = table.row(prevRowIdx)(0, coeff_idx + 1);
         const double nextValue = table.row(nextRowIdx)(0, coeff_idx + 1);
-        polynomialCoeffs[coeff_idx] = lerp(prevValue, nextValue, delta);
+        polynomialCoeffs[coeff_idx] = Math::lerp(prevValue, nextValue, delta);
     }
 
     return true;
 }
 
-/**
- * @note size should be greater or equel than 2!
- * @todo think about binary search
- */
-size_t InnoVtolDynamicsSim::search(const Eigen::MatrixXd& matrix, double key) const{
-    size_t row_idx;
-    if(matrix(matrix.rows() - 1, 0) > matrix(0, 0)){
-        for(row_idx = 1; row_idx < matrix.rows() - 1; row_idx++){
-            if(key <= matrix(row_idx, 0)){
-                break;
-            }
-        }
-        row_idx--;
-    }else{
-        for(row_idx = 1; row_idx < matrix.rows() - 1; row_idx++){
-            if(key >= matrix(row_idx, 0)){
-                break;
-            }
-        }
-        row_idx--;
-    }
-    return row_idx;
-}
-
-// first collomn of the table must be sorted!
-size_t InnoVtolDynamicsSim::findPrevRowIdx(const Eigen::MatrixXd& table, double value) const{
-    size_t row = 0;
-    size_t c = table.rows();
-    while(row + 2 < c && table(row + 1, 0) < value){
-        row++;
-    }
-    return row;
-}
-
-double InnoVtolDynamicsSim::lerp(double a, double b, double f) const{
-    return a + f * (b - a);
-}
 
 double InnoVtolDynamicsSim::griddata(const Eigen::MatrixXd& x,
                                  const Eigen::MatrixXd& y,
                                  const Eigen::MatrixXd& z,
                                  double x_val,
                                  double y_val) const{
-    size_t x1_idx = search(x, x_val);
-    size_t y1_idx = search(y, y_val);
+    size_t x1_idx = Math::findPrevRowIdxInMonotonicSequence(x, x_val);
+    size_t y1_idx = Math::findPrevRowIdxInMonotonicSequence(y, y_val);
     size_t x2_idx = x1_idx + 1;
     size_t y2_idx = y1_idx + 1;
     double Q11 = z(y1_idx, x1_idx);
@@ -679,14 +643,6 @@ double InnoVtolDynamicsSim::griddata(const Eigen::MatrixXd& x,
     double R2 = ((x(x2_idx) - x_val) * Q12 + (x_val - x(x1_idx)) * Q22) / (x(x2_idx) - x(x1_idx));
     double f =  ((y(y2_idx) - y_val) * R1  + (y_val - y(y1_idx)) * R2)  / (y(y2_idx) - y(y1_idx));
     return f;
-}
-
-double InnoVtolDynamicsSim::polyval(const Eigen::VectorXd& poly, double val) const{
-    double result = 0;
-    for(uint8_t idx = 0; idx < poly.rows(); idx++){
-        result += poly[idx] * std::pow(val, poly.rows() - 1 - idx);
-    }
-    return result;
 }
 
 /**
