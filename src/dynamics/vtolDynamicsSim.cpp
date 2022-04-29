@@ -13,9 +13,6 @@
 #include "cs_converter.hpp"
 
 #define STORE_SIM_PARAMETERS    true
-#define FORCES_LOG              false
-#define MOMENTS_LOG             false
-#define AERODYNAMICS_LOG        false
 
 InnoVtolDynamicsSim::InnoVtolDynamicsSim(): distribution_(0.0, 1.0){
     state_.angularVel.setZero();
@@ -474,30 +471,6 @@ void InnoVtolDynamicsSim::calculateAerodynamics(const Eigen::Vector3d& airspeed,
     state_.Msteer *= 0.5 * dynamicPressure * params_.characteristicLength;
     state_.Mairspeed << Cmx, Cmy, Cmz;
     state_.Mairspeed *= 0.5 * dynamicPressure * params_.characteristicLength;
-
-    #if AERODYNAMICS_LOG == true
-    if(abs(Faero[0]) > 20 || abs(Faero[1]) > 20 || abs(Faero[2]) > 20){
-        std::cout << "in: AoA_deg=" << AoA_deg << std::endl;
-        std::cout << "in: AoS_deg=" << AoS_deg << std::endl;
-        std::cout << "in: aileron/elevator/rudder poses=" << aileron_pos << ", " << elevator_pos << ", " << rudder_pos << std::endl;
-        std::cout << "in: airspeedMod=" << airspeedMod << std::endl;
-        // std::cout << "CL=" << CL << std::endl;
-        // std::cout << "CS=" << CS << std::endl;
-        // std::cout << "CS_rudder=" << CS_rudder << std::endl;
-        // std::cout << "CS_beta=" << CS_beta << std::endl;
-        // std::cout << "CD=" << CD << std::endl;
-        // std::cout << "FL=" << FL << std::endl;
-        // std::cout << "FS=" << FS << std::endl;
-        // std::cout << "FD=" << FD << std::endl;
-        std::cout << "aileron:"     << Cmx_aileron << ", "  << aileron_pos << ", "  << state_.Msteer[0] << ", Mairspeed=" << state_.Mairspeed[0] << std::endl;
-        std::cout << "elevator:"    << Cmy_elevator << ", " << elevator_pos << ", " << state_.Msteer[1] << ", Mairspeed=" << state_.Mairspeed[1] << std::endl;
-        std::cout << "rudder:"      << Cmz_rudder << ", "   << rudder_pos << ", "   << state_.Msteer[2] << ", Mairspeed=" << state_.Mairspeed[2] << std::endl;
-        std::cout << "out: Maero=" << Maero << std::endl;
-        std::cout << "out: Faero=" << Faero << std::endl;
-        std::cout << std::endl;
-    }
-
-    #endif
 }
 
 void InnoVtolDynamicsSim::thruster(double actuator,
@@ -563,39 +536,6 @@ void InnoVtolDynamicsSim::calculateNewState(const Eigen::Vector3d& Maero,
     state_.linearVel += state_.linearAccel * dt_sec;
     state_.position += state_.linearVel * dt_sec;
 
-    #if MOMENTS_LOG == true
-    static int counter = 0;
-    constexpr int max_count = 1000;
-    static Eigen::Vector3d MtotalSum(0, 0, 0);
-    static Eigen::Vector3d MaeroSum(0, 0, 0);
-    static Eigen::Vector3d MsteerSum(0, 0, 0);
-    static Eigen::Vector3d Mairspeed(0, 0, 0);
-    static Eigen::Vector3d AngularVelocitySum(0, 0, 0);
-    if(counter > max_count){
-        counter = 0;
-        MtotalSum /= max_count;
-        MaeroSum /= max_count;
-        MsteerSum /= max_count;
-        Mairspeed /= max_count;
-        AngularVelocitySum /= max_count;
-        std::cout << "Mtotal: " << MtotalSum.transpose() << ", " <<
-                     "Maero: " << MaeroSum.transpose() << ", " <<
-                     "Msteer: " << MsteerSum.transpose() << ", " <<
-                     "Mairspeed: " << Mairspeed.transpose() << ", " <<
-                     "angVelocity: " << AngularVelocitySum.transpose() << ", " <<
-                     std::endl;
-        MtotalSum << 0, 0, 0;
-        MaeroSum << 0, 0, 0;
-        AngularVelocitySum << 0, 0, 0;
-    }
-    MtotalSum += state_.Mtotal;
-    MaeroSum += state_.Maero;
-    MsteerSum += state_.Msteer;
-    Mairspeed += state_.Mairspeed;
-    AngularVelocitySum += state_.angularVel;
-    counter++;
-    #endif
-
     if(state_.position[2] >= 0){
         land();
     }else{
@@ -607,44 +547,6 @@ void InnoVtolDynamicsSim::calculateNewState(const Eigen::Vector3d& Maero,
     state_.MmotorsTotal[1] = std::accumulate(&state_.Mmotors[0][0], &state_.Mmotors[5][0], 0);
     state_.MmotorsTotal[2] = std::accumulate(&state_.Mmotors[0][0], &state_.Mmotors[5][0], 0);
     state_.bodylinearVel = rotationMatrix * state_.linearVel;
-    #endif
-
-    #if FORCES_LOG == true
-    std::cout << "- input: dt = "               << dt_sec << std::endl;
-    std::cout << "- input: u = "                << actuator[0] << ", " << actuator[1] << ", " << actuator[2] << ", " << actuator[3] << ", "
-                                                << actuator[4] << ", " << actuator[5] << ", " << actuator[6] << ", " << actuator[7] << std::endl;
-    std::cout << "- input: Faero = "            << Faero.transpose() << std::endl;
-    std::cout << "- input: Maero = "            << Maero.transpose() << std::endl;
-    std::cout << "- input: state_.angularVel = "  << state_.angularVel.transpose() << std::endl;
-
-    std::cout << "- motorTorquesInBodyCS: "     << motorTorquesInBodyCS[0].transpose() << ", " << motorTorquesInBodyCS[1].transpose() << ", " << motorTorquesInBodyCS[2].transpose() << ", "
-                                                << motorTorquesInBodyCS[3].transpose() << ", " << motorTorquesInBodyCS[4].transpose() << std::endl;
-    std::cout << "- MdueToArmOfForceInBodyCS: " << MdueToArmOfForceInBodyCS[0].transpose() << ", " << MdueToArmOfForceInBodyCS[1].transpose() << ", " << MdueToArmOfForceInBodyCS[2].transpose() << ", "
-                                                << MdueToArmOfForceInBodyCS[3].transpose() << ", " << MdueToArmOfForceInBodyCS[4].transpose() << std::endl;
-    std::cout << "- state_.Mmotors: "           << state_.Mmotors[0].transpose() << ", " << state_.Mmotors[1].transpose() << ", " << state_.Mmotors[2].transpose() << ", "
-                                                << state_.Mmotors[3].transpose() << ", " << state_.Mmotors[4].transpose() << std::endl;
-    std::cout << "- MtotalInBodyCS: "           << MtotalInBodyCS.transpose() << std::endl;
-
-    std::cout << "- new rotationMatrix: "       << rotationMatrix(0, 0) << ", " << rotationMatrix(0, 1) << ", " << rotationMatrix(0, 2) << ";" << std::endl <<
-                                                   rotationMatrix(1, 0) << ", " << rotationMatrix(1, 1) << ", " << rotationMatrix(1, 2) << ";" << std::endl <<
-                                                   rotationMatrix(2, 0) << ", " << rotationMatrix(2, 1) << ", " << rotationMatrix(2, 2) << ";" << std::endl;
-
-    std::cout << "- FmotorInBodyCS: "           << FmotorInBodyCS[0].transpose() << ", "
-                                                << FmotorInBodyCS[1].transpose() << ", "
-                                                << FmotorInBodyCS[2].transpose() << ", "
-                                                << FmotorInBodyCS[3].transpose() << ", "
-                                                << FmotorInBodyCS[4].transpose() << ", "
-                                                << std::endl;
-    std::cout << "- Fspecific="                 << Fspecific.transpose() << std::endl;
-
-    std::cout << "- Ftotal="                    << Ftotal.transpose() << ", dt=" << dt_sec << ", "
-              << ", mass="                      << params_.mass << std::endl;
-    std::cout << "- out: state_.linearAccel="   << state_.linearAccel.transpose() << std::endl;
-    std::cout << "- out: state_.angularAccel: " << state_.angularAccel.transpose() << std::endl;
-    std::cout << "- out: state_.linearVel: "   << state_.linearVel.transpose() << std::endl;
-    std::cout << "- out: state_.angularVel: "   << state_.angularVel.transpose() << std::endl;
-    std::cout << "- out: state_.position = "    << state_.position.transpose() << std::endl;
-    std::cout << "- out: state_.attitude = "    << state_.attitude.coeffs().transpose() << std::endl;
     #endif
 }
 
