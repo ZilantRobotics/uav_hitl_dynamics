@@ -49,6 +49,7 @@ add_library(${PROJECT_NAME} src/dynamics/vtolDynamicsSim.cpp
                             libs/multicopterDynamicsSim/inertialMeasurementSim.cpp
                             libs/multicopterDynamicsSim/multicopterDynamicsSim.cpp
                             src/sensors.cpp
+                            src/cs_converter.cpp
 )
 
 ## 1. Declare a C++ innopolis_vtol_dynamics_node executable
