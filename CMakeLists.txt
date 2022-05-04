@@ -15,7 +15,6 @@ find_package(catkin REQUIRED COMPONENTS
     sensor_msgs
     geometry_msgs
     uavcan_msgs
-    uavcan_communicator
     tf2
     tf2_ros
     geographiclib_conversions
@@ -65,19 +64,7 @@ target_link_libraries(${PROJECT_NAME}_node
     ${catkin_LIBRARIES}
 )
 
-## 2. Declare a C++ mavlink_communicator executable
-add_executable(${PROJECT_NAME}_mavlink_communicator src/mavlink_communicator.cpp)
-target_include_directories(${PROJECT_NAME}_mavlink_communicator
-                BEFORE
-                PUBLIC ${MAVLINK_INCLUDE_DIRS})
-set_target_properties(${PROJECT_NAME}_mavlink_communicator PROPERTIES OUTPUT_NAME mavlink_communicator PREFIX "")
-add_dependencies(${PROJECT_NAME}_mavlink_communicator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME}_mavlink_communicator
-    ${PROJECT_NAME}
-    ${catkin_LIBRARIES}
-)
-
-## 3. Declare a C++ inno_vtol_reverse_mixer_node executable
+## 2. Declare a C++ inno_vtol_reverse_mixer_node executable
 add_executable(${PROJECT_NAME}_inno_vtol_reverse_mixer_node src/inno_vtol_reverse_mixer_node.cpp)
 target_include_directories(${PROJECT_NAME}_inno_vtol_reverse_mixer_node
                 BEFORE
