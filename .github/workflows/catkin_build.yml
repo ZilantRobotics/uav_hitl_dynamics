@@ -1,0 +1,34 @@
+name: catkin_build
+
+on: [push]
+
+defaults:
+  run:
+    shell: bash
+jobs:
+  catkin_build:
+    runs-on: ubuntu-18.04
+    container:
+      image: ros:melodic
+    steps:
+      - run: apt-get update && apt-get install -y git
+      - run: apt-get install -y python-catkin-tools python-pip python3-pip
+      - run: apt-get install -y python-rosdep python-rosinstall python-rosinstall-generator python-wstool build-essential python-catkin-tools
+
+      - uses: actions/checkout@v2
+        with:
+          path: catkin_ws/src/inno_vtol_dynamics
+
+      - name: Install requirements
+        run: |
+          ./catkin_ws/src/inno_vtol_dynamics/install_requirements.sh
+
+      - name: Dependencies
+        run: |
+          git clone https://github.com/InnopolisAero/uavcan_msgs.git catkin_ws/src/uavcan_msgs                              && \
+          git clone https://github.com/InnopolisAero/geographiclib_conversions.git catkin_ws/src/geographiclib_conversions  && \
+          ./catkin_ws/src/geographiclib_conversions/scripts/install.sh
+
+      - name: Catkin build
+        run: |
+          source /opt/ros/melodic/setup.bash && cd catkin_ws && catkin build
