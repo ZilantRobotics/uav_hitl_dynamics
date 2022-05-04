@@ -30,7 +30,7 @@
 
     <!-- 2. Run mavlink or uavcan communicator depending on simulation mode -->
     <group if="$(arg run_sitl_communicator)">
-        <node pkg="innopolis_vtol_dynamics" type="mavlink_communicator" name="mavlink_communicator" output="screen">
+        <node pkg="mavlink_communicator" type="mavlink_communicator_node" name="mavlink_communicator" output="screen" required="true">
         <param name="vehicle"   value="$(arg vehicle)"  />
     </node>
     </group>
