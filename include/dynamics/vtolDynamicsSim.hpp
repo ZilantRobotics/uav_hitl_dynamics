@@ -208,8 +208,6 @@ class InnoVtolDynamicsSim : public UavDynamicsSimBase{
         double calculateCmyElevator(double elevator_pos, double airspeed) const;
         double calculateCmzRudder(double rudder_pos, double airspeed) const;
 
-        size_t findPrevRowIdx(const Eigen::MatrixXd& table, double value) const;
-        double lerp(double a, double b, double f) const;
         /**
          * @note Similar to https://www.mathworks.com/help/matlab/ref/griddata.html
          * Implementation from https://en.wikipedia.org/wiki/Bilinear_interpolation
@@ -219,8 +217,6 @@ class InnoVtolDynamicsSim : public UavDynamicsSimBase{
                         const Eigen::MatrixXd& z,
                         double xi,
                         double yi) const;
-        double polyval(const Eigen::VectorXd& poly, double val) const;
-        size_t search(const Eigen::MatrixXd& matrix, double key) const;
 
 
         void setWindParameter(Eigen::Vector3d windMeanVelocity, double wind_velocityVariance);

@@ -28,7 +28,6 @@
   <depend>tf2</depend>
   <depend>tf2_ros</depend>
   <depend>yaml-cpp</depend>
-  <depend>uavcan_communicator</depend>
 
   <!-- Other deps -->
   <build_depend>message_generation</build_depend>

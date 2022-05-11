@@ -21,7 +21,6 @@
 #include <uavcan_msgs/RawAirData.h>
 #include <uavcan_msgs/StaticPressure.h>
 #include <uavcan_msgs/StaticTemperature.h>
-#include <uavcan_msgs/Fix.h>
 
 #include "innopolis_vtol_dynamics_node.hpp"
 #include "flightgogglesDynamicsSim.hpp"
@@ -33,11 +32,6 @@
 static char GLOBAL_FRAME_ID[] = "world";
 static char UAV_FRAME_ID[] = "uav/enu";
 static char UAV_FIXED_FRAME_ID[] = "uav/com";
-
-static const double MAG_NOISE = 0.0002;
-static const double STATIC_PRESSURE_NOISE = 0.1;
-static const double DIFF_PRESSURE_NOISE_PA = 5;
-static const double TEMPERATURE_NOISE = 0.1;
 
 const std::string MOTOR_NAMES[5] = {"motor0",
                                     "motor1",
@@ -69,6 +63,14 @@ Uav_Dynamics::Uav_Dynamics(ros::NodeHandle nh) :
     actuators_(8, 0.),
     initPose_(7),
     escStatusSensor_(&nh, "/uav/esc_status", 0.25),
+    attitudeSensor_(&nh, "/uav/attitude", 0.005),
+    imuSensor_(&nh, "/uav/imu", 0.005),
+    velocitySensor_(&nh, "/uav/velocity", 0.05),
+    magSensor_(&nh, "/uav/mag", 0.03),
+    rawAirDataSensor_(&nh, "/uav/raw_air_data", 0.05),
+    staticTemperatureSensor_(&nh, "/uav/static_temperature", 0.05),
+    staticPressureSensor_(&nh, "/uav/static_pressure", 0.05),
+    gpsSensor_(&nh, "/uav/gps_position", 0.1),
     iceStatusSensor_(&nh, "/uav/ice_status", 0.25),
     fuelTankStatusSensor_(&nh, "/uav/fuel_tank", 2.0),
     batteryInfoStatusSensor_(&nh, "/uav/battery", 1.0){
@@ -79,15 +81,11 @@ Uav_Dynamics::Uav_Dynamics(ros::NodeHandle nh) :
  * @return -1 if error occured, else 0
  */
 int8_t Uav_Dynamics::init(){
-    normalDistribution_ = std::normal_distribution<double>(0.0, 1.0);
-
     if(getParamsFromRos() == -1){
         return -1;
     }else if(initDynamicsSimulator() == -1){
         return -1;
-    }else if(initMainCommunicatorSensors() == -1){
-        return -1;
-    }else if(initAuxilliaryCommunicatorSensors() == -1){
+    }else if(initSensors() == -1){
         return -1;
     }else if(initCalibration() == -1){
         return -1;
@@ -160,36 +158,19 @@ int8_t Uav_Dynamics::initDynamicsSimulator(){
     return 0;
 }
 
-int8_t Uav_Dynamics::initMainCommunicatorSensors(){
-    static constexpr char IMU_TOPIC_NAME[]                 = "/uav/imu";
-    static constexpr char MAG_TOPIC_NAME[]                 = "/uav/mag";
-    static constexpr char GPS_POSE_TOPIC_NAME[]            = "/uav/gps_position";
-    static constexpr char ATTITUDE_TOPIC_NAME[]            = "/uav/attitude";
-    static constexpr char VELOCITY_TOPIC_NAME[]            = "/uav/velocity";
-    static constexpr char ACTUATOR_TOPIC_NAME[]            = "/uav/actuators";
-    static constexpr char ARM_TOPIC_NAME[]                 = "/uav/arm";
+int8_t Uav_Dynamics::initSensors(){
+    actuatorsSub_ = node_.subscribe("/uav/actuators", 1, &Uav_Dynamics::actuatorsCallback, this);
+    armSub_ = node_.subscribe("/uav/arm", 1, &Uav_Dynamics::armCallback, this);
 
-    static constexpr char RAW_AIR_DATA_TOPIC_NAME[]        = "/uav/raw_air_data";
-    static constexpr char STATIC_TEMPERATURE_TOPIC_NAME[]  = "/uav/static_temperature";
-    static constexpr char STATIC_PRESSURE_TOPIC_NAME[]     = "/uav/static_pressure";
+    attitudeSensor_.enable();
+    imuSensor_.enable();
+    velocitySensor_.enable();
+    magSensor_.enable();
+    rawAirDataSensor_.enable();
+    staticTemperatureSensor_.enable();
+    staticPressureSensor_.enable();
+    gpsSensor_.enable();
 
-    actuatorsSub_ = node_.subscribe(ACTUATOR_TOPIC_NAME, 1, &Uav_Dynamics::actuatorsCallback, this);
-    armSub_ = node_.subscribe(ARM_TOPIC_NAME, 1, &Uav_Dynamics::armCallback, this);
-
-    imuPub_ = node_.advertise<sensor_msgs::Imu>(IMU_TOPIC_NAME, 96);
-    gpsPositionPub_ = node_.advertise<uavcan_msgs::Fix>(GPS_POSE_TOPIC_NAME, 5);
-    attitudePub_ = node_.advertise<geometry_msgs::QuaternionStamped>(ATTITUDE_TOPIC_NAME, 5);
-    speedPub_ = node_.advertise<geometry_msgs::Twist>(VELOCITY_TOPIC_NAME, 5);
-    magPub_ = node_.advertise<sensor_msgs::MagneticField>(MAG_TOPIC_NAME, 5);
-
-    rawAirDataPub_ = node_.advertise<uavcan_msgs::RawAirData>(RAW_AIR_DATA_TOPIC_NAME, 5);
-    staticTemperaturePub_ = node_.advertise<uavcan_msgs::StaticTemperature>(STATIC_TEMPERATURE_TOPIC_NAME, 5);
-    staticPressurePub_ = node_.advertise<uavcan_msgs::StaticPressure>(STATIC_PRESSURE_TOPIC_NAME, 5);
-
-    return 0;
-}
-
-int8_t Uav_Dynamics::initAuxilliaryCommunicatorSensors(){
     if(isEscStatusEnabled_){
         escStatusSensor_.enable();
     }
@@ -436,39 +417,14 @@ void Uav_Dynamics::publishStateToCommunicator(){
                                        temperatureKelvin, absPressureHpa, diffPressureHpa);
 
     // Publish state to communicator
-    auto crntTimeSec = currentTime_.toSec();
-    if(gpsLastPubTimeSec_ + GPS_POSITION_PERIOD < crntTimeSec){
-        publishUavGpsPosition(gpsPosition, linVelNed);
-        gpsLastPubTimeSec_ = crntTimeSec;
-    }
-    if(attitudeLastPubTimeSec_ + ATTITUDE_PERIOD < crntTimeSec){
-        publishUavAttitude(attitudeFrdToNed);
-        attitudeLastPubTimeSec_ = crntTimeSec;
-    }
-    if(velocityLastPubTimeSec_ + VELOCITY_PERIOD < crntTimeSec){
-        publishUavVelocity(linVelNed, angVelFrd);
-        velocityLastPubTimeSec_ = crntTimeSec;
-    }
-    if(imuLastPubTimeSec_ + IMU_PERIOD < crntTimeSec){
-        publishIMUMeasurement(accFrd, gyroFrd);
-        imuLastPubTimeSec_ = crntTimeSec;
-    }
-    if(magLastPubTimeSec_ + MAG_PERIOD < crntTimeSec){
-        publishUavMag(gpsPosition, attitudeFrdToNed);
-        magLastPubTimeSec_ = crntTimeSec;
-    }
-    if(rawAirDataLastPubTimeSec_ + RAW_AIR_DATA_PERIOD < crntTimeSec){
-        publishUavAirData(absPressureHpa, diffPressureHpa, temperatureKelvin);
-        rawAirDataLastPubTimeSec_ = crntTimeSec;
-    }
-    if(staticPressureLastPubTimeSec_ + STATIC_PRESSURE_PERIOD < crntTimeSec){
-        publishUavStaticPressure(absPressureHpa);
-        staticPressureLastPubTimeSec_ = crntTimeSec;
-    }
-    if(staticTemperatureLastPubTimeSec_ + STATIC_TEMPERATURE_PERIOD < crntTimeSec){
-        publishUavStaticTemperature(temperatureKelvin);
-        staticTemperatureLastPubTimeSec_ = crntTimeSec;
-    }
+    gpsSensor_.publish(gpsPosition, linVelNed);
+    attitudeSensor_.publish(attitudeFrdToNed);
+    velocitySensor_.publish(linVelNed, angVelFrd);
+    imuSensor_.publish(accFrd, gyroFrd);
+    magSensor_.publish(gpsPosition, attitudeFrdToNed);
+    rawAirDataSensor_.publish(absPressureHpa, diffPressureHpa, temperatureKelvin);
+    staticPressureSensor_.publish(absPressureHpa);
+    staticTemperatureSensor_.publish(temperatureKelvin);
 
     std::vector<double> motorsRpm;
     if(uavDynamicsSim_->getMotorsRpm(motorsRpm)){
@@ -478,8 +434,7 @@ void Uav_Dynamics::publishStateToCommunicator(){
         }
     }
 
-    ///< Simplified Fuel tank model
-    ///< todo: refactor it
+    ///< @todo Simplified Fuel tank model, refactor it
     static double fuelLevelPercentage = 100.0;
     if(motorsRpm.size() == 5 && motorsRpm[4] >= 1) {
         fuelLevelPercentage -= 0.002;
@@ -489,10 +444,8 @@ void Uav_Dynamics::publishStateToCommunicator(){
     }
     fuelTankStatusSensor_.publish(fuelLevelPercentage);
 
-    ///< Battery is just constant
-    ///< todo: add model
-    static double batteryPercentage = 90.0;
-    batteryInfoStatusSensor_.publish(batteryPercentage);
+    ///< @todo Battery is just constant, add model
+    batteryInfoStatusSensor_.publish(90.0);
 }
 
 void Uav_Dynamics::publishToRos(double period){
@@ -581,111 +534,6 @@ void Uav_Dynamics::publishState(void){
     transform.transform.rotation.w = 1;
     transform.child_frame_id = UAV_FIXED_FRAME_ID;
     tfPub_.sendTransform(transform);
-}
-
-void Uav_Dynamics::publishUavAttitude(Eigen::Quaterniond attitudeFrdToNed){
-    geometry_msgs::QuaternionStamped msg;
-    msg.quaternion.x = attitudeFrdToNed.x();
-    msg.quaternion.y = attitudeFrdToNed.y();
-    msg.quaternion.z = attitudeFrdToNed.z();
-    msg.quaternion.w = attitudeFrdToNed.w();
-    msg.header.stamp = currentTime_;
-    attitudePub_.publish(msg);
-}
-
-void Uav_Dynamics::publishUavGpsPosition(Eigen::Vector3d geoPosition, Eigen::Vector3d nedVelocity){
-    uavcan_msgs::Fix msg;
-
-    msg.header.stamp = currentTime_;
-
-    msg.latitude_deg_1e8 = geoPosition[0] * 1e+8;
-    msg.longitude_deg_1e8 = geoPosition[1] * 1e+8;
-    msg.height_msl_mm = geoPosition[2] * 1e+3;
-
-    msg.ned_velocity.x = nedVelocity[0];
-    msg.ned_velocity.y = nedVelocity[1];
-    msg.ned_velocity.z = nedVelocity[2];
-
-    msg.sats_used = 10;
-    msg.status = 3;
-    msg.pdop = 1;
-
-    gpsPositionPub_.publish(msg);
-}
-
-void Uav_Dynamics::publishIMUMeasurement(Eigen::Vector3d accFrd, Eigen::Vector3d gyroFrd){
-    sensor_msgs::Imu msg;
-    msg.header.stamp = currentTime_;
-
-    msg.angular_velocity.x = gyroFrd[0];
-    msg.angular_velocity.y = gyroFrd[1];
-    msg.angular_velocity.z = gyroFrd[2];
-
-    msg.linear_acceleration.x = accFrd[0];
-    msg.linear_acceleration.y = accFrd[1];
-    msg.linear_acceleration.z = accFrd[2];
-
-    imuPub_.publish(msg);
-}
-
-void Uav_Dynamics::publishUavVelocity(Eigen::Vector3d linVelNed, Eigen::Vector3d angVelFrd){
-    geometry_msgs::Twist speed;
-    speed.linear.x = linVelNed[0];
-    speed.linear.y = linVelNed[1];
-    speed.linear.z = linVelNed[2];
-    speed.angular.x = angVelFrd[0];
-    speed.angular.y = angVelFrd[1];
-    speed.angular.z = angVelFrd[2];
-    speedPub_.publish(speed);
-}
-
-void Uav_Dynamics::publishUavMag(Eigen::Vector3d geoPosition, Eigen::Quaterniond attitudeFrdToNed){
-    Eigen::Vector3d magEnu;
-    geographiclib_conversions::MagneticField(
-        geoPosition.x(), geoPosition.y(), geoPosition.z(),
-        magEnu.x(), magEnu.y(), magEnu.z());
-
-    Eigen::Vector3d magFrd = attitudeFrdToNed.inverse() * Converter::enuToNed(magEnu);
-
-    sensor_msgs::MagneticField mag;
-    mag.header.stamp = ros::Time();
-    mag.magnetic_field.x = magFrd[0] + MAG_NOISE * normalDistribution_(randomGenerator_);
-    mag.magnetic_field.y = magFrd[1] + MAG_NOISE * normalDistribution_(randomGenerator_);
-    mag.magnetic_field.z = magFrd[2] + MAG_NOISE * normalDistribution_(randomGenerator_);
-    magPub_.publish(mag);
-}
-
-void Uav_Dynamics::publishUavAirData(float absPressureHpa,
-                                     float diffPressure,
-                                     float staticTemperature){
-    uavcan_msgs::RawAirData msg;
-    msg.header.stamp = ros::Time();
-
-    msg.static_pressure = absPressureHpa * 100;
-    msg.differential_pressure = diffPressure * 100;
-    msg.static_air_temperature = staticTemperature;
-
-    msg.static_pressure += STATIC_PRESSURE_NOISE * normalDistribution_(randomGenerator_);
-    msg.differential_pressure += DIFF_PRESSURE_NOISE_PA * normalDistribution_(randomGenerator_);
-    msg.static_air_temperature += TEMPERATURE_NOISE * normalDistribution_(randomGenerator_);
-
-    rawAirDataPub_.publish(msg);
-}
-
-void Uav_Dynamics::publishUavStaticTemperature(float staticTemperature){
-    uavcan_msgs::StaticTemperature msg;
-    msg.header.stamp = ros::Time();
-    msg.static_temperature = staticTemperature + 5;
-    msg.static_temperature += TEMPERATURE_NOISE * normalDistribution_(randomGenerator_);
-    staticTemperaturePub_.publish(msg);
-}
-
-void Uav_Dynamics::publishUavStaticPressure(float staticPressureHpa){
-    uavcan_msgs::StaticPressure msg;
-    msg.header.stamp = ros::Time();
-    msg.static_pressure = staticPressureHpa * 100;
-    msg.static_pressure += STATIC_PRESSURE_NOISE * normalDistribution_(randomGenerator_);
-    staticPressurePub_.publish(msg);
 }
 
 visualization_msgs::Marker& Uav_Dynamics::makeArrow(const Eigen::Vector3d& vector3D,

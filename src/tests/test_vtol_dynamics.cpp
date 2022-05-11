@@ -9,6 +9,7 @@
 #include <random>
 #include <geographiclib_conversions/geodetic_conv.hpp>
 #include "vtolDynamicsSim.hpp"
+#include "common_math.hpp"
 
 
 TEST(InnoVtolDynamicsSim, calculateWind){
@@ -80,26 +81,49 @@ TEST(InnoVtolDynamicsSim, calculateAnglesOfSideslip){
     }
 }
 
-TEST(InnoVtolDynamicsSim, findPrevRowIdx){
+TEST(CommonMath, findPrevRowIdxInIncreasingSequence){
     InnoVtolDynamicsSim vtolDynamicsSim;
-    Eigen::MatrixXd table(8, 8);
-    table << 5, -2.758e-11, 8.139e-09, 1.438e-07, -3.095e-05, -0.0003512, 0.05557, 0.4132,
-            10, -3.934e-11, 8.204e-09, 1.935e-07, -3.075e-05, -0.0004209, 0.0552,  0.4438,
-            15, -5.464e-11, 7.747e-09, 2.369e-07, -2.918e-05, -0.0004564, 0.05447, 0.4545,
-            20, -5.087e-11, 7.803e-09, 2.267e-07, -2.926e-05, -0.0004493, 0.05435, 0.4525,
-            25, -5.489e-11, 7.949e-09, 2.428e-07, -2.975e-05, -0.0004656, 0.05472, 0.4578,
-            30, -4.749e-11, 7.778e-09, 2.219e-07, -2.926e-05, -0.0004567, 0.05433, 0.4599,
-            35, -5.911e-11, 7.879e-09, 2.574e-07, -2.961e-05, -0.0004838, 0.05458, 0.4637,
-            40, -5.911e-11, 7.879e-09, 2.574e-07, -2.961e-05, -0.0004838, 0.05458, 0.4637;
-    ASSERT_EQ(vtolDynamicsSim.findPrevRowIdx(table, -1),   0);
-    ASSERT_EQ(vtolDynamicsSim.findPrevRowIdx(table, 10),   0);
-    ASSERT_EQ(vtolDynamicsSim.findPrevRowIdx(table, 10.1), 1);
-    ASSERT_EQ(vtolDynamicsSim.findPrevRowIdx(table, 15.1), 2);
-    ASSERT_EQ(vtolDynamicsSim.findPrevRowIdx(table, 34.9), 5);
-    ASSERT_EQ(vtolDynamicsSim.findPrevRowIdx(table, 35.1), 6);
-    ASSERT_EQ(vtolDynamicsSim.findPrevRowIdx(table, 39.9), 6);
-    ASSERT_EQ(vtolDynamicsSim.findPrevRowIdx(table, 40.1), 6);
-    ASSERT_EQ(vtolDynamicsSim.findPrevRowIdx(table, 50.0), 6);
+    Eigen::MatrixXd table(8, 1);
+    table << 5, 10, 15, 20, 25, 30, 35, 40;
+    ASSERT_EQ(Math::findPrevRowIdxInIncreasingSequence(table, -1),   0);
+    ASSERT_EQ(Math::findPrevRowIdxInIncreasingSequence(table, 10),   0);
+    ASSERT_EQ(Math::findPrevRowIdxInIncreasingSequence(table, 10.1), 1);
+    ASSERT_EQ(Math::findPrevRowIdxInIncreasingSequence(table, 15.1), 2);
+    ASSERT_EQ(Math::findPrevRowIdxInIncreasingSequence(table, 34.9), 5);
+    ASSERT_EQ(Math::findPrevRowIdxInIncreasingSequence(table, 35.1), 6);
+    ASSERT_EQ(Math::findPrevRowIdxInIncreasingSequence(table, 39.9), 6);
+    ASSERT_EQ(Math::findPrevRowIdxInIncreasingSequence(table, 40.1), 6);
+    ASSERT_EQ(Math::findPrevRowIdxInIncreasingSequence(table, 50.0), 6);
+}
+
+TEST(CommonMath, findPrevRowIdxInMonotonicSequenceIncreasing){
+    InnoVtolDynamicsSim vtolDynamicsSim;
+    Eigen::MatrixXd table(8, 1);
+    table << 5, 10, 15, 20, 25, 30, 35, 40;
+    ASSERT_EQ(Math::findPrevRowIdxInMonotonicSequence(table, -1),   0);
+    ASSERT_EQ(Math::findPrevRowIdxInMonotonicSequence(table, 10),   0);
+    ASSERT_EQ(Math::findPrevRowIdxInMonotonicSequence(table, 10.1), 1);
+    ASSERT_EQ(Math::findPrevRowIdxInMonotonicSequence(table, 15.1), 2);
+    ASSERT_EQ(Math::findPrevRowIdxInMonotonicSequence(table, 34.9), 5);
+    ASSERT_EQ(Math::findPrevRowIdxInMonotonicSequence(table, 35.1), 6);
+    ASSERT_EQ(Math::findPrevRowIdxInMonotonicSequence(table, 39.9), 6);
+    ASSERT_EQ(Math::findPrevRowIdxInMonotonicSequence(table, 40.1), 6);
+    ASSERT_EQ(Math::findPrevRowIdxInMonotonicSequence(table, 50.0), 6);
+}
+
+TEST(CommonMath, findPrevRowIdxInMonotonicSequenceDecreasing){
+    InnoVtolDynamicsSim vtolDynamicsSim;
+    Eigen::MatrixXd table(8, 1);
+    table << 40, 35, 30, 25, 20, 15, 10, 5;
+    ASSERT_EQ(Math::findPrevRowIdxInMonotonicSequence(table, -1),   6);
+    ASSERT_EQ(Math::findPrevRowIdxInMonotonicSequence(table, 10),   5);
+    ASSERT_EQ(Math::findPrevRowIdxInMonotonicSequence(table, 10.1), 5);
+    ASSERT_EQ(Math::findPrevRowIdxInMonotonicSequence(table, 15.1), 4);
+    ASSERT_EQ(Math::findPrevRowIdxInMonotonicSequence(table, 34.9), 1);
+    ASSERT_EQ(Math::findPrevRowIdxInMonotonicSequence(table, 35.1), 0);
+    ASSERT_EQ(Math::findPrevRowIdxInMonotonicSequence(table, 39.9), 0);
+    ASSERT_EQ(Math::findPrevRowIdxInMonotonicSequence(table, 40.1), 0);
+    ASSERT_EQ(Math::findPrevRowIdxInMonotonicSequence(table, 50.0), 0);
 }
 
 TEST(calculatePolynomialUsingTable, test_normal_scalar){
@@ -215,34 +239,14 @@ TEST(InnoVtolDynamicsSim, calculateCDPolynomial){
     // @todo If build type is DEBUG, Eigen generates an assert
 }
 
-TEST(InnoVtolDynamicsSim, DISABLED_calculateLiftForce){
-    InnoVtolDynamicsSim vtolDynamicsSim;
-    ASSERT_EQ(vtolDynamicsSim.init(), 0);
-
-    Eigen::VectorXd polynomialCoeffs(7);
-    Eigen::Vector3d FL, airspeed;
-    double CL, dynamicPressure, AoA_deg, airspeedNorm, AoA_rad;
-
-    airspeedNorm = 10;
-    for(AoA_deg = -45; AoA_deg <= 45; AoA_deg += 5){
-        AoA_rad = AoA_deg / 180 * 3.1415;
-        airspeed << airspeedNorm * cos(AoA_rad), 0, airspeedNorm * sin(AoA_rad);
-        dynamicPressure = vtolDynamicsSim.calculateDynamicPressure(airspeed.norm());
-        vtolDynamicsSim.calculateCLPolynomial(airspeedNorm, polynomialCoeffs);
-        CL = vtolDynamicsSim.polyval(polynomialCoeffs, AoA_deg);
-        FL = 0.5 * dynamicPressure * (Eigen::Vector3d(0, 1, 0).cross(airspeed.normalized())) * CL;
-        std::cout << AoA_deg << " FL = " << FL.transpose() << ", " << airspeed.norm() << std::endl;
-    }
-}
-
-TEST(InnoVtolDynamicsSim, polyval){
+TEST(CommonMath, polyval){
     InnoVtolDynamicsSim vtolDynamicsSim;
     Eigen::VectorXd poly(7);
     poly << 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7;
     double value = 0.5;
     double expected_output = 3.1859;
 
-    double actual_output = vtolDynamicsSim.polyval(poly, value);
+    double actual_output = Math::polyval(poly, value);
     EXPECT_NEAR(actual_output, expected_output, 0.001);
 }
 
@@ -670,7 +674,7 @@ TEST(InnoVtolDynamicsSim, calculateNewStateSixthCaseOnlyCopterMotorsWithNotEqual
                     initialLinVel(0, 0, 0),
                     initAngVel(0.0, 0.0, 0.0),
                     initPose(0, 0, 0),
-                    expectedAngAccel(0.13933,       1.48111,        0.10723),
+                    expectedAngAccel(0.1354,        1.2944,         0.10723),
                     expectedLinAccel(-1.3753e-04,   1.2938e-05,     -5.0505e+00);
 
     calculateNewState(dt, actuators,  Maero, Faero,
@@ -719,7 +723,7 @@ TEST(InnoVtolDynamicsSim, calculateNewStateEightComplexWithoutInitialAttitude){
                     initialLinVel(15, 3, 1),
                     initAngVel(0.5, 0.4, 0.3),
                     initPose(0, 0, 10),
-                    expectedAngAccel(5.0598, 16.2287, 11.9625),
+                    expectedAngAccel(5.1203, 16.15784, 11.9625),
                     expectedLinAccel(5.60908, 1.44474, 0.80233);
 
     calculateNewState(dt, actuators,  Maero, Faero,
@@ -744,7 +748,7 @@ TEST(InnoVtolDynamicsSim, calculateNewStateEightComplexFull){
                     initialLinVel(15, 3, 1),
                     initAngVel(0.5, 0.4, 0.3),
                     initPose(0, 0, 10),
-                    expectedAngAccel(5.0598, 16.2287, 11.9625),
+                    expectedAngAccel(5.1202, 16.15784, 11.9625),
                     expectedLinAccel(3.45031, 4.40765, 0.68005);
 
     calculateNewState(dt, actuators,  Maero, Faero,
