@@ -1,3 +1,3 @@
-uavcan_node_id:           43
+uavcan_node_id:           45
 uavcan_node_name:         "hitl.airspeed"
 bridges:                  ["DiffPressureRosToUavcan",           "/uav/raw_air_data"]
