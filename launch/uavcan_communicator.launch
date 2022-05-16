@@ -1,6 +1,13 @@
 <launch>
-    <rosparam file="$(find innopolis_vtol_dynamics)/config/uavcan_params.yaml" command="load" ns="uavcan/" />
-    <node pkg="uavcan_communicator" type="uavcan_communicator" name="px4_uavcan_communicator" output="screen" required="true" ns="uavcan"/>
+    <arg name="disable_actuators" default="false" doc="[true, false]"/>
+
+    <group unless="$(arg disable_actuators)">
+        <rosparam file="$(find innopolis_vtol_dynamics)/config/uavcan_params_actuators.yaml" command="load" ns="uavcan/actuators" />
+        <node pkg="uavcan_communicator" type="uavcan_communicator" name="px4_uavcan_communicator_actuators" output="screen" required="true" ns="uavcan/actuators"/>
+    </group>
+
+    <rosparam file="$(find innopolis_vtol_dynamics)/config/uavcan_params_sensors.yaml" command="load" ns="uavcan/sensors" />
+    <node pkg="uavcan_communicator" type="uavcan_communicator" name="px4_uavcan_communicator_sensors" output="screen" required="true" ns="uavcan/sensors"/>
 
     <rosparam file="$(find innopolis_vtol_dynamics)/config/uavcan_params_redundant_airspeed.yaml" command="load" ns="uavcan/airspeed_redundant/" />
     <node pkg="uavcan_communicator" type="uavcan_communicator" name="px4_uavcan_communicator_redundant_airspeed" output="screen" ns="uavcan/airspeed_redundant"/>

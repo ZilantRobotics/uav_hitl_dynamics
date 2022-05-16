@@ -1,9 +1,6 @@
-uavcan_node_id:           42
-uavcan_node_name:         "inno.dynamics"
-bridges:                  ["ActuatorsUavcanToRos",              "/uav/actuators_raw",
-                           "ArmUavcanToRos",                    "/uav/arm",
-
-                           "DiffPressureRosToUavcan",           "/uav/raw_air_data",
+uavcan_node_id:           46
+uavcan_node_name:         "inno.sensors"
+bridges:                  ["DiffPressureRosToUavcan",           "/uav/raw_air_data",
                            "ImuRosToUavcan",                    "/uav/imu",
 
                            "EscStatusRosToUavcan",              "/uav/esc_status",
