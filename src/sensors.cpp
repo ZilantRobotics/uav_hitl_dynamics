@@ -7,18 +7,22 @@
 #include "cs_converter.hpp"
 
 #include <geometry_msgs/QuaternionStamped.h>
-#include <uavcan_msgs/Fix.h>
-#include <sensor_msgs/Imu.h>
+#include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/Twist.h>
+#include <sensor_msgs/Imu.h>
+#include <std_msgs/Float32.h>
 #include <sensor_msgs/MagneticField.h>
+#include <sensor_msgs/NavSatFix.h>
+#include <sensor_msgs/BatteryState.h>
+
+///< uavcan_msgs are deprecated and should be removed asap
 #include <uavcan_msgs/RawAirData.h>
 #include <uavcan_msgs/StaticPressure.h>
 #include <uavcan_msgs/StaticTemperature.h>
-
+#include <uavcan_msgs/Fix.h>
 #include <uavcan_msgs/EscStatus.h>
 #include <uavcan_msgs/IceReciprocatingStatus.h>
 #include <uavcan_msgs/IceFuelTankStatus.h>
-#include <sensor_msgs/BatteryState.h>
 
 
 static const double MAG_NOISE = 0.0002;
@@ -142,7 +146,8 @@ bool RawAirDataSensor::publish(float absPressureHpa, float diffPressure, float s
 }
 
 StaticPressureSensor::StaticPressureSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
-    publisher_ = node_handler_->advertise<uavcan_msgs::StaticPressure>(topic, 5);
+    old_publisher_ = node_handler_->advertise<uavcan_msgs::StaticPressure>(topic, 5);
+    publisher_ = node_handler_->advertise<std_msgs::Float32>("/uav/baro_pressure", 5);
 }
 bool StaticPressureSensor::publish(float staticPressureHpa) {
     auto crntTimeSec = ros::Time::now().toSec();
@@ -150,18 +155,24 @@ bool StaticPressureSensor::publish(float staticPressureHpa) {
         return false;
     }
 
-    uavcan_msgs::StaticPressure msg;
-    msg.header.stamp = ros::Time();
-    msg.static_pressure = staticPressureHpa * 100;
-    msg.static_pressure += STATIC_PRESSURE_NOISE * normalDistribution_(randomGenerator_);
+    uavcan_msgs::StaticPressure old_msg;
+    old_msg.header.stamp = ros::Time();
+    old_msg.static_pressure = staticPressureHpa * 100;
+    old_msg.static_pressure += STATIC_PRESSURE_NOISE * normalDistribution_(randomGenerator_);
+    old_publisher_.publish(old_msg);
 
+    std_msgs::Float32 msg;
+    msg.data = staticPressureHpa * 100;
+    msg.data += STATIC_PRESSURE_NOISE * normalDistribution_(randomGenerator_);
     publisher_.publish(msg);
+
     nextPubTimeSec_ = crntTimeSec + PERIOD;
     return true;
 }
 
 StaticTemperatureSensor::StaticTemperatureSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
-    publisher_ = node_handler_->advertise<uavcan_msgs::StaticTemperature>(topic, 5);
+    old_publisher_ = node_handler_->advertise<uavcan_msgs::StaticTemperature>(topic, 5);
+    publisher_ = node_handler_->advertise<std_msgs::Float32>("/uav/baro_temperature", 5);
 }
 bool StaticTemperatureSensor::publish(float staticTemperature) {
     auto crntTimeSec = ros::Time::now().toSec();
@@ -169,12 +180,17 @@ bool StaticTemperatureSensor::publish(float staticTemperature) {
         return false;
     }
 
-    uavcan_msgs::StaticTemperature msg;
-    msg.header.stamp = ros::Time();
-    msg.static_temperature = staticTemperature + 5;
-    msg.static_temperature += TEMPERATURE_NOISE * normalDistribution_(randomGenerator_);
+    uavcan_msgs::StaticTemperature old_msg;
+    old_msg.header.stamp = ros::Time();
+    old_msg.static_temperature = staticTemperature + 5;
+    old_msg.static_temperature += TEMPERATURE_NOISE * normalDistribution_(randomGenerator_);
+    old_publisher_.publish(old_msg);
 
+    std_msgs::Float32 msg;
+    msg.data = staticTemperature + 5;
+    msg.data += TEMPERATURE_NOISE * normalDistribution_(randomGenerator_);
     publisher_.publish(msg);
+
     nextPubTimeSec_ = crntTimeSec + PERIOD;
     return true;
 }
