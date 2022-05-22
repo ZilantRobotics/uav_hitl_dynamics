@@ -41,7 +41,7 @@
             <param name="airframe"  value="$(arg airframe)" />
         </node>
         <include file="$(find innopolis_vtol_dynamics)/launch/uavcan_communicator.launch">
-            <arg name="disable_actuators" value="$(arg run_cyphal_communicator)" />
+            <arg name="partial_cyphal" value="$(arg run_cyphal_communicator)" />
         </include>
     </group>
     <group if="$(arg run_cyphal_communicator)">
