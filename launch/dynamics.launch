@@ -16,6 +16,7 @@
     <arg name="run_hitl_communicator"   default="false"                         doc="[true means run uavcan  communicator, false means do nothing]"/>
     <arg name="run_inno_sim_bridge"     default="true"                          doc="[true, false]"/>
     <arg name="run_cyphal_communicator" default="false"                         doc="[true, false]"/>
+    <arg name="run_dronecan_communicator" default="false"                       doc="[true, false]"/>
 
 
     <!-- 1. Run SITL flight stack -->
@@ -40,9 +41,11 @@
             <param name="vehicle"   value="$(arg vehicle)"  />
             <param name="airframe"  value="$(arg airframe)" />
         </node>
-        <include file="$(find innopolis_vtol_dynamics)/launch/uavcan_communicator.launch">
-            <arg name="partial_cyphal" value="$(arg run_cyphal_communicator)" />
-        </include>
+        <group if="$(arg run_dronecan_communicator)">
+            <include file="$(find innopolis_vtol_dynamics)/launch/uavcan_communicator.launch">
+                <arg name="partial_cyphal" value="$(arg run_cyphal_communicator)" />
+            </include>
+        </group>
     </group>
     <group if="$(arg run_cyphal_communicator)">
         <include file="$(find cyphal_communicator)/launch/cyphal_communicator.launch"/>
