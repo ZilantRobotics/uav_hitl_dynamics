@@ -217,6 +217,7 @@ bool EscStatusSensor::publish(const std::vector<double>& rpm) {
 
 GpsSensor::GpsSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
     publisher_ = node_handler_->advertise<uavcan_msgs::Fix>(topic, 5);
+    position_publisher_ = node_handler_->advertise<sensor_msgs::NavSatFix>("/uav/gps_point", 5);
 }
 bool GpsSensor::publish(const Eigen::Vector3d& gpsPosition, const Eigen::Vector3d& nedVelocity) {
     auto crntTimeSec = ros::Time::now().toSec();
@@ -235,8 +236,14 @@ bool GpsSensor::publish(const Eigen::Vector3d& gpsPosition, const Eigen::Vector3
     fixMsg.sats_used = 10;
     fixMsg.status = 3;
     fixMsg.pdop = 1;
-
     publisher_.publish(fixMsg);
+
+    sensor_msgs::NavSatFix gps_position_msg;
+    gps_position_msg.latitude = gpsPosition[0] * 1e+8;
+    gps_position_msg.longitude = gpsPosition[1] * 1e+8;
+    gps_position_msg.altitude = gpsPosition[2] * 1e+3;
+    position_publisher_.publish(gps_position_msg);
+
     nextPubTimeSec_ = crntTimeSec + PERIOD;
     return true;
 }
