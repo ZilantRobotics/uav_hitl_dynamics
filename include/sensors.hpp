@@ -60,6 +60,10 @@ class GpsSensor : public BaseSensor{
     public:
         GpsSensor(ros::NodeHandle* nh, const char* topic, double period);
         bool publish(const Eigen::Vector3d& gpsPosition, const Eigen::Vector3d& nedVelocity);
+    private:
+        ros::Publisher yaw_publisher_;
+        ros::Publisher position_publisher_;
+        ros::Publisher velocity_publisher_;
 };
 
 class IceStatusSensor : public BaseSensor{
@@ -90,12 +94,16 @@ class StaticPressureSensor : public BaseSensor{
     public:
         StaticPressureSensor(ros::NodeHandle* nh, const char* topic, double period);
         bool publish(float staticPressureHpa);
+    private:
+        ros::Publisher old_publisher_;
 };
 
 class StaticTemperatureSensor : public BaseSensor{
     public:
         StaticTemperatureSensor(ros::NodeHandle* nh, const char* topic, double period);
         bool publish(float staticTemperature);
+    private:
+        ros::Publisher old_publisher_;
 };
 
 class VelocitySensor : public BaseSensor{

@@ -5,6 +5,7 @@
     <arg name="run_rviz"                default="false"                         doc="[true, false]"/>
     <arg name="run_inno_sim_bridge"     default="true"                          doc="[true, false]"/>
     <arg name="run_cyphal_communicator" default="false"                         doc="[true, false]"/>
+    <arg name="run_dronecan_communicator" default="false"                       doc="[true, false]"/>
 
     <include file="$(find innopolis_vtol_dynamics)/launch/dynamics.launch">
         <arg name="vehicle"                 value="$(arg vehicle)"/>
@@ -13,6 +14,7 @@
         <arg name="run_rviz"                value="$(arg run_rviz)"/>
         <arg name="run_inno_sim_bridge"     value="$(arg run_inno_sim_bridge)"/>
         <arg name="run_cyphal_communicator" value="$(arg run_cyphal_communicator)"/>
+        <arg name="run_dronecan_communicator" value="$(arg run_dronecan_communicator)"/>
 
         <arg name="run_sitl_flight_stack"   value="false"/>
         <arg name="run_sitl_communicator"   value="false"/>
