@@ -46,6 +46,9 @@ public:
         MAG_4_HEAD_UP,              // PITCH NEGATIVE pi/2  ROTATE YAW NEGATIVE
         MAG_5_TURNED_LEFT,          // ROLL POSITIVE pi/2   ROTATE YAW POSITIVE
         MAG_6_TURNED_RIGHT,         // ROLL NEGATIVE pi/2   ROTATE YAW NEGATIVE
+        MAG_7_ARDUPILOT,            // Random rotations
+        MAG_8_ARDUPILOT,            // Random rotations
+        MAG_9_ARDUPILOT,            // Random rotations
 
         ACC_1_NORMAL=11,            // ROLL OK
         ACC_2_OVERTURNED,           // ROLL INVERTED
@@ -53,6 +56,8 @@ public:
         ACC_4_HEAD_UP,              // PITCH NEGATIVE pi/2
         ACC_5_TURNED_LEFT,          // ROLL POSITIVE pi/2
         ACC_6_TURNED_RIGHT,         // ROLL NEGATIVE pi/2
+
+        AIRSPEED=21,                // Emulate airspeed
     };
     virtual int8_t calibrate(CalibrationType_t calibrationType) { return -1; }
 };
