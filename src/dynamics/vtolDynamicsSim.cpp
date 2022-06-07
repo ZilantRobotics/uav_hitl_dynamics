@@ -129,79 +129,100 @@ void InnoVtolDynamicsSim::land(){
 }
 
 int8_t InnoVtolDynamicsSim::calibrate(CalibrationType_t calType){
-    constexpr float MAG_ROTATION_SPEED = 2 * 3.1415 / 20;
+    constexpr float MAG_ROTATION_SPEED = 2 * 3.1415 / 10;
     static uint8_t prevCalibrationType = 0;
     state_.linearVel.setZero();
     state_.position[2] = 0.00;
 
-    if(calType == WORK_MODE){
-        state_.attitude = Eigen::Quaterniond(1, 0, 0, 0);
-        state_.angularVel.setZero();
-    }else if(calType == MAG_1_NORMAL){
-        if(prevCalibrationType != calType){
+    switch(calType) {
+        case WORK_MODE:
             state_.attitude = Eigen::Quaterniond(1, 0, 0, 0);
-        }
-        state_.angularVel << 0.000, 0.000, -MAG_ROTATION_SPEED;
-    }else if(calType == MAG_2_OVERTURNED){
-        if(prevCalibrationType != calType){
-            state_.attitude = Eigen::Quaterniond(0, 1, 0, 0);
-        }
-        state_.angularVel << 0.000, 0.000, MAG_ROTATION_SPEED;
-    }else if(calType == MAG_3_HEAD_DOWN){
-        if(prevCalibrationType != calType){
-            state_.attitude = Eigen::Quaterniond(0.707, 0, -0.707, 0);
-        }
-        state_.angularVel << -MAG_ROTATION_SPEED, 0.000, 0.000;
-    }else if(calType == MAG_4_HEAD_UP){
-        if(prevCalibrationType != calType){
-            state_.attitude = Eigen::Quaterniond(0.707, 0, 0.707, 0);
-        }
-        state_.angularVel << MAG_ROTATION_SPEED, 0.000, 0.000;
-    }else if(calType == MAG_5_TURNED_LEFT){
-        if(prevCalibrationType != calType){
-            state_.attitude = Eigen::Quaterniond(0.707, -0.707, 0, 0);
-        }
-        state_.angularVel << 0.000, MAG_ROTATION_SPEED, 0.000;
-    }else if(calType == MAG_6_TURNED_RIGHT){
-        if(prevCalibrationType != calType){
-            state_.attitude = Eigen::Quaterniond(0.707, 0.707, 0, 0);
-        }
-        state_.angularVel << 0.000, -MAG_ROTATION_SPEED, 0.000;
-    }else if(calType == ACC_1_NORMAL){
-        if(prevCalibrationType != calType){
+            state_.angularVel.setZero();
+            break;
+        case MAG_1_NORMAL:
+            if(prevCalibrationType != calType){
+                state_.attitude = Eigen::Quaterniond(1, 0, 0, 0);
+            }
+            state_.angularVel << 0.000, 0.000, -MAG_ROTATION_SPEED;
+            break;
+        case MAG_2_OVERTURNED:
+            if(prevCalibrationType != calType){
+                state_.attitude = Eigen::Quaterniond(0, 1, 0, 0);
+            }
+            state_.angularVel << 0.000, 0.000, MAG_ROTATION_SPEED;
+            break;
+        case MAG_3_HEAD_DOWN:
+            if(prevCalibrationType != calType){
+                state_.attitude = Eigen::Quaterniond(0.707, 0, -0.707, 0);
+            }
+            state_.angularVel << -MAG_ROTATION_SPEED, 0.000, 0.000;
+            break;
+        case MAG_4_HEAD_UP:
+            if(prevCalibrationType != calType){
+                state_.attitude = Eigen::Quaterniond(0.707, 0, 0.707, 0);
+            }
+            state_.angularVel << MAG_ROTATION_SPEED, 0.000, 0.000;
+            break;
+        case MAG_5_TURNED_LEFT:
+            if(prevCalibrationType != calType){
+                state_.attitude = Eigen::Quaterniond(0.707, -0.707, 0, 0);
+            }
+            state_.angularVel << 0.000, MAG_ROTATION_SPEED, 0.000;
+            break;
+        case MAG_7_ARDUPILOT:
+            state_.angularVel << MAG_ROTATION_SPEED, MAG_ROTATION_SPEED, MAG_ROTATION_SPEED;
+            break;
+        case MAG_8_ARDUPILOT:
+            state_.angularVel << -MAG_ROTATION_SPEED, MAG_ROTATION_SPEED, MAG_ROTATION_SPEED;
+            break;
+        case MAG_9_ARDUPILOT:
+            state_.angularVel << MAG_ROTATION_SPEED, -MAG_ROTATION_SPEED, MAG_ROTATION_SPEED;
+            break;
+
+        case ACC_1_NORMAL:
+            if(prevCalibrationType != calType){
+                state_.attitude = Eigen::Quaterniond(1, 0, 0, 0);
+            }
+            state_.angularVel.setZero();
+            break;
+        case ACC_2_OVERTURNED:
+            if(prevCalibrationType != calType){
+                state_.attitude = Eigen::Quaterniond(0, 1, 0, 0);
+            }
+            state_.angularVel.setZero();
+            break;
+        case ACC_3_HEAD_DOWN:
+            if(prevCalibrationType != calType){
+                state_.attitude = Eigen::Quaterniond(0.707, 0, -0.707, 0);
+            }
+            state_.angularVel.setZero();
+            break;
+        case ACC_4_HEAD_UP:
+            if(prevCalibrationType != calType){
+                state_.attitude = Eigen::Quaterniond(0.707, 0, 0.707, 0);
+            }
+            state_.angularVel.setZero();
+            break;
+        case ACC_5_TURNED_LEFT:
+            if(prevCalibrationType != calType){
+                state_.attitude = Eigen::Quaterniond(0.707, -0.707, 0, 0);
+            }
+            state_.angularVel.setZero();
+            break;
+        case ACC_6_TURNED_RIGHT:
+            if(prevCalibrationType != calType){
+                state_.attitude = Eigen::Quaterniond(0.707, 0.707, 0, 0);
+            }
+            state_.angularVel.setZero();
+            break;
+        case AIRSPEED:
             state_.attitude = Eigen::Quaterniond(1, 0, 0, 0);
-        }
-        state_.angularVel.setZero();
-    }else if(calType == ACC_2_OVERTURNED){
-        if(prevCalibrationType != calType){
-            state_.attitude = Eigen::Quaterniond(0, 1, 0, 0);
-        }
-        state_.angularVel.setZero();
-    }else if(calType == ACC_3_HEAD_DOWN){
-        if(prevCalibrationType != calType){
-            state_.attitude = Eigen::Quaterniond(0.707, 0, -0.707, 0);
-        }
-        state_.angularVel.setZero();
-    }else if(calType == ACC_4_HEAD_UP){
-        if(prevCalibrationType != calType){
-            state_.attitude = Eigen::Quaterniond(0.707, 0, 0.707, 0);
-        }
-        state_.angularVel.setZero();
-    }else if(calType == ACC_5_TURNED_LEFT){
-        if(prevCalibrationType != calType){
-            state_.attitude = Eigen::Quaterniond(0.707, -0.707, 0, 0);
-        }
-        state_.angularVel.setZero();
-    }else if(calType == ACC_6_TURNED_RIGHT){
-        if(prevCalibrationType != calType){
-            state_.attitude = Eigen::Quaterniond(0.707, 0.707, 0, 0);
-        }
-        state_.angularVel.setZero();
-    }else if(calType == 21){ // airspeed
-        state_.attitude = Eigen::Quaterniond(1, 0, 0, 0);
-        state_.angularVel.setZero();
-        state_.linearVel[0] = 10.0;
-        state_.linearVel[1] = 10.0;
+            state_.angularVel.setZero();
+            state_.linearVel[0] = 10.0;
+            state_.linearVel[1] = 10.0;
+            break;
+        default:
+            break;
     }
 
     if(prevCalibrationType != calType){

@@ -64,7 +64,7 @@ Uav_Dynamics::Uav_Dynamics(ros::NodeHandle nh) :
     initPose_(7),
     escStatusSensor_(&nh, "/uav/esc_status", 0.25),
     attitudeSensor_(&nh, "/uav/attitude", 0.005),
-    imuSensor_(&nh, "/uav/imu", 0.005),
+    imuSensor_(&nh, "/uav/imu", 0.00333),
     velocitySensor_(&nh, "/uav/velocity", 0.05),
     magSensor_(&nh, "/uav/mag", 0.03),
     rawAirDataSensor_(&nh, "/uav/raw_air_data", 0.05),

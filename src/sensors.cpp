@@ -93,7 +93,11 @@ bool ImuSensor::publish(const Eigen::Vector3d& accFrd, const Eigen::Vector3d& gy
     msg.linear_acceleration.z = accFrd[2];
 
     publisher_.publish(msg);
-    nextPubTimeSec_ = crntTimeSec + PERIOD;
+    if (nextPubTimeSec_ + PERIOD > crntTimeSec) {
+        nextPubTimeSec_ += PERIOD;
+    } else {
+        nextPubTimeSec_ = crntTimeSec + PERIOD;
+    }
     return true;
 }
 
