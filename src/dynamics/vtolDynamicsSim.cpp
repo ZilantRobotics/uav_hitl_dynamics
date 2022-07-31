@@ -169,6 +169,12 @@ int8_t InnoVtolDynamicsSim::calibrate(CalibrationType_t calType){
             }
             state_.angularVel << 0.000, MAG_ROTATION_SPEED, 0.000;
             break;
+        case MAG_6_TURNED_RIGHT:
+            if(prevCalibrationType != calType){
+                state_.attitude = Eigen::Quaterniond(0.707, 0.707, 0, 0);
+            }
+            state_.angularVel << 0.000, -MAG_ROTATION_SPEED, 0.000;
+            break;
         case MAG_7_ARDUPILOT:
             state_.angularVel << MAG_ROTATION_SPEED, MAG_ROTATION_SPEED, MAG_ROTATION_SPEED;
             break;
