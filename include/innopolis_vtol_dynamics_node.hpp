@@ -19,16 +19,13 @@
 #include <ros/time.h>
 #include <tf2_ros/transform_broadcaster.h>
 
-#include <sensor_msgs/Imu.h>
 #include <sensor_msgs/Joy.h>
-#include <std_msgs/Float32.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/UInt8.h>
-#include <std_msgs/Empty.h>
+#include <visualization_msgs/Marker.h>
 
 #include "uavDynamicsSimBase.hpp"
 #include "sensors.hpp"
-
 
 
 /**
@@ -102,18 +99,18 @@ class Uav_Dynamics {
         VelocitySensor velocitySensor_;
         MagSensor magSensor_;
         RawAirDataSensor rawAirDataSensor_;
-        StaticTemperatureSensor staticTemperatureSensor_;
-        StaticPressureSensor staticPressureSensor_;
+        TemperatureSensor temperatureSensor_;
+        PressureSensor pressureSensor_;
         EscStatusSensor escStatusSensor_;
         GpsSensor gpsSensor_;
         IceStatusSensor iceStatusSensor_;
-        FuelTankStatusSensor fuelTankStatusSensor_;
-        BatteryInfoStatusSensor batteryInfoStatusSensor_;
+        FuelTankSensor fuelTankSensor_;
+        BatteryInfoSensor batteryInfoSensor_;
 
         bool isEscStatusEnabled_;
         bool isIceStatusEnabled_;
-        bool isFuelTankStatusEnabled_;
-        bool isBatteryStatusEnabled_;
+        bool isFuelTankEnabled_;
+        bool isBatteryInfoEnabled_;
 
         void publishStateToCommunicator();
         //@}

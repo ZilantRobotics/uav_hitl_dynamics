@@ -149,11 +149,11 @@ bool RawAirDataSensor::publish(float absPressureHpa, float diffPressure, float s
     return true;
 }
 
-StaticPressureSensor::StaticPressureSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
+PressureSensor::PressureSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
     old_publisher_ = node_handler_->advertise<uavcan_msgs::StaticPressure>(topic, 5);
     publisher_ = node_handler_->advertise<std_msgs::Float32>("/uav/baro_pressure", 5);
 }
-bool StaticPressureSensor::publish(float staticPressureHpa) {
+bool PressureSensor::publish(float staticPressureHpa) {
     auto crntTimeSec = ros::Time::now().toSec();
     if(!isEnabled_ || (nextPubTimeSec_ > crntTimeSec)){
         return false;
@@ -174,11 +174,11 @@ bool StaticPressureSensor::publish(float staticPressureHpa) {
     return true;
 }
 
-StaticTemperatureSensor::StaticTemperatureSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
+TemperatureSensor::TemperatureSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
     old_publisher_ = node_handler_->advertise<uavcan_msgs::StaticTemperature>(topic, 5);
     publisher_ = node_handler_->advertise<std_msgs::Float32>("/uav/baro_temperature", 5);
 }
-bool StaticTemperatureSensor::publish(float staticTemperature) {
+bool TemperatureSensor::publish(float staticTemperature) {
     auto crntTimeSec = ros::Time::now().toSec();
     if(!isEnabled_ || (nextPubTimeSec_ > crntTimeSec)){
         return false;
@@ -266,10 +266,10 @@ bool IceStatusSensor::publish(double rpm) {
     return true;
 }
 
-FuelTankStatusSensor::FuelTankStatusSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
+FuelTankSensor::FuelTankSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
     publisher_ = node_handler_->advertise<uavcan_msgs::IceFuelTankStatus>(topic, 16);
 }
-bool FuelTankStatusSensor::publish(double fuelLevelPercentage) {
+bool FuelTankSensor::publish(double fuelLevelPercentage) {
     auto crntTimeSec = ros::Time::now().toSec();
     if(isEnabled_ && (nextPubTimeSec_ < crntTimeSec)){
         uavcan_msgs::IceFuelTankStatus fuelTankMsg;
@@ -281,10 +281,10 @@ bool FuelTankStatusSensor::publish(double fuelLevelPercentage) {
 }
 
 
-BatteryInfoStatusSensor::BatteryInfoStatusSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
+BatteryInfoSensor::BatteryInfoSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
     publisher_ = node_handler_->advertise<sensor_msgs::BatteryState>(topic, 16);
 }
-bool BatteryInfoStatusSensor::publish(double percentage) {
+bool BatteryInfoSensor::publish(double percentage) {
     auto crntTimeSec = ros::Time::now().toSec();
     if(isEnabled_ && (nextPubTimeSec_ < crntTimeSec)){
         sensor_msgs::BatteryState batteryInfoMsg;

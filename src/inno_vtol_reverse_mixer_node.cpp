@@ -43,10 +43,9 @@ enum INNO_VTOL_OUTPUTS {
     INNO_VTOL_THROTLE,
 };
 
-
 class BaseReverseMixer {
     public:
-        BaseReverseMixer(ros::NodeHandle nh): node_(nh) {}
+        explicit BaseReverseMixer(ros::NodeHandle nh): node_(nh) {}
         int8_t init();
     protected:
         ros::Publisher mappedActuatorPub_;
@@ -56,6 +55,7 @@ class BaseReverseMixer {
         ros::NodeHandle node_;
         ros::Subscriber rawActuatorsSub_;
 };
+
 int8_t BaseReverseMixer::init() {
     rawActuatorsSub_ = node_.subscribe(RAW_ACTUATOR_TOPIC, 2, &BaseReverseMixer::rawActuatorsCallback, this);
     mappedActuatorPub_ = node_.advertise<sensor_msgs::Joy>(MAPPED_ACTUATOR_TOPIC, 5);
@@ -65,13 +65,13 @@ int8_t BaseReverseMixer::init() {
 
 class BabysharkReverseMixer : public BaseReverseMixer {
     public:
-        BabysharkReverseMixer(ros::NodeHandle nh) : BaseReverseMixer(nh) {
+        explicit BabysharkReverseMixer(ros::NodeHandle nh) : BaseReverseMixer(nh) {
             for (size_t channel = 0; channel < 8; channel++) {
                 mappedActuatorMsg_.axes.push_back(0);
             }
         }
     protected:
-        virtual void rawActuatorsCallback(sensor_msgs::Joy msg) override;
+        void rawActuatorsCallback(sensor_msgs::Joy msg) override;
 };
 void BabysharkReverseMixer::rawActuatorsCallback(sensor_msgs::Joy msg) {
     if (msg.axes.size() == 8) {
@@ -102,9 +102,9 @@ void BabysharkReverseMixer::rawActuatorsCallback(sensor_msgs::Joy msg) {
 
 class InnoVtolReverseMixer : public BaseReverseMixer {
     public:
-        InnoVtolReverseMixer(ros::NodeHandle nh) : BaseReverseMixer(nh) {}
+        explicit InnoVtolReverseMixer(ros::NodeHandle nh) : BaseReverseMixer(nh) {}
     protected:
-        virtual void rawActuatorsCallback(sensor_msgs::Joy msg) override;
+        void rawActuatorsCallback(sensor_msgs::Joy msg) override;
 };
 void InnoVtolReverseMixer::rawActuatorsCallback(sensor_msgs::Joy msg) {
     if (msg.axes.size() == 8) {
@@ -126,13 +126,13 @@ void InnoVtolReverseMixer::rawActuatorsCallback(sensor_msgs::Joy msg) {
 
 class IrisReverseMixer : public BaseReverseMixer {
     public:
-        IrisReverseMixer(ros::NodeHandle nh) : BaseReverseMixer(nh) {
+        explicit IrisReverseMixer(ros::NodeHandle nh) : BaseReverseMixer(nh) {
             for (size_t channel = 0; channel < 4; channel++) {
                 mappedActuatorMsg_.axes.push_back(0);
             }
         }
     protected:
-        virtual void rawActuatorsCallback(sensor_msgs::Joy msg) override;
+        void rawActuatorsCallback(sensor_msgs::Joy msg) override;
 };
 void IrisReverseMixer::rawActuatorsCallback(sensor_msgs::Joy msg) {
     if (msg.axes.size() >= 4) {

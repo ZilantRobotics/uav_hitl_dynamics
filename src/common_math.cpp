@@ -51,4 +51,4 @@ size_t findPrevRowIdxInIncreasingSequence(const Eigen::MatrixXd& table, double v
     return row_idx;
 }
 
-}
+}  // namespace Math

@@ -32,6 +32,6 @@ namespace Math
      * @todo think about binary search
      */
     size_t findPrevRowIdxInIncreasingSequence(const Eigen::MatrixXd& table, double value);
-}
+}  // namespace Math
 
 #endif  // COMMON_MATH_HPP

@@ -16,7 +16,7 @@
 
 class UavDynamicsSimBase{
 public:
-    UavDynamicsSimBase() {};
+    UavDynamicsSimBase() {}
 
     /**
      * @brief Use rosparam here to initialize sim 
@@ -26,7 +26,7 @@ public:
     virtual void setInitialPosition(const Eigen::Vector3d & position,
                                     const Eigen::Quaterniond& attitude) = 0;
 
-    virtual void land() {};
+    virtual void land() {}
     virtual void process(double dt_secs,
                          const std::vector<double> & motorSpeedCommandIn,
                          bool isCmdPercent) = 0;
@@ -40,7 +40,7 @@ public:
 
     enum CalibrationType_t{
         WORK_MODE,
-        MAG_1_NORMAL=1,             // ROLL OK              ROTATE YAW POSITIVE
+        MAG_1_NORMAL = 1,           // ROLL OK              ROTATE YAW POSITIVE
         MAG_2_OVERTURNED,           // ROLL INVERTED        ROTATE YAW NEGATIVE
         MAG_3_HEAD_DOWN,            // PITCH POSITIVE pi/2  ROTATE YAW POSITIVE
         MAG_4_HEAD_UP,              // PITCH NEGATIVE pi/2  ROTATE YAW NEGATIVE
@@ -50,14 +50,14 @@ public:
         MAG_8_ARDUPILOT,            // Random rotations
         MAG_9_ARDUPILOT,            // Random rotations
 
-        ACC_1_NORMAL=11,            // ROLL OK
+        ACC_1_NORMAL = 11,          // ROLL OK
         ACC_2_OVERTURNED,           // ROLL INVERTED
         ACC_3_HEAD_DOWN,            // PITCH POSITIVE pi/2
         ACC_4_HEAD_UP,              // PITCH NEGATIVE pi/2
         ACC_5_TURNED_LEFT,          // ROLL POSITIVE pi/2
         ACC_6_TURNED_RIGHT,         // ROLL NEGATIVE pi/2
 
-        AIRSPEED=21,                // Emulate airspeed
+        AIRSPEED = 21,              // Emulate airspeed
     };
     virtual int8_t calibrate(CalibrationType_t calibrationType) { return -1; }
 };

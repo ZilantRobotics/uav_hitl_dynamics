@@ -13,9 +13,9 @@ class FlightgogglesDynamics: public UavDynamicsSimBase{
 public:
     FlightgogglesDynamics();
 
-    virtual int8_t init() override;
-    virtual void setInitialPosition(const Eigen::Vector3d & position,
-                                    const Eigen::Quaterniond& attitude) override;
+    int8_t init() override;
+    void setInitialPosition(const Eigen::Vector3d & position,
+                            const Eigen::Quaterniond& attitude) override;
 
     virtual void process(double dt_secs, const std::vector<double> & motorSpeedCommandIn, bool isCmdPercent);
 

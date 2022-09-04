@@ -28,6 +28,6 @@ namespace SensorModelISA
         diffPressureHpa = 0.005f * rho * linVelNed.norm() * linVelNed.norm();
     }
 
-}
+}  // namespace SensorModelISA
 
 #endif  // SENSORS_ISA_MODEL_HPP

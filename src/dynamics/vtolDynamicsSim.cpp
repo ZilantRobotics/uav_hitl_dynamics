@@ -84,7 +84,9 @@ void InnoVtolDynamicsSim::loadParams(const std::string& path){
         !ros::param::get(path + "actuatorMin", params_.actuatorMin) ||
         !ros::param::get(path + "actuatorMax", params_.actuatorMax) ||
         !ros::param::get(path + "accVariance", params_.accVariance) ||
-        !ros::param::get(path + "gyroVariance", params_.gyroVariance));
+        !ros::param::get(path + "gyroVariance", params_.gyroVariance)) {
+        // error
+    }
 
     params_.propellersLocation[0] <<  propLocX,  propLocY, propLocZ;
     params_.propellersLocation[1] << -propLocX, -propLocY, propLocZ;
@@ -112,16 +114,8 @@ void InnoVtolDynamicsSim::land(){
     state_.linearVel.setZero();
     state_.position[2] = 0.00;
 
-    #define YAW_ROTATE_ON_LAND_DEBUG false
-    #if YAW_ROTATE_ON_LAND_DEBUG == false
     state_.attitude = state_.initialAttitude;
     state_.angularVel.setZero();
-    #elif YAW_ROTATE_ON_LAND_DEBUG == true
-    state_.angularVel << 0.000, 0.000, 2*3.1415/60;
-    Eigen::Quaterniond attitudeDelta = state_.attitude * Eigen::Quaterniond(0, state_.angularVel(0), state_.angularVel(1), state_.angularVel(2));
-    state_.attitude.coeffs() += attitudeDelta.coeffs() * 0.5 * 0.001;
-    state_.attitude.normalize();
-    #endif
 
     for (auto iter = state_.motorsRpm.begin(); iter != state_.motorsRpm.end(); iter++) {
         *iter = 0.0;
@@ -241,7 +235,8 @@ int8_t InnoVtolDynamicsSim::calibrate(CalibrationType_t calType){
     constexpr float DELTA_TIME = 0.001;
 
     state_.Fspecific = calculateNormalForceWithoutMass();
-    Eigen::Quaterniond attitudeDelta = state_.attitude * Eigen::Quaterniond(0, state_.angularVel(0), state_.angularVel(1), state_.angularVel(2));
+    Eigen::Quaterniond quaternion(0, state_.angularVel(0), state_.angularVel(1), state_.angularVel(2));
+    Eigen::Quaterniond attitudeDelta = state_.attitude * quaternion;
     state_.attitude.coeffs() += attitudeDelta.coeffs() * 0.5 * DELTA_TIME;
     state_.attitude.normalize();
     return 1;
@@ -265,8 +260,6 @@ void InnoVtolDynamicsSim::process(double dtSecs,
 
 /**
  * @note Map motors indexes from StandardVTOL mixer into internal represenation
- * Input indexes should correspond following mixer:
- * https://github.com/InnopolisAero/Inno_PX4_Firmware/blob/e28f8a7f2e181680353cd23ed5c62c4e9b5858fc/ROMFS/px4fmu_common/mixers-sitl/standard_vtol_sitl.main.mix
  * Output indexes will be:
  * 0-3 - copter indexes, where 0 - right forward, 1 - left backward, 2 - left forward, 3 - right backward
  * 4 - throttle
@@ -354,8 +347,9 @@ std::vector<double> InnoVtolDynamicsSim::mapCmdToActuatorInnoVTOL(const std::vec
 void InnoVtolDynamicsSim::updateActuators(std::vector<double>& cmd, double dtSecs){
     state_.prevActuators = state_.crntActuators;
     for(size_t idx = 0; idx < 8; idx++){
-        state_.crntActuators[idx] = cmd[idx] + (state_.prevActuators[idx] - cmd[idx]) * (1 - pow(2.71, -dtSecs/tables_.actuatorTimeConstants[idx]));
-        cmd[idx] = state_.crntActuators[idx];
+        auto cmd_delta = state_.prevActuators[idx] - cmd[idx];
+        cmd[idx] += cmd_delta * (1 - pow(2.71, -dtSecs/tables_.actuatorTimeConstants[idx]));
+        state_.crntActuators[idx] = cmd[idx];
     }
 }
 
@@ -448,20 +442,21 @@ void InnoVtolDynamicsSim::calculateAerodynamics(const Eigen::Vector3d& airspeed,
 
     // 1. Calculate aero force
     Eigen::VectorXd polynomialCoeffs(7);
+    Eigen::Vector3d FL, FS, FD;
 
     calculateCLPolynomial(airspeedModClamped, polynomialCoeffs);
     double CL = Math::polyval(polynomialCoeffs, AoA_deg);
-    Eigen::Vector3d FL = (Eigen::Vector3d(0, 1, 0).cross(airspeed.normalized())) * CL;
+    FL = (Eigen::Vector3d(0, 1, 0).cross(airspeed.normalized())) * CL;
 
     calculateCSPolynomial(airspeedModClamped, polynomialCoeffs);
     double CS = Math::polyval(polynomialCoeffs, AoA_deg);
     double CS_rudder = calculateCSRudder(rudder_pos, airspeedModClamped);
     double CS_beta = calculateCSBeta(AoS_deg, airspeedModClamped);
-    Eigen::Vector3d FS = airspeed.cross(Eigen::Vector3d(0, 1, 0).cross(airspeed.normalized())) * (CS + CS_rudder + CS_beta);
+    FS = airspeed.cross(Eigen::Vector3d(0, 1, 0).cross(airspeed.normalized())) * (CS + CS_rudder + CS_beta);
 
     calculateCDPolynomial(airspeedModClamped, polynomialCoeffs);
     double CD = Math::polyval(polynomialCoeffs.block<5, 1>(0, 0), AoA_deg);
-    Eigen::Vector3d FD = (-1 * airspeed).normalized() * CD;
+    FD = (-1 * airspeed).normalized() * CD;
 
     Faero = 0.5 * dynamicPressure * (FL + FS + FD);
 
@@ -547,9 +542,10 @@ void InnoVtolDynamicsSim::calculateNewState(const Eigen::Vector3d& Maero,
     }
 
     auto MtotalInBodyCS = std::accumulate(&state_.Mmotors[0], &state_.Mmotors[5], Maero);
-    state_.angularAccel = params_.inertia.inverse() * (MtotalInBodyCS - state_.angularVel.cross(params_.inertia * state_.angularVel));
+    state_.angularAccel = calculateAngularAccel(params_.inertia, MtotalInBodyCS, state_.angularVel);
     state_.angularVel += state_.angularAccel * dt_sec;
-    Eigen::Quaterniond attitudeDelta = state_.attitude * Eigen::Quaterniond(0, state_.angularVel(0), state_.angularVel(1), state_.angularVel(2));
+    Eigen::Quaterniond quaternion(0, state_.angularVel(0), state_.angularVel(1), state_.angularVel(2));
+    Eigen::Quaterniond attitudeDelta = state_.attitude * quaternion;
     state_.attitude.coeffs() += attitudeDelta.coeffs() * 0.5 * dt_sec;
     state_.attitude.normalize();
 
@@ -627,18 +623,18 @@ bool InnoVtolDynamicsSim::calculatePolynomialUsingTable(const Eigen::MatrixXd& t
                                                         double airSpeedMod,
                                                         Eigen::VectorXd& polynomialCoeffs) const{
     if(table.cols() < 2 || table.rows() < 2 || polynomialCoeffs.rows() < table.cols() - 1){
-        return false; // wrong input
+        return false;  // wrong input
     }
 
     const size_t prevRowIdx = Math::findPrevRowIdxInMonotonicSequence(table, airSpeedMod);
     if(prevRowIdx + 2 > table.rows()){
-        return false; // wrong found row
+        return false;  // wrong found row
     }
 
     const size_t nextRowIdx = prevRowIdx + 1;
     const double airspeedStep = table.row(nextRowIdx)(0, 0) - table.row(prevRowIdx)(0, 0);
     if (abs(airspeedStep) < 0.001) {
-        return false; // wrong table, prevent division on zero
+        return false;  // wrong table, prevent division on zero
     }
 
     double delta = (airSpeedMod - table.row(prevRowIdx)(0, 0)) / airspeedStep;
@@ -650,6 +646,13 @@ bool InnoVtolDynamicsSim::calculatePolynomialUsingTable(const Eigen::MatrixXd& t
     }
 
     return true;
+}
+
+// Motion dynamics equation
+Eigen::Vector3d InnoVtolDynamicsSim::calculateAngularAccel(const Eigen::Matrix<double, 3, 3, Eigen::RowMajor>& inertia,
+                                                           const Eigen::Vector3d& moment,
+                                                           const Eigen::Vector3d& prevAngVel) {
+    return inertia.inverse() * (moment - prevAngVel.cross(inertia * prevAngVel));
 }
 
 
