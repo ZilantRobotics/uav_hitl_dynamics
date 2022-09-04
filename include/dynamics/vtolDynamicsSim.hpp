@@ -121,24 +121,24 @@ struct TablesWithCoeffs{
 class InnoVtolDynamicsSim : public UavDynamicsSimBase{
     public:
         InnoVtolDynamicsSim();
-        virtual int8_t init() override;
-        virtual void setInitialPosition(const Eigen::Vector3d & position,
-                                        const Eigen::Quaterniond& attitude) override;
-        virtual void land() override;
-        virtual int8_t calibrate(CalibrationType_t calibrationType) override;
-        virtual void process(double dt_secs,
-                             const std::vector<double>& motorSpeedCommandIn,
-                             bool isCmdPercent) override;
+        int8_t init() override;
+        void setInitialPosition(const Eigen::Vector3d & position,
+                                const Eigen::Quaterniond& attitude) override;
+        void land() override;
+        int8_t calibrate(CalibrationType_t calibrationType) override;
+        void process(double dt_secs,
+                     const std::vector<double>& motorSpeedCommandIn,
+                     bool isCmdPercent) override;
 
         /**
          * @note These methods should return in ned format
          */
-        virtual Eigen::Vector3d getVehiclePosition() const override;
-        virtual Eigen::Quaterniond getVehicleAttitude() const override;
-        virtual Eigen::Vector3d getVehicleVelocity() const override;
-        virtual Eigen::Vector3d getVehicleAngularVelocity() const override;
-        virtual void getIMUMeasurement(Eigen::Vector3d& accOut, Eigen::Vector3d& gyroOut) override;
-        virtual bool getMotorsRpm(std::vector<double>& motorsRpm) override;
+        Eigen::Vector3d getVehiclePosition() const override;
+        Eigen::Quaterniond getVehicleAttitude() const override;
+        Eigen::Vector3d getVehicleVelocity() const override;
+        Eigen::Vector3d getVehicleAngularVelocity() const override;
+        void getIMUMeasurement(Eigen::Vector3d& accOut, Eigen::Vector3d& gyroOut) override;
+        bool getMotorsRpm(std::vector<double>& motorsRpm) override;
 
         /**
          * @note These methods should be public for debug only (publish to ros topic)
@@ -208,6 +208,9 @@ class InnoVtolDynamicsSim : public UavDynamicsSimBase{
         double calculateCmyElevator(double elevator_pos, double airspeed) const;
         double calculateCmzRudder(double rudder_pos, double airspeed) const;
 
+        Eigen::Vector3d calculateAngularAccel(const Eigen::Matrix<double, 3, 3, Eigen::RowMajor>& inertia,
+                                              const Eigen::Vector3d& moment,
+                                              const Eigen::Vector3d& prevAngVel);
         /**
          * @note Similar to https://www.mathworks.com/help/matlab/ref/griddata.html
          * Implementation from https://en.wikipedia.org/wiki/Bilinear_interpolation

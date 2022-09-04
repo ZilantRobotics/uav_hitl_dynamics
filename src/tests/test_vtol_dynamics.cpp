@@ -293,16 +293,16 @@ TEST(InnoVtolDynamicsSim, calculateCSRudder){
     std::vector<DataSet> data_set;
     double result;
 
-    data_set.push_back({.rudder_position=0,     .airspeed=5,        .expected=-1.5009e-04});
-    data_set.push_back({.rudder_position=0,     .airspeed=5.1,      .expected=-1.2303e-04});
-    data_set.push_back({.rudder_position=0,     .airspeed=8.5,      .expected=5.9762e-04});
-    data_set.push_back({.rudder_position=0,     .airspeed=8.66025,  .expected=6.0903e-04});
-    data_set.push_back({.rudder_position=0,     .airspeed=10,       .expected=7.0445e-04});
-    data_set.push_back({.rudder_position=0,     .airspeed=20,       .expected=9.2322e-04});
-    data_set.push_back({.rudder_position=0,     .airspeed=40,       .expected=-0.0013107});
-    data_set.push_back({.rudder_position=-20,   .airspeed=5,        .expected=-0.034155});
-    data_set.push_back({.rudder_position=0,     .airspeed=5,        .expected=-1.5009e-04});
-    data_set.push_back({.rudder_position=20,    .airspeed=5,        .expected=0.037053});
+    data_set.push_back({.rudder_position = 0,   .airspeed = 5,       .expected = -1.5009e-04});
+    data_set.push_back({.rudder_position = 0,   .airspeed = 5.1,     .expected = -1.2303e-04});
+    data_set.push_back({.rudder_position = 0,   .airspeed = 8.5,     .expected = 5.9762e-04});
+    data_set.push_back({.rudder_position = 0,   .airspeed = 8.66025, .expected = 6.0903e-04});
+    data_set.push_back({.rudder_position = 0,   .airspeed = 10,      .expected = 7.0445e-04});
+    data_set.push_back({.rudder_position = 0,   .airspeed = 20,      .expected = 9.2322e-04});
+    data_set.push_back({.rudder_position = 0,   .airspeed = 40,      .expected = -0.0013107});
+    data_set.push_back({.rudder_position = -20, .airspeed = 5,       .expected = -0.034155});
+    data_set.push_back({.rudder_position = 0,   .airspeed = 5,       .expected = -1.5009e-04});
+    data_set.push_back({.rudder_position = 20,  .airspeed = 5,       .expected = 0.037053});
 
     for(auto test_case : data_set){
         result = vtolDynamicsSim.calculateCSRudder(test_case.rudder_position, test_case.airspeed);
@@ -322,10 +322,10 @@ TEST(InnoVtolDynamicsSim, calculateCSBeta){
     std::vector<DataSet> data_set;
     double result;
 
-    data_set.push_back({.aos_degree=0,      .airspeed=5,        .expected=-0.0032540});
-    data_set.push_back({.aos_degree=0,      .airspeed=10,       .expected=-0.0040036});
-    data_set.push_back({.aos_degree=0,      .airspeed=15,       .expected=-0.0037597});
-    data_set.push_back({.aos_degree=0,      .airspeed=20,       .expected=-0.0033221});
+    data_set.push_back({.aos_degree = 0,    .airspeed = 5,  .expected = -0.0032540});
+    data_set.push_back({.aos_degree = 0,    .airspeed = 10, .expected = -0.0040036});
+    data_set.push_back({.aos_degree = 0,    .airspeed = 15, .expected = -0.0037597});
+    data_set.push_back({.aos_degree = 0,    .airspeed = 20, .expected = -0.0033221});
 
 
     for(auto test_case : data_set){
@@ -366,7 +366,7 @@ TEST(InnoVtolDynamicsSim, calculateAerodynamics){
 
     vtolDynamicsSim.calculateAerodynamics(airspeed, AoA, AoS, aileron_pos, elevator_pos, rudder_pos,
                                           Faero, Maero);
-    
+
     for(size_t idx = 0; idx < 3; idx++){
         EXPECT_NEAR(Faero[idx], extectedFaero[idx], 0.001);
         EXPECT_NEAR(Maero[idx], extectedMaero[idx], 0.001);

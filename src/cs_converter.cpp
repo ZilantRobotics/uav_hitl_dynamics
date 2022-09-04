@@ -57,4 +57,4 @@ Eigen::Quaterniond fluEnuToFrdNed(Eigen::Quaterniond q_flu_to_enu){
     return Q_ENU_TO_NED.inverse() * q_flu_to_enu * Q_FRD_FLU;
 }
 
-}
+}  // namespace Converter

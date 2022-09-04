@@ -8,21 +8,11 @@
  * @brief Implementation of UAV dynamics, IMU, and angular rate control simulation node
  */
 
-#include <rosgraph_msgs/Clock.h>
-#include <visualization_msgs/Marker.h>
-#include <geometry_msgs/TransformStamped.h>
-#include <geometry_msgs/TwistStamped.h>
-#include <geometry_msgs/Twist.h>
-#include <geometry_msgs/QuaternionStamped.h>
-#include <std_msgs/Float64MultiArray.h>
-#include <sensor_msgs/Imu.h>
-#include <std_msgs/Time.h>
-#include <sensor_msgs/MagneticField.h>
-#include <uavcan_msgs/RawAirData.h>
-#include <uavcan_msgs/StaticPressure.h>
-#include <uavcan_msgs/StaticTemperature.h>
-
 #include "innopolis_vtol_dynamics_node.hpp"
+#include <rosgraph_msgs/Clock.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <std_msgs/Time.h>
+
 #include "flightgogglesDynamicsSim.hpp"
 #include "vtolDynamicsSim.hpp"
 #include "cs_converter.hpp"
@@ -32,20 +22,16 @@
 static char GLOBAL_FRAME_ID[] = "world";
 static char UAV_FRAME_ID[] = "uav/enu";
 static char UAV_FIXED_FRAME_ID[] = "uav/com";
+const std::string MOTOR_NAMES[5] = {"motor0", "motor1", "motor2", "motor3", "ICE"};
 
-const std::string MOTOR_NAMES[5] = {"motor0",
-                                    "motor1",
-                                    "motor2",
-                                    "motor3",
-                                    "ICE"};
 
 int main(int argc, char **argv){
-    ros::init(argc, argv, "innopolis_vtol_dynamics_node");
+    ros::init(argc, argv, "uav_dynamics_node");
     if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info) ) {
         ros::console::notifyLoggerLevelsChanged();
     }
 
-    ros::NodeHandle node_handler("inno_dynamics_sim");
+    ros::NodeHandle node_handler("uav_dynamics_node");
     Uav_Dynamics uav_dynamics_node(node_handler);
     if(uav_dynamics_node.init() == -1){
         ROS_ERROR("Shutdown.");
@@ -68,12 +54,12 @@ Uav_Dynamics::Uav_Dynamics(ros::NodeHandle nh) :
     velocitySensor_(&nh, "/uav/velocity", 0.05),
     magSensor_(&nh, "/uav/mag", 0.03),
     rawAirDataSensor_(&nh, "/uav/raw_air_data", 0.05),
-    staticTemperatureSensor_(&nh, "/uav/static_temperature", 0.05),
-    staticPressureSensor_(&nh, "/uav/static_pressure", 0.05),
+    temperatureSensor_(&nh, "/uav/static_temperature", 0.05),
+    pressureSensor_(&nh, "/uav/static_pressure", 0.05),
     gpsSensor_(&nh, "/uav/gps_position", 0.1),
     iceStatusSensor_(&nh, "/uav/ice_status", 0.25),
-    fuelTankStatusSensor_(&nh, "/uav/fuel_tank", 2.0),
-    batteryInfoStatusSensor_(&nh, "/uav/battery", 1.0){
+    fuelTankSensor_(&nh, "/uav/fuel_tank", 2.0),
+    batteryInfoSensor_(&nh, "/uav/battery", 1.0){
 }
 
 
@@ -100,17 +86,17 @@ int8_t Uav_Dynamics::init(){
 
 int8_t Uav_Dynamics::getParamsFromRos(){
     const std::string SIM_PARAMS_PATH = "/uav/sim_params/";
-    if(!ros::param::get(SIM_PARAMS_PATH + "use_sim_time",       useSimTime_ )               ||
-       !ros::param::get(SIM_PARAMS_PATH + "lat_ref",            latRef_)                    ||
-       !ros::param::get(SIM_PARAMS_PATH + "lon_ref",            lonRef_)                    ||
-       !ros::param::get(SIM_PARAMS_PATH + "alt_ref",            altRef_)                    ||
-       !node_.getParam("vehicle",                               vehicleName_)               ||
-       !node_.getParam("dynamics",                              dynamicsTypeName_)          ||
-       !ros::param::get(SIM_PARAMS_PATH + "init_pose",          initPose_)                  ||
-       !ros::param::get(SIM_PARAMS_PATH + "esc_status",         isEscStatusEnabled_)        ||
-       !ros::param::get(SIM_PARAMS_PATH + "ice_status",         isIceStatusEnabled_)        ||
-       !ros::param::get(SIM_PARAMS_PATH + "fuel_tank_status",   isFuelTankStatusEnabled_)   ||
-       !ros::param::get(SIM_PARAMS_PATH + "battery_status",     isBatteryStatusEnabled_)){
+    if(!ros::param::get(SIM_PARAMS_PATH + "use_sim_time",       useSimTime_ )           ||
+       !ros::param::get(SIM_PARAMS_PATH + "lat_ref",            latRef_)                ||
+       !ros::param::get(SIM_PARAMS_PATH + "lon_ref",            lonRef_)                ||
+       !ros::param::get(SIM_PARAMS_PATH + "alt_ref",            altRef_)                ||
+       !node_.getParam("vehicle",                               vehicleName_)           ||
+       !node_.getParam("dynamics",                              dynamicsTypeName_)      ||
+       !ros::param::get(SIM_PARAMS_PATH + "init_pose",          initPose_)              ||
+       !ros::param::get(SIM_PARAMS_PATH + "esc_status",         isEscStatusEnabled_)    ||
+       !ros::param::get(SIM_PARAMS_PATH + "ice_status",         isIceStatusEnabled_)    ||
+       !ros::param::get(SIM_PARAMS_PATH + "fuel_tank_status",   isFuelTankEnabled_)     ||
+       !ros::param::get(SIM_PARAMS_PATH + "battery_status",     isBatteryInfoEnabled_)){
         ROS_ERROR("Dynamics: There is no at least one of required simulator parameters.");
         return -1;
     }
@@ -167,8 +153,8 @@ int8_t Uav_Dynamics::initSensors(){
     velocitySensor_.enable();
     magSensor_.enable();
     rawAirDataSensor_.enable();
-    staticTemperatureSensor_.enable();
-    staticPressureSensor_.enable();
+    temperatureSensor_.enable();
+    pressureSensor_.enable();
     gpsSensor_.enable();
 
     if(isEscStatusEnabled_){
@@ -177,11 +163,11 @@ int8_t Uav_Dynamics::initSensors(){
     if(isIceStatusEnabled_){
         iceStatusSensor_.enable();
     }
-    if(isFuelTankStatusEnabled_){
-        fuelTankStatusSensor_.enable();
+    if(isFuelTankEnabled_){
+        fuelTankSensor_.enable();
     }
-    if(isBatteryStatusEnabled_){
-        batteryInfoStatusSensor_.enable();
+    if(isBatteryInfoEnabled_){
+        batteryInfoSensor_.enable();
     }
 
     return 0;
@@ -380,7 +366,6 @@ void Uav_Dynamics::proceedDynamics(double periodSec){
  * But we must publish only in PX4 notation
  */
 void Uav_Dynamics::publishStateToCommunicator(){
-
     // 1. Get data from simulator
     Eigen::Vector3d position, linVel, acc, gyro, angVel;
     Eigen::Quaterniond attitude;
@@ -423,8 +408,8 @@ void Uav_Dynamics::publishStateToCommunicator(){
     imuSensor_.publish(accFrd, gyroFrd);
     magSensor_.publish(gpsPosition, attitudeFrdToNed);
     rawAirDataSensor_.publish(absPressureHpa, diffPressureHpa, temperatureKelvin);
-    staticPressureSensor_.publish(absPressureHpa);
-    staticTemperatureSensor_.publish(temperatureKelvin);
+    pressureSensor_.publish(absPressureHpa);
+    temperatureSensor_.publish(temperatureKelvin);
 
     std::vector<double> motorsRpm;
     if(uavDynamicsSim_->getMotorsRpm(motorsRpm)){
@@ -442,10 +427,10 @@ void Uav_Dynamics::publishStateToCommunicator(){
             fuelLevelPercentage = 0;
         }
     }
-    fuelTankStatusSensor_.publish(fuelLevelPercentage);
+    fuelTankSensor_.publish(fuelLevelPercentage);
 
     ///< @todo Battery is just constant, add model
-    batteryInfoStatusSensor_.publish(90.0);
+    batteryInfoSensor_.publish(90.0);
 }
 
 void Uav_Dynamics::publishToRos(double period){
@@ -538,7 +523,7 @@ void Uav_Dynamics::publishState(void){
 
 visualization_msgs::Marker& Uav_Dynamics::makeArrow(const Eigen::Vector3d& vector3D,
                                                     const Eigen::Vector3d& rgbColor,
-                                                    const char* frameId=UAV_FRAME_ID){
+                                                    const char* frameId = UAV_FRAME_ID){
     auto fluVector = Converter::frdToFlu(vector3D);
     arrowMarkers_.header.frame_id = frameId;
     arrowMarkers_.points[1].x = fluVector[0];

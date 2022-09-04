@@ -3,16 +3,16 @@
  * @author ponomarevda96@gmail.com
  */
 
+#include "flightgogglesDynamicsSim.hpp"
 #include <iostream>
 #include <ros/ros.h>
 #include <geometry_msgs/TransformStamped.h>
 
-#include "flightgogglesDynamicsSim.hpp"
 
 
 static const std::string MULTICOPTER_PARAMS_NS = "/uav/multicopter_params/";
 template <class T>
-static void getParameter(std::string name, T& parameter, T default_value, std::string unit=""){
+static void getParameter(std::string name, T& parameter, T default_value, std::string unit = ""){
   if (!ros::param::get(MULTICOPTER_PARAMS_NS + name, parameter)){
     std::cout << "Did not get "
               << name
@@ -26,7 +26,6 @@ static void getParameter(std::string name, T& parameter, T default_value, std::s
 }
 
 FlightgogglesDynamics::FlightgogglesDynamics(){
-
 }
 
 int8_t FlightgogglesDynamics::init(){
@@ -41,24 +40,24 @@ int8_t FlightgogglesDynamics::init(){
     getParameter("drag_coefficient",          dragCoeff,                  0.1,      "N/(m/s)");
 
     Eigen::Matrix3d aeroMomentCoefficient = Eigen::Matrix3d::Zero();
-    getParameter("aeromoment_coefficient_xx", aeroMomentCoefficient(0,0), 0.003,    "Nm/(rad/s)^2");
-    getParameter("aeromoment_coefficient_yy", aeroMomentCoefficient(1,1), 0.003,    "Nm/(rad/s)^2");
-    getParameter("aeromoment_coefficient_zz", aeroMomentCoefficient(2,2), 0.003,    "Nm/(rad/s)^2");
+    getParameter("aeromoment_coefficient_xx", aeroMomentCoefficient(0, 0), 0.003,    "Nm/(rad/s)^2");
+    getParameter("aeromoment_coefficient_yy", aeroMomentCoefficient(1, 1), 0.003,    "Nm/(rad/s)^2");
+    getParameter("aeromoment_coefficient_zz", aeroMomentCoefficient(2, 2), 0.003,    "Nm/(rad/s)^2");
 
     Eigen::Matrix3d vehicleInertia = Eigen::Matrix3d::Zero();
-    getParameter("vehicle_inertia_xx",        vehicleInertia(0,0),        0.0049,   "kg m^2");
-    getParameter("vehicle_inertia_yy",        vehicleInertia(1,1),        0.0049,   "kg m^2");
-    getParameter("vehicle_inertia_zz",        vehicleInertia(2,2),        0.0069,   "kg m^2");
-    
+    getParameter("vehicle_inertia_xx",        vehicleInertia(0, 0),        0.0049,   "kg m^2");
+    getParameter("vehicle_inertia_yy",        vehicleInertia(1, 1),        0.0049,   "kg m^2");
+    getParameter("vehicle_inertia_zz",        vehicleInertia(2, 2),        0.0069,   "kg m^2");
+
     double minPropSpeed, maxPropSpeed, momentProcessNoiseAutoCorrelation, forceProcessNoiseAutoCorrelation;
     minPropSpeed = 0.0;
     getParameter("max_prop_speed",            maxPropSpeed,               2200.0,   "rad/s");
-    getParameter("moment_process_noise",momentProcessNoiseAutoCorrelation,1.25e-7,  "(Nm)^2 s");
+    getParameter("moment_process_noise", momentProcessNoiseAutoCorrelation, 1.25e-7,  "(Nm)^2 s");
     getParameter("force_process_noise", forceProcessNoiseAutoCorrelation, 0.0005,   "N^2 s");
 
 
     // Set gravity vector according to ROS reference axis system, see header file
-    Eigen::Vector3d gravity(0.,0.,-9.81);
+    Eigen::Vector3d gravity(0., 0., -9.81);
 
 
     // Create quadcopter simulator
@@ -91,22 +90,22 @@ int8_t FlightgogglesDynamics::init(){
     return 0;
 }
 
-void FlightgogglesDynamics::initStaticMotorTransform(){	
-    Eigen::Isometry3d motorFrame = Eigen::Isometry3d::Identity();	
-    double momentArm;	
-    getParameter("moment_arm",                momentArm,                  0.08,     "m");	
+void FlightgogglesDynamics::initStaticMotorTransform(){
+    Eigen::Isometry3d motorFrame = Eigen::Isometry3d::Identity();
+    double momentArm;
+    getParameter("moment_arm",                momentArm,                  0.08,     "m");
 
-    motorFrame.translation() = Eigen::Vector3d(momentArm, momentArm, 0.);	
-    multicopterSim_->setMotorFrame(motorFrame, 1, 0);	
+    motorFrame.translation() = Eigen::Vector3d(momentArm, momentArm, 0.);
+    multicopterSim_->setMotorFrame(motorFrame, 1, 0);
 
-    motorFrame.translation() = Eigen::Vector3d(-momentArm, momentArm, 0.);	
-    multicopterSim_->setMotorFrame(motorFrame, -1, 1);	
+    motorFrame.translation() = Eigen::Vector3d(-momentArm, momentArm, 0.);
+    multicopterSim_->setMotorFrame(motorFrame, -1, 1);
 
-    motorFrame.translation() = Eigen::Vector3d(-momentArm, -momentArm, 0.);	
-    multicopterSim_->setMotorFrame(motorFrame, 1, 2);	
+    motorFrame.translation() = Eigen::Vector3d(-momentArm, -momentArm, 0.);
+    multicopterSim_->setMotorFrame(motorFrame, 1, 2);
 
-    motorFrame.translation() = Eigen::Vector3d(momentArm, -momentArm, 0.);	
-    multicopterSim_->setMotorFrame(motorFrame, -1, 3);	
+    motorFrame.translation() = Eigen::Vector3d(momentArm, -momentArm, 0.);
+    multicopterSim_->setMotorFrame(motorFrame, -1, 3);
 }
 
 void FlightgogglesDynamics::setInitialPosition(const Eigen::Vector3d & position,
@@ -133,7 +132,8 @@ Eigen::Vector3d FlightgogglesDynamics::getVehicleVelocity(void) const{
 Eigen::Vector3d FlightgogglesDynamics::getVehicleAngularVelocity(void) const{
     return multicopterSim_->getVehicleAngularVelocity();
 }
-void FlightgogglesDynamics::getIMUMeasurement(Eigen::Vector3d & accOutput, Eigen::Vector3d & gyroOutput){
+void FlightgogglesDynamics::getIMUMeasurement(Eigen::Vector3d & accOutput,
+                                              Eigen::Vector3d & gyroOutput){
     return multicopterSim_->getIMUMeasurement(accOutput, gyroOutput);
 }
 

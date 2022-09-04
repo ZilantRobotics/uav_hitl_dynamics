@@ -36,9 +36,9 @@ class AttitudeSensor : public BaseSensor{
         bool publish(const Eigen::Quaterniond& attitudeFrdToNed);
 };
 
-class BatteryInfoStatusSensor : public BaseSensor{
+class BatteryInfoSensor : public BaseSensor{
     public:
-        BatteryInfoStatusSensor(ros::NodeHandle* nh, const char* topic, double period);
+        BatteryInfoSensor(ros::NodeHandle* nh, const char* topic, double period);
         bool publish(double rpm);
 };
 
@@ -50,9 +50,9 @@ class EscStatusSensor : public BaseSensor{
         uint8_t nextEscIdx_ = 0;
 };
 
-class FuelTankStatusSensor : public BaseSensor{
+class FuelTankSensor : public BaseSensor{
     public:
-        FuelTankStatusSensor(ros::NodeHandle* nh, const char* topic, double period);
+        FuelTankSensor(ros::NodeHandle* nh, const char* topic, double period);
         bool publish(double rpm);
 };
 
@@ -90,17 +90,17 @@ class RawAirDataSensor : public BaseSensor{
         bool publish(float absPressureHpa, float diffPressure, float staticTemperature);
 };
 
-class StaticPressureSensor : public BaseSensor{
+class PressureSensor : public BaseSensor{
     public:
-        StaticPressureSensor(ros::NodeHandle* nh, const char* topic, double period);
+        PressureSensor(ros::NodeHandle* nh, const char* topic, double period);
         bool publish(float staticPressureHpa);
     private:
         ros::Publisher old_publisher_;
 };
 
-class StaticTemperatureSensor : public BaseSensor{
+class TemperatureSensor : public BaseSensor{
     public:
-        StaticTemperatureSensor(ros::NodeHandle* nh, const char* topic, double period);
+        TemperatureSensor(ros::NodeHandle* nh, const char* topic, double period);
         bool publish(float staticTemperature);
     private:
         ros::Publisher old_publisher_;

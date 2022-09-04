@@ -1,7 +1,7 @@
 ARG ROS_DISTRO=melodic
 
 FROM ros:$ROS_DISTRO
-LABEL description="Inno VTOL dynamics"
+LABEL description="UAV VTOL dynamics"
 SHELL ["/bin/bash", "-c"]
 WORKDIR /catkin_ws/src
 
