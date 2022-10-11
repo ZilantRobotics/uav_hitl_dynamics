@@ -169,7 +169,7 @@ class Uav_Dynamics {
         void simulationLoopTimerCallback(const ros::WallTimerEvent& event);
         void proceedDynamics(double period);
         void publishToRos(double period);
-        void performDiagnostic(double period);
+        void performLogging(double period);
 
         const float ROS_PUB_PERIOD_SEC = 0.05;
         //@}
