@@ -12,6 +12,7 @@
 #include <Eigen/Geometry>
 #include <random>
 #include <geographiclib_conversions/geodetic_conv.hpp>
+#include <uavcan_msgs/IceReciprocatingStatus.h>
 
 class BaseSensor{
     public:
@@ -70,6 +71,14 @@ class IceStatusSensor : public BaseSensor{
     public:
         IceStatusSensor(ros::NodeHandle* nh, const char* topic, double period);
         bool publish(double rpm);
+        void start_stall_emulation();
+    private:
+        void estimate_state(double rpm);
+        void emulate_normal_mode(double rpm);
+        void emulate_stall_mode();
+        uavcan_msgs::IceReciprocatingStatus _iceStatusMsg;
+        double _stallTsMs = 0;
+        uint32_t _startTsSec = 0;
 };
 
 class ImuSensor : public BaseSensor{

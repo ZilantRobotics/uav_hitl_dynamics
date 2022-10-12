@@ -1,5 +1,5 @@
 /**
- * @file innopolis_vtol_dynamics_node.cpp
+ * @file uavDynamicsNode.cpp
  * @author Dmitry Ponomarev
  * @author Roman Fedorenko
  * @author Ezra Tal
@@ -8,7 +8,7 @@
  * @brief Implementation of UAV dynamics, IMU, and angular rate control simulation node
  */
 
-#include "innopolis_vtol_dynamics_node.hpp"
+#include "uavDynamicsNode.hpp"
 #include <rosgraph_msgs/Clock.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <std_msgs/Time.h>
@@ -26,7 +26,7 @@ const std::string MOTOR_NAMES[5] = {"motor0", "motor1", "motor2", "motor3", "ICE
 
 
 int main(int argc, char **argv){
-    ros::init(argc, argv, "innopolis_vtol_dynamics_node");
+    ros::init(argc, argv, "uav_dynamics_node");
     if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info) ) {
         ros::console::notifyLoggerLevelsChanged();
     }
@@ -147,6 +147,7 @@ int8_t Uav_Dynamics::initDynamicsSimulator(){
 int8_t Uav_Dynamics::initSensors(){
     actuatorsSub_ = node_.subscribe("/uav/actuators", 1, &Uav_Dynamics::actuatorsCallback, this);
     armSub_ = node_.subscribe("/uav/arm", 1, &Uav_Dynamics::armCallback, this);
+    scenarioSub_ = node_.subscribe("/uav/scenario", 1, &Uav_Dynamics::scenarioCallback, this);
 
     attitudeSensor_.enable();
     imuSensor_.enable();
@@ -473,6 +474,10 @@ void Uav_Dynamics::actuatorsCallback(sensor_msgs::Joy::Ptr msg){
     for(size_t idx = 0; idx < msg->axes.size(); idx++){
         actuators_[idx] = msg->axes[idx];
     }
+
+    if (_scenarioType == 1) {
+        actuators_[7] = 0.0;
+    }
 }
 
 void Uav_Dynamics::armCallback(std_msgs::Bool msg){
@@ -483,6 +488,11 @@ void Uav_Dynamics::armCallback(std_msgs::Bool msg){
         ROS_INFO_STREAM_THROTTLE(1, "cmd: " << (msg.data ? "Arm" : "Disarm"));
     }
     armed_ = msg.data;
+}
+
+void Uav_Dynamics::scenarioCallback(std_msgs::UInt8 msg){
+    _scenarioType = msg.data;
+    iceStatusSensor_.start_stall_emulation();
 }
 
 void Uav_Dynamics::calibrationCallback(std_msgs::UInt8 msg){

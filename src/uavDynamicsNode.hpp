@@ -1,5 +1,5 @@
 /**
- * @file innopolis_vtol_dynamics_node.hpp
+ * @file uavDynamicsNode.hpp
  * @author Dmitry Ponomarev
  * @author Roman Fedorenko
  * @author Ezra Tal
@@ -93,6 +93,10 @@ class Uav_Dynamics {
         ros::Subscriber armSub_;
         bool armed_ = false;
         void armCallback(std_msgs::Bool msg);
+
+        ros::Subscriber scenarioSub_;
+        uint8_t _scenarioType = 0;
+        void scenarioCallback(std_msgs::UInt8 msg);
 
         AttitudeSensor attitudeSensor_;
         ImuSensor imuSensor_;

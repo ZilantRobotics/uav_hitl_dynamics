@@ -6,6 +6,9 @@
 #include "sensors.hpp"
 #include "cs_converter.hpp"
 
+#include <ros/ros.h>
+#include <ros/time.h>
+
 #include <geometry_msgs/QuaternionStamped.h>
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/Twist.h>
@@ -21,7 +24,6 @@
 #include <uavcan_msgs/StaticTemperature.h>
 #include <uavcan_msgs/Fix.h>
 #include <uavcan_msgs/EscStatus.h>
-#include <uavcan_msgs/IceReciprocatingStatus.h>
 #include <uavcan_msgs/IceFuelTankStatus.h>
 
 
@@ -258,12 +260,63 @@ IceStatusSensor::IceStatusSensor(ros::NodeHandle* nh, const char* topic, double 
 bool IceStatusSensor::publish(double rpm) {
     auto crntTimeSec = ros::Time::now().toSec();
     if(isEnabled_ && (nextPubTimeSec_ < crntTimeSec)){
-        uavcan_msgs::IceReciprocatingStatus iceStatusMsg;
-        iceStatusMsg.engine_speed_rpm = rpm;
-        publisher_.publish(iceStatusMsg);
+        estimate_state(rpm);
+        publisher_.publish(_iceStatusMsg);
         nextPubTimeSec_ = crntTimeSec + PERIOD;
     }
     return true;
+}
+void IceStatusSensor::estimate_state(double rpm) {
+    if (_stallTsMs == 0) {
+        emulate_normal_mode(rpm);
+    } else {
+        emulate_stall_mode();
+    }
+}
+
+void IceStatusSensor::emulate_normal_mode(double rpm) {
+    auto crntTimeSec = ros::Time::now().toSec();
+    if (rpm < 1.0) {
+        _iceStatusMsg.state = 0;
+    } else if (_iceStatusMsg.state == 0) {
+        _iceStatusMsg.state = 1;
+        _startTsSec = ros::Time::now().toSec();
+    } else if (_startTsSec + 3.0 < crntTimeSec) {
+        _iceStatusMsg.state = 2;
+    }
+    _iceStatusMsg.engine_speed_rpm = rpm;
+}
+
+static const constexpr double WORKING_RPM = 4000.0;
+static const constexpr double STARTING_RPM = 500.0;
+static const constexpr double PERIOD_1 = 1500.0;    // falling rpm period
+static const constexpr double PERIOD_2 = 1500.0;    // starting period
+static const constexpr double PERIOD_3 = 2000.0;    // waiting period
+static const constexpr double PERIOD_23 = PERIOD_2 + PERIOD_3;    // starting + waiting period
+
+void IceStatusSensor::emulate_stall_mode() {
+    auto crntTimeMs = ros::Time::now().toSec() * 1000;
+    auto timeElapsedMs = crntTimeMs - _stallTsMs;
+    if (timeElapsedMs < PERIOD_1) {
+        _iceStatusMsg.state = 2;
+        _iceStatusMsg.engine_speed_rpm = WORKING_RPM * (PERIOD_1 - timeElapsedMs) / PERIOD_1;
+    } else if (timeElapsedMs < PERIOD_1 + PERIOD_2) {
+        _iceStatusMsg.state = 1;
+        _iceStatusMsg.engine_speed_rpm = STARTING_RPM;
+    } else if (timeElapsedMs < PERIOD_1 + PERIOD_23) {
+        _iceStatusMsg.state = 2;
+        _iceStatusMsg.engine_speed_rpm = 0.0;
+    } else if (timeElapsedMs < PERIOD_1 + PERIOD_23 + PERIOD_2) {
+        _iceStatusMsg.state = 1;
+        _iceStatusMsg.engine_speed_rpm = STARTING_RPM;
+    } else {
+        _iceStatusMsg.state = 3;
+        _iceStatusMsg.engine_speed_rpm = 0;
+    }
+}
+
+void IceStatusSensor::start_stall_emulation() {
+    _stallTsMs = ros::Time::now().toSec() * 1000;
 }
 
 FuelTankSensor::FuelTankSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
