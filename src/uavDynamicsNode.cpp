@@ -18,12 +18,6 @@
 #include "cs_converter.hpp"
 
 
-static char GLOBAL_FRAME_ID[] = "world";
-static char UAV_FRAME_ID[] = "uav/enu";
-static char UAV_FIXED_FRAME_ID[] = "uav/com";
-const std::string MOTOR_NAMES[5] = {"motor0", "motor1", "motor2", "motor3", "ICE"};
-
-
 int main(int argc, char **argv){
     ros::init(argc, argv, "uav_dynamics_node");
     if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info) ) {
@@ -47,7 +41,8 @@ Uav_Dynamics::Uav_Dynamics(ros::NodeHandle nh) :
     node_(nh),
     actuators_(8, 0.),
     initPose_(7),
-    _sensors(&nh){
+    _sensors(&nh),
+    _rviz_visualizator(node_){
 }
 
 
@@ -63,7 +58,7 @@ int8_t Uav_Dynamics::init(){
         return -1;
     }else if(initCalibration() == -1){
         return -1;
-    }else if(initRvizVisualizationMarkers() == -1){
+    }else if(_rviz_visualizator.init(uavDynamicsSim_) == -1){
         return -1;
     }else if(startClockAndThreads() == -1){
         return -1;
@@ -133,34 +128,6 @@ int8_t Uav_Dynamics::initSensors(){
 
 int8_t Uav_Dynamics::initCalibration(){
     calibrationSub_ = node_.subscribe("/uav/calibration", 1, &Uav_Dynamics::calibrationCallback, this);
-    return 0;
-}
-
-int8_t Uav_Dynamics::initRvizVisualizationMarkers(){
-    initMarkers();
-    totalForcePub_ = node_.advertise<visualization_msgs::Marker>("/uav/Ftotal", 1);
-    aeroForcePub_ = node_.advertise<visualization_msgs::Marker>("/uav/Faero", 1);
-    motorsForcesPub_[0] = node_.advertise<visualization_msgs::Marker>("/uav/Fmotor0", 1);
-    motorsForcesPub_[1] = node_.advertise<visualization_msgs::Marker>("/uav/Fmotor1", 1);
-    motorsForcesPub_[2] = node_.advertise<visualization_msgs::Marker>("/uav/Fmotor2", 1);
-    motorsForcesPub_[3] = node_.advertise<visualization_msgs::Marker>("/uav/Fmotor3", 1);
-    motorsForcesPub_[4] = node_.advertise<visualization_msgs::Marker>("/uav/Fmotor4", 1);
-    liftForcePub_ = node_.advertise<visualization_msgs::Marker>("/uav/liftForce", 1);
-    drugForcePub_ = node_.advertise<visualization_msgs::Marker>("/uav/drugForce", 1);
-    sideForcePub_ = node_.advertise<visualization_msgs::Marker>("/uav/sideForce", 1);
-
-    totalMomentPub_ = node_.advertise<visualization_msgs::Marker>("/uav/Mtotal", 1);
-    aeroMomentPub_ = node_.advertise<visualization_msgs::Marker>("/uav/Maero", 1);
-    controlSurfacesMomentPub_ = node_.advertise<visualization_msgs::Marker>("/uav/McontrolSurfaces", 1);
-    aoaMomentPub_ = node_.advertise<visualization_msgs::Marker>("/uav/Maoa", 1);
-    motorsMomentsPub_[0] = node_.advertise<visualization_msgs::Marker>("/uav/Mmotor0", 1);
-    motorsMomentsPub_[1] = node_.advertise<visualization_msgs::Marker>("/uav/Mmotor1", 1);
-    motorsMomentsPub_[2] = node_.advertise<visualization_msgs::Marker>("/uav/Mmotor2", 1);
-    motorsMomentsPub_[3] = node_.advertise<visualization_msgs::Marker>("/uav/Mmotor3", 1);
-    motorsMomentsPub_[4] = node_.advertise<visualization_msgs::Marker>("/uav/Mmotor4", 1);
-
-    velocityPub_ = node_.advertise<visualization_msgs::Marker>("/uav/linearVelocity", 1);
-
     return 0;
 }
 
@@ -335,11 +302,13 @@ void Uav_Dynamics::publishToRos(double period){
         auto time_point = crnt_time + sleed_period;
         rosPubCounter_++;
 
-        publishState();
+        _rviz_visualizator.publishTf(_dynamicsNotation);
 
         static auto next_time = std::chrono::system_clock::now();
         if(crnt_time > next_time){
-            publishMarkers();
+            if (dynamicsType_ == DYNAMICS_INNO_VTOL) {
+                _rviz_visualizator.publish(_dynamicsNotation);
+            }
             next_time += std::chrono::milliseconds(int(50));
         }
 
@@ -385,141 +354,4 @@ void Uav_Dynamics::calibrationCallback(std_msgs::UInt8 msg){
         ROS_INFO_STREAM_THROTTLE(1, "calibration type: " << msg.data + 0);
     }
     calibrationType_ = static_cast<UavDynamicsSimBase::CalibrationType_t>(msg.data);
-}
-
-/**
- * @brief Perform TF transform between GLOBAL_FRAME -> UAV_FRAME in ROS (enu/flu) format
- */
-void Uav_Dynamics::publishState(void){
-    geometry_msgs::TransformStamped transform;
-    transform.header.stamp = ros::Time::now();
-    transform.header.frame_id = GLOBAL_FRAME_ID;
-
-    auto position = uavDynamicsSim_->getVehiclePosition();
-    auto attitude = uavDynamicsSim_->getVehicleAttitude();
-    Eigen::Vector3d enuPosition;
-    Eigen::Quaterniond fluAttitude;
-    if(_dynamicsNotation == PX4_NED_FRD){
-        enuPosition = Converter::nedToEnu(position);
-        fluAttitude = Converter::frdNedTofluEnu(attitude);
-    }else{
-        enuPosition = position;
-        fluAttitude = attitude;
-    }
-
-    transform.transform.translation.x = enuPosition[0];
-    transform.transform.translation.y = enuPosition[1];
-    transform.transform.translation.z = enuPosition[2];
-    transform.transform.rotation.x = fluAttitude.x();
-    transform.transform.rotation.y = fluAttitude.y();
-    transform.transform.rotation.z = fluAttitude.z();
-    transform.transform.rotation.w = fluAttitude.w();
-    transform.child_frame_id = UAV_FRAME_ID;
-    tfPub_.sendTransform(transform);
-
-    transform.transform.rotation.x = 0;
-    transform.transform.rotation.y = 0;
-    transform.transform.rotation.z = 0;
-    transform.transform.rotation.w = 1;
-    transform.child_frame_id = UAV_FIXED_FRAME_ID;
-    tfPub_.sendTransform(transform);
-}
-
-visualization_msgs::Marker& Uav_Dynamics::makeArrow(const Eigen::Vector3d& vector3D,
-                                                    const Eigen::Vector3d& rgbColor,
-                                                    const char* frameId = UAV_FRAME_ID){
-    auto fluVector = Converter::frdToFlu(vector3D);
-    arrowMarkers_.header.frame_id = frameId;
-    arrowMarkers_.points[1].x = fluVector[0];
-    arrowMarkers_.points[1].y = fluVector[1];
-    arrowMarkers_.points[1].z = fluVector[2];
-    arrowMarkers_.color.r = rgbColor[0];
-    arrowMarkers_.color.g = rgbColor[1];
-    arrowMarkers_.color.b = rgbColor[2];
-    return arrowMarkers_;
-}
-
-void Uav_Dynamics::initMarkers(){
-    arrowMarkers_.id = 0;
-    arrowMarkers_.type = visualization_msgs::Marker::ARROW;
-    arrowMarkers_.action = visualization_msgs::Marker::ADD;
-    arrowMarkers_.pose.orientation.w = 1;
-    arrowMarkers_.scale.x = 0.05;   // radius of cylinder
-    arrowMarkers_.scale.y = 0.1;
-    arrowMarkers_.scale.z = 0.03;   // scale of hat
-    arrowMarkers_.lifetime = ros::Duration();
-    arrowMarkers_.color.a = 1.0;
-
-    geometry_msgs::Point startPoint, endPoint;
-    startPoint.x = 0;
-    startPoint.y = 0;
-    startPoint.z = 0;
-    endPoint.x = 0;
-    endPoint.y = 0;
-    endPoint.z = 0;
-
-    arrowMarkers_.points.push_back(startPoint);
-    arrowMarkers_.points.push_back(endPoint);
-}
-
-/**
- * @brief Publish forces and moments of vehicle
- */
-void Uav_Dynamics::publishMarkers(void){
-    if(dynamicsType_ == DYNAMICS_INNO_VTOL){
-        arrowMarkers_.header.stamp = ros::Time();
-        Eigen::Vector3d MOMENT_COLOR(0.5, 0.5, 0.0),
-                        MOTORS_FORCES_COLOR(0.0, 0.5, 0.5),
-                        SPEED_COLOR(0.7, 0.5, 1.3),
-                        LIFT_FORCE(0.8, 0.2, 0.3),
-                        DRAG_FORCE(0.2, 0.8, 0.3),
-                        SIDE_FORCE(0.2, 0.3, 0.8);
-
-        // publish moments
-        auto Maero = static_cast<InnoVtolDynamicsSim*>(uavDynamicsSim_)->getMaero();
-        aeroMomentPub_.publish(makeArrow(Maero, MOMENT_COLOR));
-
-        auto Mmotors = static_cast<InnoVtolDynamicsSim*>(uavDynamicsSim_)->getMmotors();
-        for(size_t motorIdx = 0; motorIdx < 5; motorIdx++){
-            motorsMomentsPub_[motorIdx].publish(makeArrow(Mmotors[motorIdx],
-                                                          MOMENT_COLOR,
-                                                          MOTOR_NAMES[motorIdx].c_str()));
-        }
-
-        auto Mtotal = static_cast<InnoVtolDynamicsSim*>(uavDynamicsSim_)->getMtotal();
-        totalMomentPub_.publish(makeArrow(Mtotal, MOMENT_COLOR));
-
-        auto Msteer = static_cast<InnoVtolDynamicsSim*>(uavDynamicsSim_)->getMsteer();
-        controlSurfacesMomentPub_.publish(makeArrow(Msteer, MOMENT_COLOR));
-
-        auto Mairspeed = static_cast<InnoVtolDynamicsSim*>(uavDynamicsSim_)->getMairspeed();
-        aoaMomentPub_.publish(makeArrow(Mairspeed, MOMENT_COLOR));
-
-
-        // publish forces
-        auto Faero = static_cast<InnoVtolDynamicsSim*>(uavDynamicsSim_)->getFaero();
-        aeroForcePub_.publish(makeArrow(Faero / 10, MOTORS_FORCES_COLOR));
-
-        auto Fmotors = static_cast<InnoVtolDynamicsSim*>(uavDynamicsSim_)->getFmotors();
-        for(size_t motorIdx = 0; motorIdx < 5; motorIdx++){
-            motorsForcesPub_[motorIdx].publish(makeArrow(Fmotors[motorIdx] / 10,
-                                                         MOTORS_FORCES_COLOR,
-                                                         MOTOR_NAMES[motorIdx].c_str()));
-        }
-
-        auto Ftotal = static_cast<InnoVtolDynamicsSim*>(uavDynamicsSim_)->getFtotal();
-        totalForcePub_.publish(makeArrow(Ftotal, Eigen::Vector3d(0.0, 1.0, 1.0)));
-
-        auto velocity = static_cast<InnoVtolDynamicsSim*>(uavDynamicsSim_)->getBodyLinearVelocity();
-        velocityPub_.publish(makeArrow(velocity, SPEED_COLOR));
-
-        auto Flift = static_cast<InnoVtolDynamicsSim*>(uavDynamicsSim_)->getFlift();
-        liftForcePub_.publish(makeArrow(Flift / 10, LIFT_FORCE));
-
-        auto Fdrug = static_cast<InnoVtolDynamicsSim*>(uavDynamicsSim_)->getFdrug();
-        drugForcePub_.publish(makeArrow(Fdrug / 10, DRAG_FORCE));
-
-        auto Fside = static_cast<InnoVtolDynamicsSim*>(uavDynamicsSim_)->getFside();
-        sideForcePub_.publish(makeArrow(Fside / 10, SIDE_FORCE));
-    }
 }

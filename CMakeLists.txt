@@ -55,6 +55,7 @@ add_library(${PROJECT_NAME} src/dynamics/vtol/vtolDynamicsSim.cpp
                             src/sensors/sensor_base.cpp
                             src/common_math.cpp
                             src/cs_converter.cpp
+                            src/rviz_visualization.cpp
 )
 
 ## 1. Declare a C++ uav_dynamics_node executable

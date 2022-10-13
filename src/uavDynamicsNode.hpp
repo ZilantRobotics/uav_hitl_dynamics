@@ -17,15 +17,14 @@
 
 #include <ros/ros.h>
 #include <ros/time.h>
-#include <tf2_ros/transform_broadcaster.h>
 
 #include <sensor_msgs/Joy.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/UInt8.h>
-#include <visualization_msgs/Marker.h>
 
 #include "uavDynamicsSimBase.hpp"
 #include "sensors.hpp"
+#include "rviz_visualization.hpp"
 
 
 /**
@@ -46,7 +45,6 @@ class Uav_Dynamics {
         int8_t initDynamicsSimulator();
         int8_t initSensors();
         int8_t initCalibration();
-        int8_t initRvizVisualizationMarkers();
         int8_t startClockAndThreads();
 
         /// @name Simulator
@@ -102,6 +100,7 @@ class Uav_Dynamics {
         void scenarioCallback(std_msgs::UInt8 msg);
 
         Sensors _sensors;
+        RvizVisualizator _rviz_visualizator;
         //@}
 
         /// @name Calibration
@@ -117,36 +116,6 @@ class Uav_Dynamics {
         uint64_t dynamicsCounter_;
         uint64_t rosPubCounter_;
         //@}
-
-        /// @name Visualization (Markers and tf)
-        //@{
-        tf2_ros::TransformBroadcaster tfPub_;
-
-        visualization_msgs::Marker arrowMarkers_;
-
-        ros::Publisher totalForcePub_;
-        ros::Publisher aeroForcePub_;
-        ros::Publisher motorsForcesPub_[5];
-        ros::Publisher liftForcePub_;
-        ros::Publisher drugForcePub_;
-        ros::Publisher sideForcePub_;
-
-        ros::Publisher totalMomentPub_;
-        ros::Publisher aeroMomentPub_;
-        ros::Publisher controlSurfacesMomentPub_;
-        ros::Publisher aoaMomentPub_;
-        ros::Publisher motorsMomentsPub_[5];
-
-        ros::Publisher velocityPub_;
-
-        void initMarkers();
-        visualization_msgs::Marker& makeArrow(const Eigen::Vector3d& vector3D,
-                                              const Eigen::Vector3d& rgbColor,
-                                              const char* frameId);
-        void publishMarkers();
-        void publishState();
-        //@}
-
 
         /// @name Timer and threads
         //@{
