@@ -20,11 +20,17 @@
 #define SRC_SENSORS_SENSORS_HPP_
 
 #include "ice.hpp"
+#include "uavDynamicsSimBase.hpp"
 
-struct Sensors {
-    Sensors(ros::NodeHandle* nh);
-    int8_t init();
+class Sensors {
+public:
+    explicit Sensors(ros::NodeHandle* nh);
+    int8_t init(UavDynamicsSimBase* uavDynamicsSim);
+    void publishStateToCommunicator(uint8_t dynamicsNotation);
 
+    IceStatusSensor iceStatusSensor;
+
+private:
     AttitudeSensor attitudeSensor;
     ImuSensor imuSensor;
     VelocitySensor velocitySensor_;
@@ -35,9 +41,11 @@ struct Sensors {
     GpsSensor gpsSensor;
 
     EscStatusSensor escStatusSensor;
-    IceStatusSensor iceStatusSensor;
     FuelTankSensor fuelTankSensor;
     BatteryInfoSensor batteryInfoSensor;
+
+    geodetic_converter::GeodeticConverter geodeticConverter;
+    UavDynamicsSimBase* _uavDynamicsSim;
 };
 
 #endif  // SRC_SENSORS_SENSORS_HPP_

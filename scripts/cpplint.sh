@@ -1,6 +1,5 @@
 #!/bin/bash
-cpplint src/*/*.cpp
-cpplint src/*.cpp
+cpplint src/*.*pp
+cpplint src/*/*.*pp
+cpplint src/*/*/*.*pp
 
-cpplint include/*/*.hpp
-cpplint include/*.hpp

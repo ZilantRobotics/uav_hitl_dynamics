@@ -36,6 +36,11 @@ class Uav_Dynamics {
         explicit Uav_Dynamics(ros::NodeHandle nh);
         int8_t init();
 
+        enum DynamicsNotation_t{
+            PX4_NED_FRD = 0,
+            ROS_ENU_FLU = 1,
+        };
+
     private:
         int8_t getParamsFromRos();
         int8_t initDynamicsSimulator();
@@ -76,8 +81,6 @@ class Uav_Dynamics {
 
         std::string vehicleName_;
         std::string dynamicsTypeName_;
-
-        geodetic_converter::GeodeticConverter geodeticConverter_;
         //@}
 
 
@@ -99,8 +102,6 @@ class Uav_Dynamics {
         void scenarioCallback(std_msgs::UInt8 msg);
 
         Sensors _sensors;
-
-        void publishStateToCommunicator();
         //@}
 
         /// @name Calibration
@@ -162,11 +163,7 @@ class Uav_Dynamics {
         const float ROS_PUB_PERIOD_SEC = 0.05;
         //@}
 
-        enum DynamicsNotation_t{
-            PX4_NED_FRD = 0,
-            ROS_ENU_FLU = 1,
-        };
-        DynamicsNotation_t dynamicsNotation_;
+        DynamicsNotation_t _dynamicsNotation;
 };
 
 #endif

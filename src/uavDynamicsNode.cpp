@@ -16,7 +16,6 @@
 #include "flightgogglesDynamicsSim.hpp"
 #include "vtolDynamicsSim.hpp"
 #include "cs_converter.hpp"
-#include "sensors_isa_model.hpp"
 
 
 static char GLOBAL_FRAME_ID[] = "world";
@@ -76,9 +75,6 @@ int8_t Uav_Dynamics::init(){
 int8_t Uav_Dynamics::getParamsFromRos(){
     const std::string SIM_PARAMS_PATH = "/uav/sim_params/";
     if(!ros::param::get(SIM_PARAMS_PATH + "use_sim_time",       useSimTime_ )           ||
-       !ros::param::get(SIM_PARAMS_PATH + "lat_ref",            latRef_)                ||
-       !ros::param::get(SIM_PARAMS_PATH + "lon_ref",            lonRef_)                ||
-       !ros::param::get(SIM_PARAMS_PATH + "alt_ref",            altRef_)                ||
        !node_.getParam("vehicle",                               vehicleName_)           ||
        !node_.getParam("dynamics",                              dynamicsTypeName_)      ||
        !ros::param::get(SIM_PARAMS_PATH + "init_pose",          initPose_)){
@@ -96,11 +92,11 @@ int8_t Uav_Dynamics::initDynamicsSimulator(){
     if(dynamicsTypeName_ == DYNAMICS_NAME_FLIGHTGOGGLES){
         dynamicsType_ = DYNAMICS_FLIGHTGOGGLES_MULTICOPTER;
         uavDynamicsSim_ = new FlightgogglesDynamics;
-        dynamicsNotation_ = ROS_ENU_FLU;
+        _dynamicsNotation = ROS_ENU_FLU;
     }else if(dynamicsTypeName_ == DYNAMICS_NAME_INNO_VTOL){
         uavDynamicsSim_ = new InnoVtolDynamicsSim;
         dynamicsType_ = DYNAMICS_INNO_VTOL;
-        dynamicsNotation_ = PX4_NED_FRD;
+        _dynamicsNotation = PX4_NED_FRD;
     }else{
         ROS_ERROR("Dynamics type with name \"%s\" is not exist.", dynamicsTypeName_.c_str());
         return -1;
@@ -119,7 +115,6 @@ int8_t Uav_Dynamics::initDynamicsSimulator(){
         ROS_ERROR("Can't init uav dynamics sim. Shutdown.");
         return -1;
     }
-    geodeticConverter_.initialiseReference(latRef_, lonRef_, altRef_);
 
     Eigen::Vector3d initPosition(initPose_.at(0), initPose_.at(1), initPose_.at(2));
     Eigen::Quaterniond initAttitude(initPose_.at(6), initPose_.at(3), initPose_.at(4), initPose_.at(5));
@@ -133,7 +128,7 @@ int8_t Uav_Dynamics::initSensors(){
     actuatorsSub_ = node_.subscribe("/uav/actuators", 1, &Uav_Dynamics::actuatorsCallback, this);
     armSub_ = node_.subscribe("/uav/arm", 1, &Uav_Dynamics::armCallback, this);
     scenarioSub_ = node_.subscribe("/uav/scenario", 1, &Uav_Dynamics::scenarioCallback, this);
-    return _sensors.init();
+    return _sensors.init(uavDynamicsSim_);
 }
 
 int8_t Uav_Dynamics::initCalibration(){
@@ -276,7 +271,7 @@ void Uav_Dynamics::performLogging(double periodSec){
         }
 
         auto pose = uavDynamicsSim_->getVehiclePosition();
-        auto enuPosition = (dynamicsNotation_ == PX4_NED_FRD) ? Converter::nedToEnu(pose) : pose;
+        auto enuPosition = (_dynamicsNotation == PX4_NED_FRD) ? Converter::nedToEnu(pose) : pose;
         logAddBoldStringToStream(logStream, "enu pose");
         logStream << std::setprecision(1) << std::fixed << " ["
                   << enuPosition[0] << ", "
@@ -327,82 +322,10 @@ void Uav_Dynamics::proceedDynamics(double periodSec){
             uavDynamicsSim_->land();
         }
 
-        publishStateToCommunicator();
+        _sensors.publishStateToCommunicator(_dynamicsNotation);
 
         std::this_thread::sleep_until(time_point);
     }
-}
-
-/**
- * @note Different simulators return data in different notation (PX4 or ROS)
- * But we must publish only in PX4 notation
- */
-void Uav_Dynamics::publishStateToCommunicator(){
-    // 1. Get data from simulator
-    Eigen::Vector3d position, linVel, acc, gyro, angVel;
-    Eigen::Quaterniond attitude;
-    position = uavDynamicsSim_->getVehiclePosition();
-    linVel = uavDynamicsSim_->getVehicleVelocity();
-    uavDynamicsSim_->getIMUMeasurement(acc, gyro);
-    angVel = uavDynamicsSim_->getVehicleAngularVelocity();
-    attitude = uavDynamicsSim_->getVehicleAttitude();
-
-    // 2. Convert them to appropriate CS
-    Eigen::Vector3d gpsPosition, enuPosition, linVelNed, accFrd, gyroFrd, angVelFrd;
-    Eigen::Quaterniond attitudeFrdToNed;
-    if(dynamicsNotation_ == PX4_NED_FRD){
-        enuPosition = Converter::nedToEnu(position);
-        linVelNed = linVel;
-        accFrd = acc;
-        gyroFrd = gyro;
-        angVelFrd = angVel;
-        attitudeFrdToNed = attitude;
-    }else{
-        enuPosition = position;
-        linVelNed =  Converter::enuToNed(linVel);
-        accFrd = Converter::fluToFrd(acc);
-        gyroFrd = Converter::fluToFrd(gyro);
-        angVelFrd = Converter::fluToFrd(angVel);
-        attitudeFrdToNed = Converter::fluEnuToFrdNed(attitude);
-    }
-    geodeticConverter_.enu2Geodetic(enuPosition[0], enuPosition[1], enuPosition[2],
-                                    &gpsPosition[0], &gpsPosition[1], &gpsPosition[2]);
-
-    // 3. Calculate temperature, abs pressure and diff pressure using ISA model
-    float temperatureKelvin, absPressureHpa, diffPressureHpa;
-    SensorModelISA::EstimateAtmosphere(gpsPosition, linVelNed,
-                                       temperatureKelvin, absPressureHpa, diffPressureHpa);
-
-    // Publish state to communicator
-    _sensors.attitudeSensor.publish(attitudeFrdToNed);
-    _sensors.imuSensor.publish(accFrd, gyroFrd);
-    _sensors.velocitySensor_.publish(linVelNed, angVelFrd);
-    _sensors.magSensor.publish(gpsPosition, attitudeFrdToNed);
-    _sensors.rawAirDataSensor.publish(absPressureHpa, diffPressureHpa, temperatureKelvin);
-    _sensors.pressureSensor.publish(absPressureHpa);
-    _sensors.temperatureSensor.publish(temperatureKelvin);
-    _sensors.gpsSensor.publish(gpsPosition, linVelNed);
-
-    std::vector<double> motorsRpm;
-    if(uavDynamicsSim_->getMotorsRpm(motorsRpm)){
-        _sensors.escStatusSensor.publish(motorsRpm);
-        if(motorsRpm.size() == 5){
-            _sensors.iceStatusSensor.publish(motorsRpm[4]);
-        }
-    }
-
-    ///< @todo Simplified Fuel tank model, refactor it
-    static double fuelLevelPercentage = 100.0;
-    if(motorsRpm.size() == 5 && motorsRpm[4] >= 1) {
-        fuelLevelPercentage -= 0.002;
-        if(fuelLevelPercentage < 0) {
-            fuelLevelPercentage = 0;
-        }
-    }
-    _sensors.fuelTankSensor.publish(fuelLevelPercentage);
-
-    ///< @todo Battery is just constant, add model
-    _sensors.batteryInfoSensor.publish(90.0);
 }
 
 void Uav_Dynamics::publishToRos(double period){
@@ -476,7 +399,7 @@ void Uav_Dynamics::publishState(void){
     auto attitude = uavDynamicsSim_->getVehicleAttitude();
     Eigen::Vector3d enuPosition;
     Eigen::Quaterniond fluAttitude;
-    if(dynamicsNotation_ == PX4_NED_FRD){
+    if(_dynamicsNotation == PX4_NED_FRD){
         enuPosition = Converter::nedToEnu(position);
         fluAttitude = Converter::frdNedTofluEnu(attitude);
     }else{
