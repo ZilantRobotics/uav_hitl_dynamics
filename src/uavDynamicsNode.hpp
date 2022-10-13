@@ -99,22 +99,6 @@ class Uav_Dynamics {
         void scenarioCallback(std_msgs::UInt8 msg);
 
         Sensors _sensors;
-        ImuSensor imuSensor_;
-        VelocitySensor velocitySensor_;
-        MagSensor magSensor_;
-        RawAirDataSensor rawAirDataSensor_;
-        TemperatureSensor temperatureSensor_;
-        PressureSensor pressureSensor_;
-        EscStatusSensor escStatusSensor_;
-        GpsSensor gpsSensor_;
-        IceStatusSensor iceStatusSensor_;
-        FuelTankSensor fuelTankSensor_;
-        BatteryInfoSensor batteryInfoSensor_;
-
-        bool isEscStatusEnabled_;
-        bool isIceStatusEnabled_;
-        bool isFuelTankEnabled_;
-        bool isBatteryInfoEnabled_;
 
         void publishStateToCommunicator();
         //@}

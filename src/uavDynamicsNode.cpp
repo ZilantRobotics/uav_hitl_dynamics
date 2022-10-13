@@ -48,18 +48,7 @@ Uav_Dynamics::Uav_Dynamics(ros::NodeHandle nh) :
     node_(nh),
     actuators_(8, 0.),
     initPose_(7),
-    escStatusSensor_(&nh, "/uav/esc_status", 0.25),
-    _sensors(&nh),
-    imuSensor_(&nh, "/uav/imu", 0.00333),
-    velocitySensor_(&nh, "/uav/velocity", 0.05),
-    magSensor_(&nh, "/uav/mag", 0.03),
-    rawAirDataSensor_(&nh, "/uav/raw_air_data", 0.05),
-    temperatureSensor_(&nh, "/uav/static_temperature", 0.05),
-    pressureSensor_(&nh, "/uav/static_pressure", 0.05),
-    gpsSensor_(&nh, "/uav/gps_position", 0.1),
-    iceStatusSensor_(&nh, "/uav/ice_status", 0.25),
-    fuelTankSensor_(&nh, "/uav/fuel_tank", 2.0),
-    batteryInfoSensor_(&nh, "/uav/battery", 1.0){
+    _sensors(&nh){
 }
 
 
@@ -92,11 +81,7 @@ int8_t Uav_Dynamics::getParamsFromRos(){
        !ros::param::get(SIM_PARAMS_PATH + "alt_ref",            altRef_)                ||
        !node_.getParam("vehicle",                               vehicleName_)           ||
        !node_.getParam("dynamics",                              dynamicsTypeName_)      ||
-       !ros::param::get(SIM_PARAMS_PATH + "init_pose",          initPose_)              ||
-       !ros::param::get(SIM_PARAMS_PATH + "esc_status",         isEscStatusEnabled_)    ||
-       !ros::param::get(SIM_PARAMS_PATH + "ice_status",         isIceStatusEnabled_)    ||
-       !ros::param::get(SIM_PARAMS_PATH + "fuel_tank_status",   isFuelTankEnabled_)     ||
-       !ros::param::get(SIM_PARAMS_PATH + "battery_status",     isBatteryInfoEnabled_)){
+       !ros::param::get(SIM_PARAMS_PATH + "init_pose",          initPose_)){
         ROS_ERROR("Dynamics: There is no at least one of required simulator parameters.");
         return -1;
     }
@@ -148,30 +133,7 @@ int8_t Uav_Dynamics::initSensors(){
     actuatorsSub_ = node_.subscribe("/uav/actuators", 1, &Uav_Dynamics::actuatorsCallback, this);
     armSub_ = node_.subscribe("/uav/arm", 1, &Uav_Dynamics::armCallback, this);
     scenarioSub_ = node_.subscribe("/uav/scenario", 1, &Uav_Dynamics::scenarioCallback, this);
-
-    _sensors.init();
-    imuSensor_.enable();
-    velocitySensor_.enable();
-    magSensor_.enable();
-    rawAirDataSensor_.enable();
-    temperatureSensor_.enable();
-    pressureSensor_.enable();
-    gpsSensor_.enable();
-
-    if(isEscStatusEnabled_){
-        escStatusSensor_.enable();
-    }
-    if(isIceStatusEnabled_){
-        iceStatusSensor_.enable();
-    }
-    if(isFuelTankEnabled_){
-        fuelTankSensor_.enable();
-    }
-    if(isBatteryInfoEnabled_){
-        batteryInfoSensor_.enable();
-    }
-
-    return 0;
+    return _sensors.init();
 }
 
 int8_t Uav_Dynamics::initCalibration(){
@@ -412,20 +374,20 @@ void Uav_Dynamics::publishStateToCommunicator(){
                                        temperatureKelvin, absPressureHpa, diffPressureHpa);
 
     // Publish state to communicator
-    gpsSensor_.publish(gpsPosition, linVelNed);
-    _sensors.attitudeSensor_.publish(attitudeFrdToNed);
-    velocitySensor_.publish(linVelNed, angVelFrd);
-    imuSensor_.publish(accFrd, gyroFrd);
-    magSensor_.publish(gpsPosition, attitudeFrdToNed);
-    rawAirDataSensor_.publish(absPressureHpa, diffPressureHpa, temperatureKelvin);
-    pressureSensor_.publish(absPressureHpa);
-    temperatureSensor_.publish(temperatureKelvin);
+    _sensors.attitudeSensor.publish(attitudeFrdToNed);
+    _sensors.imuSensor.publish(accFrd, gyroFrd);
+    _sensors.velocitySensor_.publish(linVelNed, angVelFrd);
+    _sensors.magSensor.publish(gpsPosition, attitudeFrdToNed);
+    _sensors.rawAirDataSensor.publish(absPressureHpa, diffPressureHpa, temperatureKelvin);
+    _sensors.pressureSensor.publish(absPressureHpa);
+    _sensors.temperatureSensor.publish(temperatureKelvin);
+    _sensors.gpsSensor.publish(gpsPosition, linVelNed);
 
     std::vector<double> motorsRpm;
     if(uavDynamicsSim_->getMotorsRpm(motorsRpm)){
-        escStatusSensor_.publish(motorsRpm);
+        _sensors.escStatusSensor.publish(motorsRpm);
         if(motorsRpm.size() == 5){
-            iceStatusSensor_.publish(motorsRpm[4]);
+            _sensors.iceStatusSensor.publish(motorsRpm[4]);
         }
     }
 
@@ -437,10 +399,10 @@ void Uav_Dynamics::publishStateToCommunicator(){
             fuelLevelPercentage = 0;
         }
     }
-    fuelTankSensor_.publish(fuelLevelPercentage);
+    _sensors.fuelTankSensor.publish(fuelLevelPercentage);
 
     ///< @todo Battery is just constant, add model
-    batteryInfoSensor_.publish(90.0);
+    _sensors.batteryInfoSensor.publish(90.0);
 }
 
 void Uav_Dynamics::publishToRos(double period){
@@ -492,7 +454,7 @@ void Uav_Dynamics::armCallback(std_msgs::Bool msg){
 
 void Uav_Dynamics::scenarioCallback(std_msgs::UInt8 msg){
     _scenarioType = msg.data;
-    iceStatusSensor_.start_stall_emulation();
+    _sensors.iceStatusSensor.start_stall_emulation();
 }
 
 void Uav_Dynamics::calibrationCallback(std_msgs::UInt8 msg){

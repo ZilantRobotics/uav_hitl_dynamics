@@ -19,13 +19,25 @@
 #ifndef SRC_SENSORS_SENSORS_HPP_
 #define SRC_SENSORS_SENSORS_HPP_
 
-#include "sensor_base.hpp"
 #include "ice.hpp"
 
 struct Sensors {
     Sensors(ros::NodeHandle* nh);
     int8_t init();
-    AttitudeSensor attitudeSensor_;
+
+    AttitudeSensor attitudeSensor;
+    ImuSensor imuSensor;
+    VelocitySensor velocitySensor_;
+    MagSensor magSensor;
+    RawAirDataSensor rawAirDataSensor;
+    TemperatureSensor temperatureSensor;
+    PressureSensor pressureSensor;
+    GpsSensor gpsSensor;
+
+    EscStatusSensor escStatusSensor;
+    IceStatusSensor iceStatusSensor;
+    FuelTankSensor fuelTankSensor;
+    BatteryInfoSensor batteryInfoSensor;
 };
 
 #endif  // SRC_SENSORS_SENSORS_HPP_
