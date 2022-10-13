@@ -39,7 +39,7 @@ Extended sensors publishers list of topics:
 | 9 | /uav/fuel_tank_status      | uavcan_msgs/IceFuelTankStatus             |
 | 10| /uav/battery_status        | [sensor_msgs/BatteryState](http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/BatteryState.html)    |
 
-Here topics 1-6 are necessary for any simulation. The last 4 topics are auxiliary and you may enable/disable them in the [sim_params.yaml](uav_dynamics/inno_vtol_dynamics/config/sim_params.yaml) config file. You may implement your own sensors in the [sensors.cpp](uav_dynamics/inno_vtol_dynamics/src/sensors.cpp) file.
+Here topics 1-6 are necessary for any simulation. The last 4 topics are auxiliary and you may enable/disable them in the [sim_params.yaml](uav_dynamics/inno_vtol_dynamics/config/sim_params.yaml) config file. You may implement your own sensors in the [sensors.cpp](uav_dynamics/inno_vtol_dynamics/src/sensors/sensors.cpp) file.
 
 To work in pair with [InnoSimulator](https://github.com/inno-robolab/InnoSimulator) as physics engine via [inno_sim_interface](https://github.com/InnopolisAero/inno_sim_interface) it publishes and subscribes on following topics.
 

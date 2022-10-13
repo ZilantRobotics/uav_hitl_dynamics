@@ -39,6 +39,7 @@ include_directories(
     src/dynamics
     src/dynamics/vtol
     src/dynamics/quadcopter
+    src/sensors
     ${catkin_INCLUDE_DIRS}
     ${mavlink_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIRS}
@@ -49,7 +50,7 @@ add_library(${PROJECT_NAME} src/dynamics/vtol/vtolDynamicsSim.cpp
                             src/dynamics/uavDynamicsSimBase.cpp
                             libs/multicopterDynamicsSim/inertialMeasurementSim.cpp
                             libs/multicopterDynamicsSim/multicopterDynamicsSim.cpp
-                            src/sensors.cpp
+                            src/sensors/sensors.cpp
                             src/common_math.cpp
                             src/cs_converter.cpp
 )
