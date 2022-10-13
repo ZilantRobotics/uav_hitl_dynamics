@@ -16,16 +16,24 @@
  * Author: Dmitry Ponomarev <ponomarevda96@gmail.com>
  */
 
-#ifndef SRC_SENSORS_SENSORS_HPP_
-#define SRC_SENSORS_SENSORS_HPP_
+#ifndef SRC_SENSORS_ICE_HPP
+#define SRC_SENSORS_ICE_HPP
 
-#include "sensor_base.hpp"
-#include "ice.hpp"
+#include <uavcan_msgs/IceReciprocatingStatus.h>
+#include "sensors.hpp"
 
-struct Sensors {
-    Sensors(ros::NodeHandle* nh);
-    int8_t init();
-    AttitudeSensor attitudeSensor_;
+class IceStatusSensor : public BaseSensor{
+    public:
+        IceStatusSensor(ros::NodeHandle* nh, const char* topic, double period);
+        bool publish(double rpm);
+        void start_stall_emulation();
+    private:
+        void estimate_state(double rpm);
+        void emulate_normal_mode(double rpm);
+        void emulate_stall_mode();
+        uavcan_msgs::IceReciprocatingStatus _iceStatusMsg;
+        double _stallTsMs = 0;
+        uint32_t _startTsSec = 0;
 };
 
-#endif  // SRC_SENSORS_SENSORS_HPP_
+#endif  // SRC_SENSORS_ICE_HPP

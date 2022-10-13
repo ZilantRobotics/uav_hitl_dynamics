@@ -49,7 +49,7 @@ Uav_Dynamics::Uav_Dynamics(ros::NodeHandle nh) :
     actuators_(8, 0.),
     initPose_(7),
     escStatusSensor_(&nh, "/uav/esc_status", 0.25),
-    attitudeSensor_(&nh, "/uav/attitude", 0.005),
+    _sensors(&nh),
     imuSensor_(&nh, "/uav/imu", 0.00333),
     velocitySensor_(&nh, "/uav/velocity", 0.05),
     magSensor_(&nh, "/uav/mag", 0.03),
@@ -149,7 +149,7 @@ int8_t Uav_Dynamics::initSensors(){
     armSub_ = node_.subscribe("/uav/arm", 1, &Uav_Dynamics::armCallback, this);
     scenarioSub_ = node_.subscribe("/uav/scenario", 1, &Uav_Dynamics::scenarioCallback, this);
 
-    attitudeSensor_.enable();
+    _sensors.init();
     imuSensor_.enable();
     velocitySensor_.enable();
     magSensor_.enable();
@@ -413,7 +413,7 @@ void Uav_Dynamics::publishStateToCommunicator(){
 
     // Publish state to communicator
     gpsSensor_.publish(gpsPosition, linVelNed);
-    attitudeSensor_.publish(attitudeFrdToNed);
+    _sensors.attitudeSensor_.publish(attitudeFrdToNed);
     velocitySensor_.publish(linVelNed, angVelFrd);
     imuSensor_.publish(accFrd, gyroFrd);
     magSensor_.publish(gpsPosition, attitudeFrdToNed);

@@ -98,7 +98,7 @@ class Uav_Dynamics {
         uint8_t _scenarioType = 0;
         void scenarioCallback(std_msgs::UInt8 msg);
 
-        AttitudeSensor attitudeSensor_;
+        Sensors _sensors;
         ImuSensor imuSensor_;
         VelocitySensor velocitySensor_;
         MagSensor magSensor_;
