@@ -27,6 +27,7 @@ class IceStatusSensor : public BaseSensor{
         IceStatusSensor(ros::NodeHandle* nh, const char* topic, double period);
         bool publish(double rpm);
         void start_stall_emulation();
+        void stop_stall_emulation();
     private:
         void estimate_state(double rpm);
         void emulate_normal_mode(double rpm);

@@ -346,7 +346,11 @@ void Uav_Dynamics::armCallback(std_msgs::Bool msg){
 
 void Uav_Dynamics::scenarioCallback(std_msgs::UInt8 msg){
     _scenarioType = msg.data;
-    _sensors.iceStatusSensor.start_stall_emulation();
+    if (_scenarioType == 0) {
+        _sensors.iceStatusSensor.stop_stall_emulation();
+    } else if (_scenarioType == 1) {
+        _sensors.iceStatusSensor.start_stall_emulation();
+    }
 }
 
 void Uav_Dynamics::calibrationCallback(std_msgs::UInt8 msg){

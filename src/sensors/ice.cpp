@@ -64,21 +64,22 @@ void IceStatusSensor::emulate_stall_mode() {
     if (timeElapsedMs < PERIOD_1) {
         _iceStatusMsg.state = 2;
         _iceStatusMsg.engine_speed_rpm = WORKING_RPM * (PERIOD_1 - timeElapsedMs) / PERIOD_1;
-    } else if (timeElapsedMs < PERIOD_1 + PERIOD_2) {
-        _iceStatusMsg.state = 1;
-        _iceStatusMsg.engine_speed_rpm = STARTING_RPM;
-    } else if (timeElapsedMs < PERIOD_1 + PERIOD_23) {
-        _iceStatusMsg.state = 2;
-        _iceStatusMsg.engine_speed_rpm = 0.0;
-    } else if (timeElapsedMs < PERIOD_1 + PERIOD_23 + PERIOD_2) {
-        _iceStatusMsg.state = 1;
-        _iceStatusMsg.engine_speed_rpm = STARTING_RPM;
     } else {
-        _iceStatusMsg.state = 3;
-        _iceStatusMsg.engine_speed_rpm = 0;
+        double timeSinceRestartMs = timeElapsedMs - PERIOD_1;
+        if (fmod(timeSinceRestartMs, PERIOD_23) < PERIOD_2) {
+            _iceStatusMsg.state = 1;
+            _iceStatusMsg.engine_speed_rpm = STARTING_RPM;
+        } else {
+            _iceStatusMsg.state = 2;
+            _iceStatusMsg.engine_speed_rpm = 0.0;
+        }
     }
 }
 
 void IceStatusSensor::start_stall_emulation() {
     _stallTsMs = ros::Time::now().toSec() * 1000;
+}
+
+void IceStatusSensor::stop_stall_emulation() {
+    _stallTsMs = 0;
 }
