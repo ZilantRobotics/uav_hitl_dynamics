@@ -1,10 +1,26 @@
-/**
- * @file sensors.cpp
- * @author Dmitry Ponomarev
+/* 
+ * Copyright (c) 2020-2022 RaccoonLab.
+ * 
+ * This program is free software: you can redistribute it and/or modify  
+ * it under the terms of the GNU General Public License as published by  
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but 
+ * WITHOUT ANY WARRANTY; without even the implied warranty of 
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License 
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * Author: Dmitry Ponomarev <ponomarevda96@gmail.com>
  */
 
 #include "sensors.hpp"
 #include "cs_converter.hpp"
+
+#include <ros/ros.h>
+#include <ros/time.h>
 
 #include <geometry_msgs/QuaternionStamped.h>
 #include <geometry_msgs/Vector3.h>
@@ -21,7 +37,6 @@
 #include <uavcan_msgs/StaticTemperature.h>
 #include <uavcan_msgs/Fix.h>
 #include <uavcan_msgs/EscStatus.h>
-#include <uavcan_msgs/IceReciprocatingStatus.h>
 #include <uavcan_msgs/IceFuelTankStatus.h>
 
 
@@ -36,7 +51,7 @@ AttitudeSensor::AttitudeSensor(ros::NodeHandle* nh, const char* topic, double pe
 }
 bool AttitudeSensor::publish(const Eigen::Quaterniond& attitudeFrdToNed) {
     auto crntTimeSec = ros::Time::now().toSec();
-    if(!isEnabled_ || (nextPubTimeSec_ > crntTimeSec)){
+    if(!_isEnabled || (nextPubTimeSec_ > crntTimeSec)){
         return false;
     }
 
@@ -57,7 +72,7 @@ VelocitySensor::VelocitySensor(ros::NodeHandle* nh, const char* topic, double pe
 }
 bool VelocitySensor::publish(const Eigen::Vector3d& linVelNed, const Eigen::Vector3d& angVelFrd) {
     auto crntTimeSec = ros::Time::now().toSec();
-    if(!isEnabled_ || (nextPubTimeSec_ > crntTimeSec)){
+    if(!_isEnabled || (nextPubTimeSec_ > crntTimeSec)){
         return false;
     }
 
@@ -79,7 +94,7 @@ ImuSensor::ImuSensor(ros::NodeHandle* nh, const char* topic, double period) : Ba
 }
 bool ImuSensor::publish(const Eigen::Vector3d& accFrd, const Eigen::Vector3d& gyroFrd) {
     auto crntTimeSec = ros::Time::now().toSec();
-    if(!isEnabled_ || (nextPubTimeSec_ > crntTimeSec)){
+    if(!_isEnabled || (nextPubTimeSec_ > crntTimeSec)){
         return false;
     }
 
@@ -106,7 +121,7 @@ MagSensor::MagSensor(ros::NodeHandle* nh, const char* topic, double period) : Ba
 }
 bool MagSensor::publish(const Eigen::Vector3d& geoPosition, const Eigen::Quaterniond& attitudeFrdToNed) {
     auto crntTimeSec = ros::Time::now().toSec();
-    if(!isEnabled_ || (nextPubTimeSec_ > crntTimeSec)){
+    if(!_isEnabled || (nextPubTimeSec_ > crntTimeSec)){
         return false;
     }
 
@@ -131,7 +146,7 @@ RawAirDataSensor::RawAirDataSensor(ros::NodeHandle* nh, const char* topic, doubl
 }
 bool RawAirDataSensor::publish(float absPressureHpa, float diffPressure, float staticTemperature) {
     auto crntTimeSec = ros::Time::now().toSec();
-    if(!isEnabled_ || (nextPubTimeSec_ > crntTimeSec)){
+    if(!_isEnabled || (nextPubTimeSec_ > crntTimeSec)){
         return false;
     }
 
@@ -150,12 +165,12 @@ bool RawAirDataSensor::publish(float absPressureHpa, float diffPressure, float s
 }
 
 PressureSensor::PressureSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
-    old_publisher_ = node_handler_->advertise<uavcan_msgs::StaticPressure>(topic, 5);
+    _old_publisher = node_handler_->advertise<uavcan_msgs::StaticPressure>(topic, 5);
     publisher_ = node_handler_->advertise<std_msgs::Float32>("/uav/baro_pressure", 5);
 }
 bool PressureSensor::publish(float staticPressureHpa) {
     auto crntTimeSec = ros::Time::now().toSec();
-    if(!isEnabled_ || (nextPubTimeSec_ > crntTimeSec)){
+    if(!_isEnabled || (nextPubTimeSec_ > crntTimeSec)){
         return false;
     }
 
@@ -163,7 +178,7 @@ bool PressureSensor::publish(float staticPressureHpa) {
     old_msg.header.stamp = ros::Time();
     old_msg.static_pressure = staticPressureHpa * 100;
     old_msg.static_pressure += STATIC_PRESSURE_NOISE * normalDistribution_(randomGenerator_);
-    old_publisher_.publish(old_msg);
+    _old_publisher.publish(old_msg);
 
     std_msgs::Float32 msg;
     msg.data = staticPressureHpa * 100;
@@ -175,12 +190,12 @@ bool PressureSensor::publish(float staticPressureHpa) {
 }
 
 TemperatureSensor::TemperatureSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
-    old_publisher_ = node_handler_->advertise<uavcan_msgs::StaticTemperature>(topic, 5);
+    _old_publisher = node_handler_->advertise<uavcan_msgs::StaticTemperature>(topic, 5);
     publisher_ = node_handler_->advertise<std_msgs::Float32>("/uav/baro_temperature", 5);
 }
 bool TemperatureSensor::publish(float staticTemperature) {
     auto crntTimeSec = ros::Time::now().toSec();
-    if(!isEnabled_ || (nextPubTimeSec_ > crntTimeSec)){
+    if(!_isEnabled || (nextPubTimeSec_ > crntTimeSec)){
         return false;
     }
 
@@ -188,7 +203,7 @@ bool TemperatureSensor::publish(float staticTemperature) {
     old_msg.header.stamp = ros::Time();
     old_msg.static_temperature = staticTemperature + 5;
     old_msg.static_temperature += TEMPERATURE_NOISE * normalDistribution_(randomGenerator_);
-    old_publisher_.publish(old_msg);
+    _old_publisher.publish(old_msg);
 
     std_msgs::Float32 msg;
     msg.data = staticTemperature + 5;
@@ -205,7 +220,7 @@ EscStatusSensor::EscStatusSensor(ros::NodeHandle* nh, const char* topic, double 
 bool EscStatusSensor::publish(const std::vector<double>& rpm) {
     ///< The idea here is to publish each esc status with equal interval instead of burst
     auto crntTimeSec = ros::Time::now().toSec();
-    if(isEnabled_ && rpm.size() > 0 && rpm.size() <= 8 && (nextPubTimeSec_ < crntTimeSec)){
+    if(_isEnabled && rpm.size() > 0 && rpm.size() <= 8 && (nextPubTimeSec_ < crntTimeSec)){
         uavcan_msgs::EscStatus escStatusMsg;
         if(nextEscIdx_ >= rpm.size()){
             nextEscIdx_ = 0;
@@ -225,7 +240,7 @@ GpsSensor::GpsSensor(ros::NodeHandle* nh, const char* topic, double period) : Ba
 }
 bool GpsSensor::publish(const Eigen::Vector3d& gpsPosition, const Eigen::Vector3d& nedVelocity) {
     auto crntTimeSec = ros::Time::now().toSec();
-    if(!isEnabled_ || (nextPubTimeSec_ > crntTimeSec)){
+    if(!_isEnabled || (nextPubTimeSec_ > crntTimeSec)){
         return false;
     }
 
@@ -252,26 +267,13 @@ bool GpsSensor::publish(const Eigen::Vector3d& gpsPosition, const Eigen::Vector3
     return true;
 }
 
-IceStatusSensor::IceStatusSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
-    publisher_ = node_handler_->advertise<uavcan_msgs::IceReciprocatingStatus>(topic, 16);
-}
-bool IceStatusSensor::publish(double rpm) {
-    auto crntTimeSec = ros::Time::now().toSec();
-    if(isEnabled_ && (nextPubTimeSec_ < crntTimeSec)){
-        uavcan_msgs::IceReciprocatingStatus iceStatusMsg;
-        iceStatusMsg.engine_speed_rpm = rpm;
-        publisher_.publish(iceStatusMsg);
-        nextPubTimeSec_ = crntTimeSec + PERIOD;
-    }
-    return true;
-}
 
 FuelTankSensor::FuelTankSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
     publisher_ = node_handler_->advertise<uavcan_msgs::IceFuelTankStatus>(topic, 16);
 }
 bool FuelTankSensor::publish(double fuelLevelPercentage) {
     auto crntTimeSec = ros::Time::now().toSec();
-    if(isEnabled_ && (nextPubTimeSec_ < crntTimeSec)){
+    if(_isEnabled && (nextPubTimeSec_ < crntTimeSec)){
         uavcan_msgs::IceFuelTankStatus fuelTankMsg;
         fuelTankMsg.available_fuel_volume_percent = fuelLevelPercentage;
         publisher_.publish(fuelTankMsg);
@@ -286,7 +288,7 @@ BatteryInfoSensor::BatteryInfoSensor(ros::NodeHandle* nh, const char* topic, dou
 }
 bool BatteryInfoSensor::publish(double percentage) {
     auto crntTimeSec = ros::Time::now().toSec();
-    if(isEnabled_ && (nextPubTimeSec_ < crntTimeSec)){
+    if(_isEnabled && (nextPubTimeSec_ < crntTimeSec)){
         sensor_msgs::BatteryState batteryInfoMsg;
         batteryInfoMsg.voltage = 4.1;
         batteryInfoMsg.percentage = percentage;

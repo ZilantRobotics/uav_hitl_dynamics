@@ -27,7 +27,6 @@ RUN /catkin_ws/src/geographiclib_conversions/scripts/install.sh
 RUN source /opt/ros/$ROS_DISTRO/setup.bash && cd /catkin_ws && catkin build
 
 # 4. Copy the source files
-COPY include/           inno_vtol_dynamics/include/
 COPY libs/              inno_vtol_dynamics/libs/
 COPY meshes/            inno_vtol_dynamics/meshes/
 COPY src/               inno_vtol_dynamics/src/

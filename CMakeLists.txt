@@ -35,25 +35,31 @@ catkin_package(
 ## Build ##
 ###########
 include_directories(
-    include
-    include/dynamics
+    src
+    src/dynamics
+    src/dynamics/vtol
+    src/dynamics/quadcopter
+    src/sensors
     ${catkin_INCLUDE_DIRS}
     ${mavlink_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIRS}
 )
 
-add_library(${PROJECT_NAME} src/dynamics/vtolDynamicsSim.cpp
-                            src/dynamics/flightgogglesDynamicsSim.cpp
+add_library(${PROJECT_NAME} src/dynamics/vtol/vtolDynamicsSim.cpp
+                            src/dynamics/quadcopter/flightgogglesDynamicsSim.cpp
                             src/dynamics/uavDynamicsSimBase.cpp
                             libs/multicopterDynamicsSim/inertialMeasurementSim.cpp
                             libs/multicopterDynamicsSim/multicopterDynamicsSim.cpp
-                            src/sensors.cpp
+                            src/sensors/ice.cpp
+                            src/sensors/sensors.cpp
+                            src/sensors/sensor_base.cpp
                             src/common_math.cpp
                             src/cs_converter.cpp
+                            src/rviz_visualization.cpp
 )
 
-## 1. Declare a C++ innopolis_vtol_dynamics_node executable
-add_executable(${PROJECT_NAME}_node src/innopolis_vtol_dynamics_node.cpp)
+## 1. Declare a C++ uav_dynamics_node executable
+add_executable(${PROJECT_NAME}_node src/uavDynamicsNode.cpp)
 target_include_directories(${PROJECT_NAME}_node
                 BEFORE
                 PUBLIC ${MAVLINK_INCLUDE_DIRS})

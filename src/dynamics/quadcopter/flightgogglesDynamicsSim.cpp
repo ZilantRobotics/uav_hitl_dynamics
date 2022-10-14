@@ -1,5 +1,5 @@
 /**
- * @file multicopterDynamicsSimWrapper.cpp
+ * @file flightgogglesDynamicsSim.cpp
  * @author ponomarevda96@gmail.com
  */
 

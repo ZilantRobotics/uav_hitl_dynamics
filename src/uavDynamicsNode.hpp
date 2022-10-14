@@ -1,5 +1,5 @@
 /**
- * @file innopolis_vtol_dynamics_node.hpp
+ * @file uavDynamicsNode.hpp
  * @author Dmitry Ponomarev
  * @author Roman Fedorenko
  * @author Ezra Tal
@@ -17,15 +17,14 @@
 
 #include <ros/ros.h>
 #include <ros/time.h>
-#include <tf2_ros/transform_broadcaster.h>
 
 #include <sensor_msgs/Joy.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/UInt8.h>
-#include <visualization_msgs/Marker.h>
 
 #include "uavDynamicsSimBase.hpp"
 #include "sensors.hpp"
+#include "rviz_visualization.hpp"
 
 
 /**
@@ -36,12 +35,16 @@ class Uav_Dynamics {
         explicit Uav_Dynamics(ros::NodeHandle nh);
         int8_t init();
 
+        enum DynamicsNotation_t{
+            PX4_NED_FRD = 0,
+            ROS_ENU_FLU = 1,
+        };
+
     private:
         int8_t getParamsFromRos();
         int8_t initDynamicsSimulator();
         int8_t initSensors();
         int8_t initCalibration();
-        int8_t initRvizVisualizationMarkers();
         int8_t startClockAndThreads();
 
         /// @name Simulator
@@ -76,8 +79,6 @@ class Uav_Dynamics {
 
         std::string vehicleName_;
         std::string dynamicsTypeName_;
-
-        geodetic_converter::GeodeticConverter geodeticConverter_;
         //@}
 
 
@@ -94,25 +95,12 @@ class Uav_Dynamics {
         bool armed_ = false;
         void armCallback(std_msgs::Bool msg);
 
-        AttitudeSensor attitudeSensor_;
-        ImuSensor imuSensor_;
-        VelocitySensor velocitySensor_;
-        MagSensor magSensor_;
-        RawAirDataSensor rawAirDataSensor_;
-        TemperatureSensor temperatureSensor_;
-        PressureSensor pressureSensor_;
-        EscStatusSensor escStatusSensor_;
-        GpsSensor gpsSensor_;
-        IceStatusSensor iceStatusSensor_;
-        FuelTankSensor fuelTankSensor_;
-        BatteryInfoSensor batteryInfoSensor_;
+        ros::Subscriber scenarioSub_;
+        uint8_t _scenarioType = 0;
+        void scenarioCallback(std_msgs::UInt8 msg);
 
-        bool isEscStatusEnabled_;
-        bool isIceStatusEnabled_;
-        bool isFuelTankEnabled_;
-        bool isBatteryInfoEnabled_;
-
-        void publishStateToCommunicator();
+        Sensors _sensors;
+        RvizVisualizator _rviz_visualizator;
         //@}
 
         /// @name Calibration
@@ -129,36 +117,6 @@ class Uav_Dynamics {
         uint64_t rosPubCounter_;
         //@}
 
-        /// @name Visualization (Markers and tf)
-        //@{
-        tf2_ros::TransformBroadcaster tfPub_;
-
-        visualization_msgs::Marker arrowMarkers_;
-
-        ros::Publisher totalForcePub_;
-        ros::Publisher aeroForcePub_;
-        ros::Publisher motorsForcesPub_[5];
-        ros::Publisher liftForcePub_;
-        ros::Publisher drugForcePub_;
-        ros::Publisher sideForcePub_;
-
-        ros::Publisher totalMomentPub_;
-        ros::Publisher aeroMomentPub_;
-        ros::Publisher controlSurfacesMomentPub_;
-        ros::Publisher aoaMomentPub_;
-        ros::Publisher motorsMomentsPub_[5];
-
-        ros::Publisher velocityPub_;
-
-        void initMarkers();
-        visualization_msgs::Marker& makeArrow(const Eigen::Vector3d& vector3D,
-                                              const Eigen::Vector3d& rgbColor,
-                                              const char* frameId);
-        void publishMarkers();
-        void publishState();
-        //@}
-
-
         /// @name Timer and threads
         //@{
         ros::WallTimer simulationLoopTimer_;
@@ -174,11 +132,7 @@ class Uav_Dynamics {
         const float ROS_PUB_PERIOD_SEC = 0.05;
         //@}
 
-        enum DynamicsNotation_t{
-            PX4_NED_FRD = 0,
-            ROS_ENU_FLU = 1,
-        };
-        DynamicsNotation_t dynamicsNotation_;
+        DynamicsNotation_t _dynamicsNotation;
 };
 
 #endif

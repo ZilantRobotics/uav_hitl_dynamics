@@ -1,10 +1,23 @@
-/**
- * @file sensors.hpp
- * @author Dmitry Ponomarev
+/* 
+ * Copyright (c) 2020-2022 RaccoonLab.
+ * 
+ * This program is free software: you can redistribute it and/or modify  
+ * it under the terms of the GNU General Public License as published by  
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but 
+ * WITHOUT ANY WARRANTY; without even the implied warranty of 
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License 
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * Author: Dmitry Ponomarev <ponomarevda96@gmail.com>
  */
 
-#ifndef INNO_VTOL_DYNAMICS_SENSORS_HPP
-#define INNO_VTOL_DYNAMICS_SENSORS_HPP
+#ifndef SENSORS_SENSOR_BASE_HPP
+#define SENSORS_SENSOR_BASE_HPP
 
 #include <iostream>
 #include <ros/ros.h>
@@ -17,11 +30,11 @@ class BaseSensor{
     public:
         BaseSensor() = delete;
         BaseSensor(ros::NodeHandle* nh, double period): node_handler_(nh), PERIOD(period) {};
-        void enable() {isEnabled_ = true;}
-        void disable() {isEnabled_ = false;}
+        void enable() {_isEnabled = true;}
+        void disable() {_isEnabled = false;}
     protected:
         ros::NodeHandle* node_handler_;
-        bool isEnabled_{false};
+        bool _isEnabled{false};
         const double PERIOD;
         ros::Publisher publisher_;
         double nextPubTimeSec_ = 0;
@@ -66,12 +79,6 @@ class GpsSensor : public BaseSensor{
         ros::Publisher velocity_publisher_;
 };
 
-class IceStatusSensor : public BaseSensor{
-    public:
-        IceStatusSensor(ros::NodeHandle* nh, const char* topic, double period);
-        bool publish(double rpm);
-};
-
 class ImuSensor : public BaseSensor{
     public:
         ImuSensor(ros::NodeHandle* nh, const char* topic, double period);
@@ -95,7 +102,7 @@ class PressureSensor : public BaseSensor{
         PressureSensor(ros::NodeHandle* nh, const char* topic, double period);
         bool publish(float staticPressureHpa);
     private:
-        ros::Publisher old_publisher_;
+        ros::Publisher _old_publisher;
 };
 
 class TemperatureSensor : public BaseSensor{
@@ -103,7 +110,7 @@ class TemperatureSensor : public BaseSensor{
         TemperatureSensor(ros::NodeHandle* nh, const char* topic, double period);
         bool publish(float staticTemperature);
     private:
-        ros::Publisher old_publisher_;
+        ros::Publisher _old_publisher;
 };
 
 class VelocitySensor : public BaseSensor{
@@ -113,4 +120,4 @@ class VelocitySensor : public BaseSensor{
 };
 
 
-#endif  // INNO_VTOL_DYNAMICS_SENSORS_HPP
+#endif  // SENSORS_SENSOR_BASE_HPP
