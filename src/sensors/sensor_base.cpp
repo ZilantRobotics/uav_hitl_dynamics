@@ -258,9 +258,9 @@ bool GpsSensor::publish(const Eigen::Vector3d& gpsPosition, const Eigen::Vector3
     publisher_.publish(fixMsg);
 
     sensor_msgs::NavSatFix gps_position_msg;
-    gps_position_msg.latitude = gpsPosition[0] * 1e+8;
-    gps_position_msg.longitude = gpsPosition[1] * 1e+8;
-    gps_position_msg.altitude = gpsPosition[2] * 1e+3;
+    gps_position_msg.latitude = gpsPosition[0];
+    gps_position_msg.longitude = gpsPosition[1];
+    gps_position_msg.altitude = gpsPosition[2];
     position_publisher_.publish(gps_position_msg);
 
     nextPubTimeSec_ = crntTimeSec + PERIOD;
