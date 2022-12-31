@@ -34,7 +34,6 @@
 ///< uavcan_msgs are deprecated and should be removed asap
 #include <uavcan_msgs/RawAirData.h>
 #include <uavcan_msgs/StaticPressure.h>
-#include <uavcan_msgs/StaticTemperature.h>
 #include <uavcan_msgs/Fix.h>
 #include <uavcan_msgs/EscStatus.h>
 #include <uavcan_msgs/IceFuelTankStatus.h>
@@ -190,7 +189,6 @@ bool PressureSensor::publish(float staticPressureHpa) {
 }
 
 TemperatureSensor::TemperatureSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
-    _old_publisher = node_handler_->advertise<uavcan_msgs::StaticTemperature>(topic, 5);
     publisher_ = node_handler_->advertise<std_msgs::Float32>("/uav/baro_temperature", 5);
 }
 bool TemperatureSensor::publish(float staticTemperature) {
@@ -198,12 +196,6 @@ bool TemperatureSensor::publish(float staticTemperature) {
     if(!_isEnabled || (nextPubTimeSec_ > crntTimeSec)){
         return false;
     }
-
-    uavcan_msgs::StaticTemperature old_msg;
-    old_msg.header.stamp = ros::Time();
-    old_msg.static_temperature = staticTemperature + 5;
-    old_msg.static_temperature += TEMPERATURE_NOISE * normalDistribution_(randomGenerator_);
-    _old_publisher.publish(old_msg);
 
     std_msgs::Float32 msg;
     msg.data = staticTemperature + 5;
