@@ -94,23 +94,21 @@ class MagSensor : public BaseSensor{
 class RawAirDataSensor : public BaseSensor{
     public:
         RawAirDataSensor(ros::NodeHandle* nh, const char* topic, double period);
-        bool publish(float absPressureHpa, float diffPressure, float staticTemperature);
+        bool publish(float staticPressureHpa, float diffPressureHpa, float staticTemperature);
+    private:
+        ros::Publisher _old_publisher;
 };
 
 class PressureSensor : public BaseSensor{
     public:
         PressureSensor(ros::NodeHandle* nh, const char* topic, double period);
         bool publish(float staticPressureHpa);
-    private:
-        ros::Publisher _old_publisher;
 };
 
 class TemperatureSensor : public BaseSensor{
     public:
         TemperatureSensor(ros::NodeHandle* nh, const char* topic, double period);
         bool publish(float staticTemperature);
-    private:
-        ros::Publisher _old_publisher;
 };
 
 class VelocitySensor : public BaseSensor{

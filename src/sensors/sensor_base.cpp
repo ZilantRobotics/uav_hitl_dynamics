@@ -140,24 +140,31 @@ bool MagSensor::publish(const Eigen::Vector3d& geoPosition, const Eigen::Quatern
 }
 
 RawAirDataSensor::RawAirDataSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
-    publisher_ = node_handler_->advertise<uavcan_msgs::RawAirData>(topic, 5);
+    publisher_ = node_handler_->advertise<std_msgs::Float32>(topic, 5);
+    _old_publisher = node_handler_->advertise<uavcan_msgs::RawAirData>(topic, 5);
 }
-bool RawAirDataSensor::publish(float absPressureHpa, float diffPressure, float staticTemperature) {
+bool RawAirDataSensor::publish(float staticPressureHpa, float diffPressureHpa, float staticTemperature) {
     auto crntTimeSec = ros::Time::now().toSec();
     if(!_isEnabled || (nextPubTimeSec_ > crntTimeSec)){
         return false;
     }
 
-    uavcan_msgs::RawAirData msg;
-    msg.header.stamp = ros::Time();
-    msg.static_pressure = absPressureHpa * 100;
-    msg.differential_pressure = diffPressure * 100;
-    msg.static_air_temperature = staticTemperature;
-    msg.static_pressure += STATIC_PRESSURE_NOISE * normalDistribution_(randomGenerator_);
-    msg.differential_pressure += DIFF_PRESSURE_NOISE_PA * normalDistribution_(randomGenerator_);
-    msg.static_air_temperature += TEMPERATURE_NOISE * normalDistribution_(randomGenerator_);
-
+    std_msgs::Float32 msg;
+    msg.data = diffPressureHpa * 100;
+    msg.data += STATIC_PRESSURE_NOISE * normalDistribution_(randomGenerator_);
     publisher_.publish(msg);
+
+    uavcan_msgs::RawAirData old_msg;
+    old_msg.header.stamp = ros::Time();
+    old_msg.differential_pressure = diffPressureHpa * 100;
+    old_msg.differential_pressure += DIFF_PRESSURE_NOISE_PA * normalDistribution_(randomGenerator_);
+    old_msg.static_pressure = staticPressureHpa * 100;
+    old_msg.static_pressure += STATIC_PRESSURE_NOISE * normalDistribution_(randomGenerator_);
+    old_msg.static_air_temperature = staticTemperature;
+    old_msg.static_air_temperature += TEMPERATURE_NOISE * normalDistribution_(randomGenerator_);
+
+    _old_publisher.publish(old_msg);
+
     nextPubTimeSec_ = crntTimeSec + PERIOD;
     return true;
 }
