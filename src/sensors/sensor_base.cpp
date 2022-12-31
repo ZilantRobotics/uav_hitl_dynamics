@@ -33,7 +33,6 @@
 
 ///< uavcan_msgs are deprecated and should be removed asap
 #include <uavcan_msgs/RawAirData.h>
-#include <uavcan_msgs/StaticPressure.h>
 #include <uavcan_msgs/Fix.h>
 #include <uavcan_msgs/EscStatus.h>
 #include <uavcan_msgs/IceFuelTankStatus.h>
@@ -164,7 +163,6 @@ bool RawAirDataSensor::publish(float absPressureHpa, float diffPressure, float s
 }
 
 PressureSensor::PressureSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
-    _old_publisher = node_handler_->advertise<uavcan_msgs::StaticPressure>(topic, 5);
     publisher_ = node_handler_->advertise<std_msgs::Float32>("/uav/baro_pressure", 5);
 }
 bool PressureSensor::publish(float staticPressureHpa) {
@@ -172,12 +170,6 @@ bool PressureSensor::publish(float staticPressureHpa) {
     if(!_isEnabled || (nextPubTimeSec_ > crntTimeSec)){
         return false;
     }
-
-    uavcan_msgs::StaticPressure old_msg;
-    old_msg.header.stamp = ros::Time();
-    old_msg.static_pressure = staticPressureHpa * 100;
-    old_msg.static_pressure += STATIC_PRESSURE_NOISE * normalDistribution_(randomGenerator_);
-    _old_publisher.publish(old_msg);
 
     std_msgs::Float32 msg;
     msg.data = staticPressureHpa * 100;
