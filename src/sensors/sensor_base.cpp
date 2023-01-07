@@ -23,8 +23,6 @@
 #include <ros/time.h>
 
 #include <geometry_msgs/Vector3.h>
-#include <geometry_msgs/Twist.h>
-#include <sensor_msgs/Imu.h>
 #include <std_msgs/Float32.h>
 #include <sensor_msgs/MagneticField.h>
 #include <sensor_msgs/NavSatFix.h>
@@ -38,32 +36,6 @@
 
 static const double MAG_NOISE = 0.0002;
 
-ImuSensor::ImuSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
-    publisher_ = node_handler_->advertise<sensor_msgs::Imu>(topic, 5);
-}
-bool ImuSensor::publish(const Eigen::Vector3d& accFrd, const Eigen::Vector3d& gyroFrd) {
-    auto crntTimeSec = ros::Time::now().toSec();
-    if(!_isEnabled || (nextPubTimeSec_ > crntTimeSec)){
-        return false;
-    }
-
-    sensor_msgs::Imu msg;
-    msg.header.stamp = ros::Time::now();
-    msg.angular_velocity.x = gyroFrd[0];
-    msg.angular_velocity.y = gyroFrd[1];
-    msg.angular_velocity.z = gyroFrd[2];
-    msg.linear_acceleration.x = accFrd[0];
-    msg.linear_acceleration.y = accFrd[1];
-    msg.linear_acceleration.z = accFrd[2];
-
-    publisher_.publish(msg);
-    if (nextPubTimeSec_ + PERIOD > crntTimeSec) {
-        nextPubTimeSec_ += PERIOD;
-    } else {
-        nextPubTimeSec_ = crntTimeSec + PERIOD;
-    }
-    return true;
-}
 
 MagSensor::MagSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
     publisher_ = node_handler_->advertise<sensor_msgs::MagneticField>(topic, 5);

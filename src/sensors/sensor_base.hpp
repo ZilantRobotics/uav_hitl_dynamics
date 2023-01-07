@@ -73,12 +73,6 @@ class GpsSensor : public BaseSensor{
         ros::Publisher velocity_publisher_;
 };
 
-class ImuSensor : public BaseSensor{
-    public:
-        ImuSensor(ros::NodeHandle* nh, const char* topic, double period);
-        bool publish(const Eigen::Vector3d& accFrd, const Eigen::Vector3d& gyroFrd);
-};
-
 class MagSensor : public BaseSensor{
     public:
         MagSensor(ros::NodeHandle* nh, const char* topic, double period);

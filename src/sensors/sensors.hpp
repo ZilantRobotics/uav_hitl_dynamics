@@ -23,6 +23,7 @@
 #include "barometer.hpp"
 #include "differential_pressure.hpp"
 #include "ice.hpp"
+#include "imu.hpp"
 #include "velocity.hpp"
 
 #include "uavDynamicsSimBase.hpp"
