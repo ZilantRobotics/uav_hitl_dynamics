@@ -141,7 +141,6 @@ bool MagSensor::publish(const Eigen::Vector3d& geoPosition, const Eigen::Quatern
 
 RawAirDataSensor::RawAirDataSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
     publisher_ = node_handler_->advertise<std_msgs::Float32>(topic, 5);
-    _old_publisher = node_handler_->advertise<uavcan_msgs::RawAirData>(topic, 5);
 }
 bool RawAirDataSensor::publish(float staticPressureHpa, float diffPressureHpa, float staticTemperature) {
     auto crntTimeSec = ros::Time::now().toSec();
@@ -154,23 +153,12 @@ bool RawAirDataSensor::publish(float staticPressureHpa, float diffPressureHpa, f
     msg.data += STATIC_PRESSURE_NOISE * normalDistribution_(randomGenerator_);
     publisher_.publish(msg);
 
-    uavcan_msgs::RawAirData old_msg;
-    old_msg.header.stamp = ros::Time();
-    old_msg.differential_pressure = diffPressureHpa * 100;
-    old_msg.differential_pressure += DIFF_PRESSURE_NOISE_PA * normalDistribution_(randomGenerator_);
-    old_msg.static_pressure = staticPressureHpa * 100;
-    old_msg.static_pressure += STATIC_PRESSURE_NOISE * normalDistribution_(randomGenerator_);
-    old_msg.static_air_temperature = staticTemperature;
-    old_msg.static_air_temperature += TEMPERATURE_NOISE * normalDistribution_(randomGenerator_);
-
-    _old_publisher.publish(old_msg);
-
     nextPubTimeSec_ = crntTimeSec + PERIOD;
     return true;
 }
 
 PressureSensor::PressureSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
-    publisher_ = node_handler_->advertise<std_msgs::Float32>("/uav/baro_pressure", 5);
+    publisher_ = node_handler_->advertise<std_msgs::Float32>("/uav/static_pressure", 5);
 }
 bool PressureSensor::publish(float staticPressureHpa) {
     auto crntTimeSec = ros::Time::now().toSec();
@@ -188,7 +176,7 @@ bool PressureSensor::publish(float staticPressureHpa) {
 }
 
 TemperatureSensor::TemperatureSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
-    publisher_ = node_handler_->advertise<std_msgs::Float32>("/uav/baro_temperature", 5);
+    publisher_ = node_handler_->advertise<std_msgs::Float32>("/uav/static_temperature", 5);
 }
 bool TemperatureSensor::publish(float staticTemperature) {
     auto crntTimeSec = ros::Time::now().toSec();
@@ -249,6 +237,7 @@ bool GpsSensor::publish(const Eigen::Vector3d& gpsPosition, const Eigen::Vector3
     publisher_.publish(fixMsg);
 
     sensor_msgs::NavSatFix gps_position_msg;
+    gps_position_msg.header.stamp = ros::Time::now();
     gps_position_msg.latitude = gpsPosition[0];
     gps_position_msg.longitude = gpsPosition[1];
     gps_position_msg.altitude = gpsPosition[2];
