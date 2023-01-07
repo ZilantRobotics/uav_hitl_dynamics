@@ -41,7 +41,6 @@
 static const double MAG_NOISE = 0.0002;
 static const double STATIC_PRESSURE_NOISE = 0.1;
 static const double DIFF_PRESSURE_NOISE_PA = 5;
-static const double TEMPERATURE_NOISE = 0.1;
 
 
 AttitudeSensor::AttitudeSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
@@ -151,42 +150,6 @@ bool RawAirDataSensor::publish(float staticPressureHpa, float diffPressureHpa, f
     std_msgs::Float32 msg;
     msg.data = diffPressureHpa * 100;
     msg.data += STATIC_PRESSURE_NOISE * normalDistribution_(randomGenerator_);
-    publisher_.publish(msg);
-
-    nextPubTimeSec_ = crntTimeSec + PERIOD;
-    return true;
-}
-
-PressureSensor::PressureSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
-    publisher_ = node_handler_->advertise<std_msgs::Float32>("/uav/static_pressure", 5);
-}
-bool PressureSensor::publish(float staticPressureHpa) {
-    auto crntTimeSec = ros::Time::now().toSec();
-    if(!_isEnabled || (nextPubTimeSec_ > crntTimeSec)){
-        return false;
-    }
-
-    std_msgs::Float32 msg;
-    msg.data = staticPressureHpa * 100;
-    msg.data += STATIC_PRESSURE_NOISE * normalDistribution_(randomGenerator_);
-    publisher_.publish(msg);
-
-    nextPubTimeSec_ = crntTimeSec + PERIOD;
-    return true;
-}
-
-TemperatureSensor::TemperatureSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
-    publisher_ = node_handler_->advertise<std_msgs::Float32>("/uav/static_temperature", 5);
-}
-bool TemperatureSensor::publish(float staticTemperature) {
-    auto crntTimeSec = ros::Time::now().toSec();
-    if(!_isEnabled || (nextPubTimeSec_ > crntTimeSec)){
-        return false;
-    }
-
-    std_msgs::Float32 msg;
-    msg.data = staticTemperature + 5;
-    msg.data += TEMPERATURE_NOISE * normalDistribution_(randomGenerator_);
     publisher_.publish(msg);
 
     nextPubTimeSec_ = crntTimeSec + PERIOD;

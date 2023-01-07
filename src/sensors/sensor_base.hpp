@@ -99,18 +99,6 @@ class RawAirDataSensor : public BaseSensor{
         ros::Publisher _old_publisher;
 };
 
-class PressureSensor : public BaseSensor{
-    public:
-        PressureSensor(ros::NodeHandle* nh, const char* topic, double period);
-        bool publish(float staticPressureHpa);
-};
-
-class TemperatureSensor : public BaseSensor{
-    public:
-        TemperatureSensor(ros::NodeHandle* nh, const char* topic, double period);
-        bool publish(float staticTemperature);
-};
-
 class VelocitySensor : public BaseSensor{
     public:
         VelocitySensor(ros::NodeHandle* nh, const char* topic, double period);

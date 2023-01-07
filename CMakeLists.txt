@@ -51,6 +51,7 @@ add_library(${PROJECT_NAME} src/dynamics/vtol/vtolDynamicsSim.cpp
                             libs/multicopterDynamicsSim/inertialMeasurementSim.cpp
                             libs/multicopterDynamicsSim/multicopterDynamicsSim.cpp
                             src/sensors/ice.cpp
+                            src/sensors/barometer.cpp
                             src/sensors/sensors.cpp
                             src/sensors/sensor_base.cpp
                             src/common_math.cpp
