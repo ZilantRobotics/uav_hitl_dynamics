@@ -23,6 +23,8 @@
 #include "barometer.hpp"
 #include "differential_pressure.hpp"
 #include "ice.hpp"
+#include "velocity.hpp"
+
 #include "uavDynamicsSimBase.hpp"
 
 class Sensors {

@@ -38,28 +38,6 @@
 
 static const double MAG_NOISE = 0.0002;
 
-VelocitySensor::VelocitySensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
-    publisher_ = node_handler_->advertise<geometry_msgs::Twist>(topic, 5);
-}
-bool VelocitySensor::publish(const Eigen::Vector3d& linVelNed, const Eigen::Vector3d& angVelFrd) {
-    auto crntTimeSec = ros::Time::now().toSec();
-    if(!_isEnabled || (nextPubTimeSec_ > crntTimeSec)){
-        return false;
-    }
-
-    geometry_msgs::Twist msg;
-    msg.linear.x = linVelNed[0];
-    msg.linear.y = linVelNed[1];
-    msg.linear.z = linVelNed[2];
-    msg.angular.x = angVelFrd[0];
-    msg.angular.y = angVelFrd[1];
-    msg.angular.z = angVelFrd[2];
-
-    publisher_.publish(msg);
-    nextPubTimeSec_ = crntTimeSec + PERIOD;
-    return true;
-}
-
 ImuSensor::ImuSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
     publisher_ = node_handler_->advertise<sensor_msgs::Imu>(topic, 5);
 }

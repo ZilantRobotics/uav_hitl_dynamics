@@ -85,11 +85,4 @@ class MagSensor : public BaseSensor{
         bool publish(const Eigen::Vector3d& geoPosition, const Eigen::Quaterniond& attitudeFrdToNed);
 };
 
-class VelocitySensor : public BaseSensor{
-    public:
-        VelocitySensor(ros::NodeHandle* nh, const char* topic, double period);
-        bool publish(const Eigen::Vector3d& linVelNed, const Eigen::Vector3d& angVelFrd);
-};
-
-
 #endif  // SENSORS_SENSOR_BASE_HPP
