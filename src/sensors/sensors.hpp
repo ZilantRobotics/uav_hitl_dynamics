@@ -25,6 +25,7 @@
 #include "differential_pressure.hpp"
 #include "ice.hpp"
 #include "imu.hpp"
+#include "mag.hpp"
 #include "velocity.hpp"
 
 #include "uavDynamicsSimBase.hpp"

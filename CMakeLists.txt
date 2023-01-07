@@ -58,6 +58,7 @@ add_library(${PROJECT_NAME} src/dynamics/vtol/vtolDynamicsSim.cpp
                             src/sensors/ice.cpp
                             src/sensors/imu.cpp
                             src/sensors/velocity.cpp
+                            src/sensors/mag.cpp
 
                             src/sensors/sensors.cpp
                             src/sensors/sensor_base.cpp

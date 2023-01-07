@@ -17,14 +17,12 @@
  */
 
 #include "sensors.hpp"
-#include "cs_converter.hpp"
 
 #include <ros/ros.h>
 #include <ros/time.h>
 
 #include <geometry_msgs/Vector3.h>
 #include <std_msgs/Float32.h>
-#include <sensor_msgs/MagneticField.h>
 #include <sensor_msgs/NavSatFix.h>
 
 ///< uavcan_msgs are deprecated and should be removed asap
@@ -32,34 +30,6 @@
 #include <uavcan_msgs/EscStatus.h>
 #include <uavcan_msgs/IceFuelTankStatus.h>
 
-
-static const double MAG_NOISE = 0.0002;
-
-
-MagSensor::MagSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
-    publisher_ = node_handler_->advertise<sensor_msgs::MagneticField>(topic, 5);
-}
-bool MagSensor::publish(const Eigen::Vector3d& geoPosition, const Eigen::Quaterniond& attitudeFrdToNed) {
-    auto crntTimeSec = ros::Time::now().toSec();
-    if(!_isEnabled || (nextPubTimeSec_ > crntTimeSec)){
-        return false;
-    }
-
-    sensor_msgs::MagneticField msg;
-    Eigen::Vector3d magEnu;
-    geographiclib_conversions::MagneticField(
-        geoPosition.x(), geoPosition.y(), geoPosition.z(),
-        magEnu.x(), magEnu.y(), magEnu.z());
-    Eigen::Vector3d magFrd = attitudeFrdToNed.inverse() * Converter::enuToNed(magEnu);
-    msg.header.stamp = ros::Time();
-    msg.magnetic_field.x = magFrd[0] + MAG_NOISE * normalDistribution_(randomGenerator_);
-    msg.magnetic_field.y = magFrd[1] + MAG_NOISE * normalDistribution_(randomGenerator_);
-    msg.magnetic_field.z = magFrd[2] + MAG_NOISE * normalDistribution_(randomGenerator_);
-
-    publisher_.publish(msg);
-    nextPubTimeSec_ = crntTimeSec + PERIOD;
-    return true;
-}
 
 EscStatusSensor::EscStatusSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
     publisher_ = node_handler_->advertise<uavcan_msgs::EscStatus>(topic, 10);
