@@ -43,12 +43,6 @@ class BaseSensor{
         std::normal_distribution<double> normalDistribution_{std::normal_distribution<double>(0.0, 1.0)};
 };
 
-class AttitudeSensor : public BaseSensor{
-    public:
-        AttitudeSensor(ros::NodeHandle* nh, const char* topic, double period);
-        bool publish(const Eigen::Quaterniond& attitudeFrdToNed);
-};
-
 class BatteryInfoSensor : public BaseSensor{
     public:
         BatteryInfoSensor(ros::NodeHandle* nh, const char* topic, double period);

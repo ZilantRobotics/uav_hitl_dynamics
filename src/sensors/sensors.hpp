@@ -19,6 +19,7 @@
 #ifndef SRC_SENSORS_SENSORS_HPP_
 #define SRC_SENSORS_SENSORS_HPP_
 
+#include "attitude.hpp"
 #include "barometer.hpp"
 #include "ice.hpp"
 #include "uavDynamicsSimBase.hpp"

@@ -22,7 +22,6 @@
 #include <ros/ros.h>
 #include <ros/time.h>
 
-#include <geometry_msgs/QuaternionStamped.h>
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/Twist.h>
 #include <sensor_msgs/Imu.h>
@@ -42,27 +41,6 @@ static const double MAG_NOISE = 0.0002;
 static const double STATIC_PRESSURE_NOISE = 0.1;
 static const double DIFF_PRESSURE_NOISE_PA = 5;
 
-
-AttitudeSensor::AttitudeSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
-    publisher_ = node_handler_->advertise<geometry_msgs::QuaternionStamped>(topic, 5);
-}
-bool AttitudeSensor::publish(const Eigen::Quaterniond& attitudeFrdToNed) {
-    auto crntTimeSec = ros::Time::now().toSec();
-    if(!_isEnabled || (nextPubTimeSec_ > crntTimeSec)){
-        return false;
-    }
-
-    geometry_msgs::QuaternionStamped msg;
-    msg.quaternion.x = attitudeFrdToNed.x();
-    msg.quaternion.y = attitudeFrdToNed.y();
-    msg.quaternion.z = attitudeFrdToNed.z();
-    msg.quaternion.w = attitudeFrdToNed.w();
-    msg.header.stamp = ros::Time::now();
-
-    publisher_.publish(msg);
-    nextPubTimeSec_ = crntTimeSec + PERIOD;
-    return true;
-}
 
 VelocitySensor::VelocitySensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
     publisher_ = node_handler_->advertise<geometry_msgs::Twist>(topic, 5);
