@@ -43,12 +43,6 @@ class BaseSensor{
         std::normal_distribution<double> normalDistribution_{std::normal_distribution<double>(0.0, 1.0)};
 };
 
-class BatteryInfoSensor : public BaseSensor{
-    public:
-        BatteryInfoSensor(ros::NodeHandle* nh, const char* topic, double period);
-        bool publish(double rpm);
-};
-
 class EscStatusSensor : public BaseSensor{
     public:
         EscStatusSensor(ros::NodeHandle* nh, const char* topic, double period);

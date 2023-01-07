@@ -21,6 +21,7 @@
 
 #include "attitude.hpp"
 #include "barometer.hpp"
+#include "battery.hpp"
 #include "differential_pressure.hpp"
 #include "ice.hpp"
 #include "imu.hpp"

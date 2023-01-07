@@ -26,7 +26,6 @@
 #include <std_msgs/Float32.h>
 #include <sensor_msgs/MagneticField.h>
 #include <sensor_msgs/NavSatFix.h>
-#include <sensor_msgs/BatteryState.h>
 
 ///< uavcan_msgs are deprecated and should be removed asap
 #include <uavcan_msgs/Fix.h>
@@ -126,23 +125,6 @@ bool FuelTankSensor::publish(double fuelLevelPercentage) {
         uavcan_msgs::IceFuelTankStatus fuelTankMsg;
         fuelTankMsg.available_fuel_volume_percent = fuelLevelPercentage;
         publisher_.publish(fuelTankMsg);
-        nextPubTimeSec_ = crntTimeSec + PERIOD;
-    }
-    return true;
-}
-
-
-BatteryInfoSensor::BatteryInfoSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
-    publisher_ = node_handler_->advertise<sensor_msgs::BatteryState>(topic, 16);
-}
-bool BatteryInfoSensor::publish(double percentage) {
-    auto crntTimeSec = ros::Time::now().toSec();
-    if(_isEnabled && (nextPubTimeSec_ < crntTimeSec)){
-        sensor_msgs::BatteryState batteryInfoMsg;
-        batteryInfoMsg.voltage = 4.1;
-        batteryInfoMsg.percentage = percentage;
-        batteryInfoMsg.capacity = 6;
-        publisher_.publish(batteryInfoMsg);
         nextPubTimeSec_ = crntTimeSec + PERIOD;
     }
     return true;
