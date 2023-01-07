@@ -25,7 +25,7 @@ Sensors::Sensors(ros::NodeHandle* nh) :
     imuSensor(nh,           "/uav/imu",                 0.00333),
     velocitySensor_(nh,     "/uav/velocity",            0.05),
     magSensor(nh,           "/uav/mag",                 0.03),
-    rawAirDataSensor(nh,    "/uav/raw_air_data",        0.05),
+    diffPressureSensor(nh,  "/uav/raw_air_data",        0.05),
     temperatureSensor(nh,   "/uav/static_temperature",  0.05),
     pressureSensor(nh,      "/uav/static_pressure",     0.05),
     gpsSensor(nh,           "/uav/gps_position",        0.1),
@@ -70,7 +70,7 @@ int8_t Sensors::init(UavDynamicsSimBase* uavDynamicsSim) {
     imuSensor.enable();
     velocitySensor_.enable();
     magSensor.enable();
-    rawAirDataSensor.enable();
+    diffPressureSensor.enable();
     temperatureSensor.enable();
     pressureSensor.enable();
     gpsSensor.enable();
@@ -128,7 +128,7 @@ void Sensors::publishStateToCommunicator(uint8_t dynamicsNotation) {
     imuSensor.publish(accFrd, gyroFrd);
     velocitySensor_.publish(linVelNed, angVelFrd);
     magSensor.publish(gpsPosition, attitudeFrdToNed);
-    rawAirDataSensor.publish(absPressureHpa, diffPressureHpa, temperatureKelvin);
+    diffPressureSensor.publish(diffPressureHpa);
     pressureSensor.publish(absPressureHpa);
     temperatureSensor.publish(temperatureKelvin);
     gpsSensor.publish(gpsPosition, linVelNed);

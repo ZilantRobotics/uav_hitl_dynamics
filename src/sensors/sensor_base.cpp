@@ -31,16 +31,12 @@
 #include <sensor_msgs/BatteryState.h>
 
 ///< uavcan_msgs are deprecated and should be removed asap
-#include <uavcan_msgs/RawAirData.h>
 #include <uavcan_msgs/Fix.h>
 #include <uavcan_msgs/EscStatus.h>
 #include <uavcan_msgs/IceFuelTankStatus.h>
 
 
 static const double MAG_NOISE = 0.0002;
-static const double STATIC_PRESSURE_NOISE = 0.1;
-static const double DIFF_PRESSURE_NOISE_PA = 5;
-
 
 VelocitySensor::VelocitySensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
     publisher_ = node_handler_->advertise<geometry_msgs::Twist>(topic, 5);
@@ -112,24 +108,6 @@ bool MagSensor::publish(const Eigen::Vector3d& geoPosition, const Eigen::Quatern
     msg.magnetic_field.z = magFrd[2] + MAG_NOISE * normalDistribution_(randomGenerator_);
 
     publisher_.publish(msg);
-    nextPubTimeSec_ = crntTimeSec + PERIOD;
-    return true;
-}
-
-RawAirDataSensor::RawAirDataSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
-    publisher_ = node_handler_->advertise<std_msgs::Float32>(topic, 5);
-}
-bool RawAirDataSensor::publish(float staticPressureHpa, float diffPressureHpa, float staticTemperature) {
-    auto crntTimeSec = ros::Time::now().toSec();
-    if(!_isEnabled || (nextPubTimeSec_ > crntTimeSec)){
-        return false;
-    }
-
-    std_msgs::Float32 msg;
-    msg.data = diffPressureHpa * 100;
-    msg.data += STATIC_PRESSURE_NOISE * normalDistribution_(randomGenerator_);
-    publisher_.publish(msg);
-
     nextPubTimeSec_ = crntTimeSec + PERIOD;
     return true;
 }

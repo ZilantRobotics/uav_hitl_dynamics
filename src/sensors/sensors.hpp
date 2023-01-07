@@ -21,6 +21,7 @@
 
 #include "attitude.hpp"
 #include "barometer.hpp"
+#include "differential_pressure.hpp"
 #include "ice.hpp"
 #include "uavDynamicsSimBase.hpp"
 
@@ -37,7 +38,7 @@ private:
     ImuSensor imuSensor;
     VelocitySensor velocitySensor_;
     MagSensor magSensor;
-    RawAirDataSensor rawAirDataSensor;
+    DifferentialPressureSensor diffPressureSensor;
     TemperatureSensor temperatureSensor;
     PressureSensor pressureSensor;
     GpsSensor gpsSensor;

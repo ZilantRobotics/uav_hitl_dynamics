@@ -85,14 +85,6 @@ class MagSensor : public BaseSensor{
         bool publish(const Eigen::Vector3d& geoPosition, const Eigen::Quaterniond& attitudeFrdToNed);
 };
 
-class RawAirDataSensor : public BaseSensor{
-    public:
-        RawAirDataSensor(ros::NodeHandle* nh, const char* topic, double period);
-        bool publish(float staticPressureHpa, float diffPressureHpa, float staticTemperature);
-    private:
-        ros::Publisher _old_publisher;
-};
-
 class VelocitySensor : public BaseSensor{
     public:
         VelocitySensor(ros::NodeHandle* nh, const char* topic, double period);
