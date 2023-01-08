@@ -14,7 +14,6 @@ find_package(catkin REQUIRED COMPONENTS
     std_msgs
     sensor_msgs
     geometry_msgs
-    uavcan_msgs
     mavros_msgs
     tf2
     tf2_ros
