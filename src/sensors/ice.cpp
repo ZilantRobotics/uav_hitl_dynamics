@@ -17,6 +17,8 @@
  */
 
 #include "ice.hpp"
+#include <std_msgs/UInt8.h>
+#include <mavros_msgs/ESCStatusItem.h>
 
 static const constexpr double WORKING_RPM = 4000.0;
 static const constexpr double STARTING_RPM = 500.0;
@@ -26,13 +28,25 @@ static const constexpr double PERIOD_3 = 2000.0;    // waiting period
 static const constexpr double PERIOD_23 = PERIOD_2 + PERIOD_3;    // starting + waiting period
 
 IceStatusSensor::IceStatusSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
-    publisher_ = node_handler_->advertise<uavcan_msgs::IceReciprocatingStatus>(topic, 16);
+    std::string base_name = topic;
+    auto rpm_name = base_name + "_rpm";
+    auto status_name = base_name + "_status";
+    publisher_ = node_handler_->advertise<mavros_msgs::ESCStatusItem>(rpm_name.c_str(), 5);
+    _status_publisher = node_handler_->advertise<std_msgs::UInt8>(status_name.c_str(), 5);
 }
 bool IceStatusSensor::publish(double rpm) {
     auto crntTimeSec = ros::Time::now().toSec();
     if(_isEnabled && (nextPubTimeSec_ < crntTimeSec)){
         estimate_state(rpm);
-        publisher_.publish(_iceStatusMsg);
+
+        std_msgs::UInt8 state_msg;
+        state_msg.data = _state;
+        _status_publisher.publish(state_msg);
+
+        mavros_msgs::ESCStatusItem rpm_msg;
+        rpm_msg.rpm = rpm;
+        publisher_.publish(rpm_msg);
+
         nextPubTimeSec_ = crntTimeSec + PERIOD;
     }
     return true;
@@ -48,30 +62,30 @@ void IceStatusSensor::estimate_state(double rpm) {
 void IceStatusSensor::emulate_normal_mode(double rpm) {
     auto crntTimeSec = ros::Time::now().toSec();
     if (rpm < 1.0) {
-        _iceStatusMsg.state = 0;
-    } else if (_iceStatusMsg.state == 0) {
-        _iceStatusMsg.state = 1;
+        _state = 0;
+    } else if (_state == 0) {
+        _state = 1;
         _startTsSec = ros::Time::now().toSec();
     } else if (_startTsSec + 3.0 < crntTimeSec) {
-        _iceStatusMsg.state = 2;
+        _state = 2;
     }
-    _iceStatusMsg.engine_speed_rpm = rpm;
+    _rpm = rpm;
 }
 
 void IceStatusSensor::emulate_stall_mode() {
     auto crntTimeMs = ros::Time::now().toSec() * 1000;
     auto timeElapsedMs = crntTimeMs - _stallTsMs;
     if (timeElapsedMs < PERIOD_1) {
-        _iceStatusMsg.state = 2;
-        _iceStatusMsg.engine_speed_rpm = WORKING_RPM * (PERIOD_1 - timeElapsedMs) / PERIOD_1;
+        _state = 2;
+        _rpm = WORKING_RPM * (PERIOD_1 - timeElapsedMs) / PERIOD_1;
     } else {
         double timeSinceRestartMs = timeElapsedMs - PERIOD_1;
         if (fmod(timeSinceRestartMs, PERIOD_23) < PERIOD_2) {
-            _iceStatusMsg.state = 1;
-            _iceStatusMsg.engine_speed_rpm = STARTING_RPM;
+            _state = 1;
+            _rpm = STARTING_RPM;
         } else {
-            _iceStatusMsg.state = 2;
-            _iceStatusMsg.engine_speed_rpm = 0.0;
+            _state = 2;
+            _rpm = 0.0;
         }
     }
 }

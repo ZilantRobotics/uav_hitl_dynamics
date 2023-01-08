@@ -20,15 +20,12 @@ jobs:
           path: catkin_ws/src/inno_vtol_dynamics
 
       - name: Install requirements
-        run: |
-          ./catkin_ws/src/inno_vtol_dynamics/install_requirements.sh
+        run: ./catkin_ws/src/inno_vtol_dynamics/install_requirements.sh
 
       - name: Dependencies
         run: |
-          git clone https://github.com/InnopolisAero/uavcan_msgs.git catkin_ws/src/uavcan_msgs                              && \
           git clone https://github.com/InnopolisAero/geographiclib_conversions.git catkin_ws/src/geographiclib_conversions  && \
           ./catkin_ws/src/geographiclib_conversions/scripts/install.sh
 
       - name: Catkin build
-        run: |
-          source /opt/ros/melodic/setup.bash && cd catkin_ws && catkin build
+        run: source /opt/ros/melodic/setup.bash && cd catkin_ws && catkin build

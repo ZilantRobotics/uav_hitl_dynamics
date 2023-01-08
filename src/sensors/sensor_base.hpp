@@ -19,10 +19,8 @@
 #ifndef SENSORS_SENSOR_BASE_HPP
 #define SENSORS_SENSOR_BASE_HPP
 
-#include <iostream>
 #include <ros/ros.h>
-#include <ros/time.h>
-#include <Eigen/Geometry>
+// #include <ros/time.h>
 #include <random>
 #include <geographiclib_conversions/geodetic_conv.hpp>
 
@@ -42,82 +40,5 @@ class BaseSensor{
         std::default_random_engine randomGenerator_;
         std::normal_distribution<double> normalDistribution_{std::normal_distribution<double>(0.0, 1.0)};
 };
-
-class AttitudeSensor : public BaseSensor{
-    public:
-        AttitudeSensor(ros::NodeHandle* nh, const char* topic, double period);
-        bool publish(const Eigen::Quaterniond& attitudeFrdToNed);
-};
-
-class BatteryInfoSensor : public BaseSensor{
-    public:
-        BatteryInfoSensor(ros::NodeHandle* nh, const char* topic, double period);
-        bool publish(double rpm);
-};
-
-class EscStatusSensor : public BaseSensor{
-    public:
-        EscStatusSensor(ros::NodeHandle* nh, const char* topic, double period);
-        bool publish(const std::vector<double>& rpm);
-    private:
-        uint8_t nextEscIdx_ = 0;
-};
-
-class FuelTankSensor : public BaseSensor{
-    public:
-        FuelTankSensor(ros::NodeHandle* nh, const char* topic, double period);
-        bool publish(double rpm);
-};
-
-class GpsSensor : public BaseSensor{
-    public:
-        GpsSensor(ros::NodeHandle* nh, const char* topic, double period);
-        bool publish(const Eigen::Vector3d& gpsPosition, const Eigen::Vector3d& nedVelocity);
-    private:
-        ros::Publisher yaw_publisher_;
-        ros::Publisher position_publisher_;
-        ros::Publisher velocity_publisher_;
-};
-
-class ImuSensor : public BaseSensor{
-    public:
-        ImuSensor(ros::NodeHandle* nh, const char* topic, double period);
-        bool publish(const Eigen::Vector3d& accFrd, const Eigen::Vector3d& gyroFrd);
-};
-
-class MagSensor : public BaseSensor{
-    public:
-        MagSensor(ros::NodeHandle* nh, const char* topic, double period);
-        bool publish(const Eigen::Vector3d& geoPosition, const Eigen::Quaterniond& attitudeFrdToNed);
-};
-
-class RawAirDataSensor : public BaseSensor{
-    public:
-        RawAirDataSensor(ros::NodeHandle* nh, const char* topic, double period);
-        bool publish(float absPressureHpa, float diffPressure, float staticTemperature);
-};
-
-class PressureSensor : public BaseSensor{
-    public:
-        PressureSensor(ros::NodeHandle* nh, const char* topic, double period);
-        bool publish(float staticPressureHpa);
-    private:
-        ros::Publisher _old_publisher;
-};
-
-class TemperatureSensor : public BaseSensor{
-    public:
-        TemperatureSensor(ros::NodeHandle* nh, const char* topic, double period);
-        bool publish(float staticTemperature);
-    private:
-        ros::Publisher _old_publisher;
-};
-
-class VelocitySensor : public BaseSensor{
-    public:
-        VelocitySensor(ros::NodeHandle* nh, const char* topic, double period);
-        bool publish(const Eigen::Vector3d& linVelNed, const Eigen::Vector3d& angVelFrd);
-};
-
 
 #endif  // SENSORS_SENSOR_BASE_HPP

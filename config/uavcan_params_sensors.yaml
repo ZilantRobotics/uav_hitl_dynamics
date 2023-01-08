@@ -4,7 +4,7 @@ bridges:                  ["DiffPressureRosToUavcan",           "/uav/raw_air_da
                            "ImuRosToUavcan",                    "/uav/imu",
 
                            "EscStatusRosToUavcan",              "/uav/esc_status",
-                           "IceReciprocatingStatusRosToUavcan", "/uav/ice_status",
+                           "IceReciprocatingStatusRosToUavcan", "/uav/ice",
                            "IceFuelTankStatusRosToUavcan",      "/uav/fuel_tank",
                            "BatteryInfoRosToUavcan",            "/uav/battery"
 ]

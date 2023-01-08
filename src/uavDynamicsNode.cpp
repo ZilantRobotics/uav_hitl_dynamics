@@ -179,11 +179,12 @@ void Uav_Dynamics::simulationLoopTimerCallback(const ros::WallTimerEvent& event)
 }
 
 std::string COLOR_RED = "\033[1;31m";
+std::string COLOR_GREEN = "\033[1;32m";
 std::string COLOR_BOLD = "\033[1;29m";
 std::string COLOR_TAIL = "\033[0m";
 
-void logAddToStream(std::stringstream& logStream, bool is_ok, std::string& newData) {
-    if(is_ok){
+void logColorizeAndAddToStream(std::stringstream& logStream, bool is_ok, std::string& newData) {
+    if(!is_ok){
         logStream << COLOR_RED << newData << COLOR_TAIL;
     }else{
         logStream << newData;
@@ -200,24 +201,28 @@ void Uav_Dynamics::performLogging(double periodSec){
         auto sleed_period = std::chrono::seconds(int(periodSec * clockScale_));
 
         std::stringstream logStream;
-        logStream << dynamicsTypeName_.c_str() << ": " << "time elapsed: " << periodSec << " secs. ";
+
+        std::string arm_str = armed_ ? COLOR_GREEN + "[Armed]" + COLOR_TAIL : "[Disarmed]";
+        logStream << arm_str << ", ";
+
+        logStream << dynamicsTypeName_.c_str() << ". ";
 
         float dynamicsCompleteness = dynamicsCounter_ * dt_secs_ / (clockScale_ * periodSec);
         std::string dyn_str = "dyn=" + std::to_string(dynamicsCompleteness);
-        logAddToStream(logStream, dynamicsCompleteness >= 0.9, dyn_str);
+        logColorizeAndAddToStream(logStream, dynamicsCompleteness >= 0.9, dyn_str);
         logStream << ", ";
         dynamicsCounter_ = 0;
 
         float rosPubCompleteness = rosPubCounter_ * ROS_PUB_PERIOD_SEC / (clockScale_ * periodSec);
         std::string ros_pub_str = "ros_pub=" + std::to_string(rosPubCompleteness);
-        logAddToStream(logStream, rosPubCompleteness >= 0.9, ros_pub_str);
+        logColorizeAndAddToStream(logStream, rosPubCompleteness >= 0.9, ros_pub_str);
         logStream << ", ";
         rosPubCounter_ = 0;
 
-        std::string actuator_str;
+        std::string actuator_str = "setpoint=" + std::to_string(actuatorsMsgCounter_);
         bool is_actuator_ok = actuatorsMsgCounter_ > 100 && maxDelayUsec_ < 20000 && maxDelayUsec_ != 0;
-        logAddToStream(logStream, is_actuator_ok, actuator_str);
-        logStream << " us.\n";
+        logColorizeAndAddToStream(logStream, is_actuator_ok, actuator_str);
+        logStream << " msg/sec.\n";
         actuatorsMsgCounter_ = 0;
         maxDelayUsec_ = 0;
 

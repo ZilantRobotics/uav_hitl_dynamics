@@ -1,3 +1,3 @@
 uavcan_node_id:           43
 uavcan_node_name:         "hitl.gps"
-bridges:                  ["GpsRosToUavcan",           "/uav/gps_position"]
+bridges:                  ["GpsRosToUavcan",           "/uav/gps_point"]

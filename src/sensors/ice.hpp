@@ -19,7 +19,6 @@
 #ifndef SRC_SENSORS_ICE_HPP
 #define SRC_SENSORS_ICE_HPP
 
-#include <uavcan_msgs/IceReciprocatingStatus.h>
 #include "sensor_base.hpp"
 
 class IceStatusSensor : public BaseSensor{
@@ -33,7 +32,10 @@ class IceStatusSensor : public BaseSensor{
         void emulate_normal_mode(double rpm);
         void emulate_stall_mode();
 
-        uavcan_msgs::IceReciprocatingStatus _iceStatusMsg;
+        ros::Publisher _status_publisher;
+
+        double _rpm{0};
+        uint8_t _state{0};
         double _stallTsMs = 0;
         uint32_t _startTsSec = 0;
 };

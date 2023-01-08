@@ -19,24 +19,26 @@ COPY install_requirements.sh install_requirements.sh
 RUN ./install_requirements.sh
 
 # 3. Install dependencies
-RUN git clone https://github.com/InnopolisAero/uavcan_msgs.git /catkin_ws/src/uavcan_msgs
-RUN source /opt/ros/$ROS_DISTRO/setup.bash && cd /catkin_ws && catkin build
-
 RUN git clone https://github.com/InnopolisAero/geographiclib_conversions.git /catkin_ws/src/geographiclib_conversions
 RUN /catkin_ws/src/geographiclib_conversions/scripts/install.sh
 RUN source /opt/ros/$ROS_DISTRO/setup.bash && cd /catkin_ws && catkin build
 
 # 4. Copy the source files
-COPY libs/              inno_vtol_dynamics/libs/
-COPY meshes/            inno_vtol_dynamics/meshes/
-COPY src/               inno_vtol_dynamics/src/
-COPY urdf/              inno_vtol_dynamics/urdf/
-COPY CMakeLists.txt     inno_vtol_dynamics/CMakeLists.txt
-COPY package.xml        inno_vtol_dynamics/package.xml
-COPY requirements.txt   inno_vtol_dynamics/requirements.txt
+WORKDIR /catkin_ws/src/inno_vtol_dynamics
+COPY libs/              libs/
+COPY meshes/            meshes/
+COPY src/               src/
+COPY urdf/              urdf/
+COPY CMakeLists.txt     CMakeLists.txt
+COPY package.xml        package.xml
+COPY requirements.txt   requirements.txt
 
 # 5. Build
 RUN source /opt/ros/$ROS_DISTRO/setup.bash && cd /catkin_ws && catkin build
+
+COPY config/ config/
+COPY launch/ launch/
+COPY catkin_test.sh catkin_test.sh
 
 CMD echo "main process has been started"                                        &&  \
     source /opt/ros/$ROS_DISTRO/setup.bash                                      &&  \
