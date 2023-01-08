@@ -1,0 +1,41 @@
+name: tests
+
+on: [push]
+
+env:
+  ROS_DISTRO: noetic
+
+defaults:
+  run:
+    shell: bash
+jobs:
+  tests:
+    runs-on: ubuntu-20.04
+    container:
+      image: ros:noetic
+    steps:
+      - run: apt-get update && apt-get install -y git
+      - run: if [[ "$ROS_DISTRO" = "noetic" ]] ;  then apt-get install -y python3-pip ros-noetic-catkin python3-catkin-tools ; fi
+      - run: if [[ "$ROS_DISTRO" = "melodic" ]] ; then apt-get install -y python-catkin-tools python-pip python3-pip python-rosdep python-rosinstall python-rosinstall-generator python-wstool build-essential python-catkin-tools ; fi
+
+      - uses: actions/checkout@v2
+        with:
+          path: catkin_ws/src/inno_vtol_dynamics
+
+      - name: Install requirements
+        run: ./catkin_ws/src/inno_vtol_dynamics/install_requirements.sh
+
+      - name: Dependencies
+        run: |
+          git clone https://github.com/InnopolisAero/geographiclib_conversions.git catkin_ws/src/geographiclib_conversions  && \
+          ./catkin_ws/src/geographiclib_conversions/scripts/install.sh
+
+      - name: Tests
+        run: |
+          source /opt/ros/$ROS_DISTRO/setup.bash && \
+          cd catkin_ws && \
+          catkin build && \
+          source devel/setup.bash && \
+          sudo apt-get install psmisc &&  \
+          cd src/inno_vtol_dynamics/ &&  \
+          source catkin_test.sh
