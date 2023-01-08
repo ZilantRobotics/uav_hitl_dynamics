@@ -21,12 +21,10 @@
 #include <ros/ros.h>
 #include <ros/time.h>
 
-#include <geometry_msgs/Vector3.h>
 #include <std_msgs/Float32.h>
 
 ///< uavcan_msgs are deprecated and should be removed asap
 #include <uavcan_msgs/EscStatus.h>
-#include <uavcan_msgs/IceFuelTankStatus.h>
 
 
 EscStatusSensor::EscStatusSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
@@ -45,21 +43,6 @@ bool EscStatusSensor::publish(const std::vector<double>& rpm) {
         publisher_.publish(escStatusMsg);
         nextPubTimeSec_ = crntTimeSec + PERIOD / rpm.size();
         nextEscIdx_++;
-    }
-    return true;
-}
-
-
-FuelTankSensor::FuelTankSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
-    publisher_ = node_handler_->advertise<uavcan_msgs::IceFuelTankStatus>(topic, 16);
-}
-bool FuelTankSensor::publish(double fuelLevelPercentage) {
-    auto crntTimeSec = ros::Time::now().toSec();
-    if(_isEnabled && (nextPubTimeSec_ < crntTimeSec)){
-        uavcan_msgs::IceFuelTankStatus fuelTankMsg;
-        fuelTankMsg.available_fuel_volume_percent = fuelLevelPercentage;
-        publisher_.publish(fuelTankMsg);
-        nextPubTimeSec_ = crntTimeSec + PERIOD;
     }
     return true;
 }

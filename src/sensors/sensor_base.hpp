@@ -51,10 +51,4 @@ class EscStatusSensor : public BaseSensor{
         uint8_t nextEscIdx_ = 0;
 };
 
-class FuelTankSensor : public BaseSensor{
-    public:
-        FuelTankSensor(ros::NodeHandle* nh, const char* topic, double period);
-        bool publish(double rpm);
-};
-
 #endif  // SENSORS_SENSOR_BASE_HPP
