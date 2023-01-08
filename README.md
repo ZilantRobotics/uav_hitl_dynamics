@@ -37,10 +37,11 @@ Extended sensors publishers list of topics:
 
 | № | Advertised topics         | msg                                   |
 | - | -------------------------- | ------------------------------------- |
-| 7 | /uav/esc_status            | [mavros_msgs::ESCTelemetryItem](http://docs.ros.org/en/api/mavros_msgs/html/msg/ESCTelemetryItem.html) |
-| 8 | /uav/ice_status            | [mavros_msgs::ESCStatusItem](http://docs.ros.org/en/api/mavros_msgs/html/msg/ESCStatusItem.html) and [std_msgs::UInt8](http://docs.ros.org/en/melodic/api/std_msgs/html/msg/UInt8.html) |
-| 9 | /uav/fuel_tank_status      | [std_msgs/UInt8](http://docs.ros.org/en/melodic/api/std_msgs/html/msg/UInt8.html) |
-| 10| /uav/battery_status        | [sensor_msgs/BatteryState](http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/BatteryState.html)    |
+| 7 | /uav/esc_status | [mavros_msgs::ESCTelemetryItem](http://docs.ros.org/en/api/mavros_msgs/html/msg/ESCTelemetryItem.html) |
+| 8 | /uav/ice_rpm | [mavros_msgs::ESCStatusItem](http://docs.ros.org/en/api/mavros_msgs/html/msg/ESCStatusItem.html) |
+| 9 | /uav/ice_status | [std_msgs::UInt8](http://docs.ros.org/en/melodic/api/std_msgs/html/msg/UInt8.html) |
+| 10| /uav/fuel_tank_status | [std_msgs/UInt8](http://docs.ros.org/en/melodic/api/std_msgs/html/msg/UInt8.html) |
+| 11| /uav/battery_status | [sensor_msgs/BatteryState](http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/BatteryState.html) |
 
 Here topics 1-6 are necessary for any simulation. The last 4 topics are auxiliary and you may enable/disable them in the [sim_params.yaml](uav_dynamics/inno_vtol_dynamics/config/sim_params.yaml) config file. You may implement your own sensors in the [sensors.cpp](uav_dynamics/inno_vtol_dynamics/src/sensors/sensors.cpp) file.
 

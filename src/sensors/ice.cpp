@@ -28,8 +28,11 @@ static const constexpr double PERIOD_3 = 2000.0;    // waiting period
 static const constexpr double PERIOD_23 = PERIOD_2 + PERIOD_3;    // starting + waiting period
 
 IceStatusSensor::IceStatusSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
-    publisher_ = node_handler_->advertise<mavros_msgs::ESCStatusItem>(topic, 5);
-    _status_publisher = node_handler_->advertise<std_msgs::UInt8>(topic, 5);
+    std::string base_name = topic;
+    auto rpm_name = base_name + "_rpm";
+    auto status_name = base_name + "_status";
+    publisher_ = node_handler_->advertise<mavros_msgs::ESCStatusItem>(rpm_name.c_str(), 5);
+    _status_publisher = node_handler_->advertise<std_msgs::UInt8>(status_name.c_str(), 5);
 }
 bool IceStatusSensor::publish(double rpm) {
     auto crntTimeSec = ros::Time::now().toSec();
