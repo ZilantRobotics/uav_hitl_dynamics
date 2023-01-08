@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
     sensor_msgs
     geometry_msgs
     uavcan_msgs
+    mavros_msgs
     tf2
     tf2_ros
     geographiclib_conversions
@@ -55,15 +56,14 @@ add_library(${PROJECT_NAME} src/dynamics/vtol/vtolDynamicsSim.cpp
                             src/sensors/barometer.cpp
                             src/sensors/battery.cpp
                             src/sensors/differential_pressure.cpp
+                            src/sensors/esc_status.cpp
                             src/sensors/fuel_tank.cpp
                             src/sensors/gnss.cpp
                             src/sensors/ice.cpp
                             src/sensors/imu.cpp
                             src/sensors/velocity.cpp
                             src/sensors/mag.cpp
-
                             src/sensors/sensors.cpp
-                            src/sensors/sensor_base.cpp
 
                             src/common_math.cpp
                             src/cs_converter.cpp

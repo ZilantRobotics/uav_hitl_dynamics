@@ -19,10 +19,8 @@
 #ifndef SENSORS_SENSOR_BASE_HPP
 #define SENSORS_SENSOR_BASE_HPP
 
-#include <iostream>
 #include <ros/ros.h>
-#include <ros/time.h>
-#include <Eigen/Geometry>
+// #include <ros/time.h>
 #include <random>
 #include <geographiclib_conversions/geodetic_conv.hpp>
 
@@ -41,14 +39,6 @@ class BaseSensor{
 
         std::default_random_engine randomGenerator_;
         std::normal_distribution<double> normalDistribution_{std::normal_distribution<double>(0.0, 1.0)};
-};
-
-class EscStatusSensor : public BaseSensor{
-    public:
-        EscStatusSensor(ros::NodeHandle* nh, const char* topic, double period);
-        bool publish(const std::vector<double>& rpm);
-    private:
-        uint8_t nextEscIdx_ = 0;
 };
 
 #endif  // SENSORS_SENSOR_BASE_HPP

@@ -23,6 +23,7 @@
 #include "barometer.hpp"
 #include "battery.hpp"
 #include "differential_pressure.hpp"
+#include "esc_status.hpp"
 #include "fuel_tank.hpp"
 #include "gnss.hpp"
 #include "ice.hpp"
