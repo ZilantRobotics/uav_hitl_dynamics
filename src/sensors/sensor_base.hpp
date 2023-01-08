@@ -57,14 +57,4 @@ class FuelTankSensor : public BaseSensor{
         bool publish(double rpm);
 };
 
-class GpsSensor : public BaseSensor{
-    public:
-        GpsSensor(ros::NodeHandle* nh, const char* topic, double period);
-        bool publish(const Eigen::Vector3d& gpsPosition, const Eigen::Vector3d& nedVelocity);
-    private:
-        ros::Publisher yaw_publisher_;
-        ros::Publisher position_publisher_;
-        ros::Publisher velocity_publisher_;
-};
-
 #endif  // SENSORS_SENSOR_BASE_HPP

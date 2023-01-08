@@ -28,7 +28,7 @@ Sensors::Sensors(ros::NodeHandle* nh) :
     diffPressureSensor(nh,  "/uav/raw_air_data",        0.05),
     temperatureSensor(nh,   "/uav/static_temperature",  0.05),
     pressureSensor(nh,      "/uav/static_pressure",     0.05),
-    gpsSensor(nh,           "/uav/gps_position",        0.1),
+    gpsSensor(nh,           "/uav/gps_point",           0.1),
     escStatusSensor(nh,     "/uav/esc_status",          0.25),
     iceStatusSensor(nh,     "/uav/ice_status",          0.25),
     fuelTankSensor(nh,      "/uav/fuel_tank",           2.0),

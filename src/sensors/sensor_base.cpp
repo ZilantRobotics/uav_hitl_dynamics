@@ -23,10 +23,8 @@
 
 #include <geometry_msgs/Vector3.h>
 #include <std_msgs/Float32.h>
-#include <sensor_msgs/NavSatFix.h>
 
 ///< uavcan_msgs are deprecated and should be removed asap
-#include <uavcan_msgs/Fix.h>
 #include <uavcan_msgs/EscStatus.h>
 #include <uavcan_msgs/IceFuelTankStatus.h>
 
@@ -48,40 +46,6 @@ bool EscStatusSensor::publish(const std::vector<double>& rpm) {
         nextPubTimeSec_ = crntTimeSec + PERIOD / rpm.size();
         nextEscIdx_++;
     }
-    return true;
-}
-
-GpsSensor::GpsSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
-    publisher_ = node_handler_->advertise<uavcan_msgs::Fix>(topic, 5);
-    position_publisher_ = node_handler_->advertise<sensor_msgs::NavSatFix>("/uav/gps_point", 5);
-}
-bool GpsSensor::publish(const Eigen::Vector3d& gpsPosition, const Eigen::Vector3d& nedVelocity) {
-    auto crntTimeSec = ros::Time::now().toSec();
-    if(!_isEnabled || (nextPubTimeSec_ > crntTimeSec)){
-        return false;
-    }
-
-    uavcan_msgs::Fix fixMsg;
-    fixMsg.header.stamp = ros::Time::now();
-    fixMsg.latitude_deg_1e8 = gpsPosition[0] * 1e+8;
-    fixMsg.longitude_deg_1e8 = gpsPosition[1] * 1e+8;
-    fixMsg.height_msl_mm = gpsPosition[2] * 1e+3;
-    fixMsg.ned_velocity.x = nedVelocity[0];
-    fixMsg.ned_velocity.y = nedVelocity[1];
-    fixMsg.ned_velocity.z = nedVelocity[2];
-    fixMsg.sats_used = 10;
-    fixMsg.status = 3;
-    fixMsg.pdop = 1;
-    publisher_.publish(fixMsg);
-
-    sensor_msgs::NavSatFix gps_position_msg;
-    gps_position_msg.header.stamp = ros::Time::now();
-    gps_position_msg.latitude = gpsPosition[0];
-    gps_position_msg.longitude = gpsPosition[1];
-    gps_position_msg.altitude = gpsPosition[2];
-    position_publisher_.publish(gps_position_msg);
-
-    nextPubTimeSec_ = crntTimeSec + PERIOD;
     return true;
 }
 

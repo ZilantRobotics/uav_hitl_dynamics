@@ -23,6 +23,7 @@
 #include "barometer.hpp"
 #include "battery.hpp"
 #include "differential_pressure.hpp"
+#include "gnss.hpp"
 #include "ice.hpp"
 #include "imu.hpp"
 #include "mag.hpp"
