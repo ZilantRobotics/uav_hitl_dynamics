@@ -19,6 +19,7 @@
 #ifndef SRC_RVIZ_VISUALIZATION_HPP_
 #define SRC_RVIZ_VISUALIZATION_HPP_
 
+#include <array>
 #include <visualization_msgs/Marker.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include "uavDynamicsSimBase.hpp"
@@ -26,7 +27,7 @@
 class RvizVisualizator {
 public:
     explicit RvizVisualizator(ros::NodeHandle& nh);
-    int8_t init(UavDynamicsSimBase* uavDynamicsSim);
+    int8_t init(const std::shared_ptr<UavDynamicsSimBase>& uavDynamicsSim_);
 
     // common
     void publishTf(uint8_t dynamicsNotation);
@@ -41,13 +42,13 @@ private:
                                           const char* frameId);
 
     ros::NodeHandle& node;
-    UavDynamicsSimBase* uavDynamicsSim;
+    std::shared_ptr<UavDynamicsSimBase> uavDynamicsSim;
 
     visualization_msgs::Marker arrowMarkers;
 
     ros::Publisher totalForcePub;
     ros::Publisher aeroForcePub;
-    ros::Publisher motorsForcesPub[5];
+    std::array<ros::Publisher, 5> motorsForcesPub;
     ros::Publisher liftForcePub;
     ros::Publisher drugForcePub;
     ros::Publisher sideForcePub;
@@ -56,7 +57,7 @@ private:
     ros::Publisher aeroMomentPub;
     ros::Publisher controlSurfacesMomentPub;
     ros::Publisher aoaMomentPub;
-    ros::Publisher motorsMomentsPub[5];
+    std::array<ros::Publisher, 5> motorsMomentsPub;
     ros::Publisher velocityPub;
 
     tf2_ros::TransformBroadcaster tfPub;

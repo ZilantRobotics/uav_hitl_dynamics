@@ -22,11 +22,11 @@
 BatteryInfoSensor::BatteryInfoSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
     publisher_ = node_handler_->advertise<sensor_msgs::BatteryState>(topic, 16);
 }
-bool BatteryInfoSensor::publish(double percentage) {
+bool BatteryInfoSensor::publish(float percentage) {
     auto crntTimeSec = ros::Time::now().toSec();
     if(_isEnabled && (nextPubTimeSec_ < crntTimeSec)){
         sensor_msgs::BatteryState batteryInfoMsg;
-        batteryInfoMsg.voltage = 4.1;
+        batteryInfoMsg.voltage = 4.1f;
         batteryInfoMsg.percentage = percentage;
         batteryInfoMsg.capacity = 6;
         publisher_.publish(batteryInfoMsg);

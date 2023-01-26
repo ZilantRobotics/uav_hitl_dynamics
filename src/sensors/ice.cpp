@@ -44,7 +44,7 @@ bool IceStatusSensor::publish(double rpm) {
         _status_publisher.publish(state_msg);
 
         mavros_msgs::ESCStatusItem rpm_msg;
-        rpm_msg.rpm = rpm;
+        rpm_msg.rpm = static_cast<int32_t>(rpm);
         publisher_.publish(rpm_msg);
 
         nextPubTimeSec_ = crntTimeSec + PERIOD;

@@ -50,19 +50,14 @@ class Uav_Dynamics {
         /// @name Simulator
         //@{
         ros::NodeHandle node_;
-        UavDynamicsSimBase* uavDynamicsSim_;
+        std::shared_ptr<UavDynamicsSimBase> uavDynamicsSim_;
         ros::Publisher clockPub_;
 
         ros::Time currentTime_;
         double dt_secs_ = 1.0f/960.;
-        bool useAutomaticClockscale_ = false;
         double clockScale_ = 1.0;
-        double actualFps_  = -1;
         bool useSimTime_;
 
-        double latRef_;
-        double lonRef_;
-        double altRef_;
         std::vector<double> initPose_;
 
         enum DynamicsType{
@@ -106,7 +101,7 @@ class Uav_Dynamics {
         /// @name Calibration
         //@{
         ros::Subscriber calibrationSub_;
-        UavDynamicsSimBase::CalibrationType_t calibrationType_ = UavDynamicsSimBase::WORK_MODE;
+        UavDynamicsSimBase::SimMode_t calibrationType_{UavDynamicsSimBase::SimMode_t::NORMAL};
         void calibrationCallback(std_msgs::UInt8 msg);
         //@}
 
@@ -129,7 +124,7 @@ class Uav_Dynamics {
         void publishToRos(double period);
         void performLogging(double period);
 
-        const float ROS_PUB_PERIOD_SEC = 0.05;
+        const float ROS_PUB_PERIOD_SEC = 0.05f;
         //@}
 
         DynamicsNotation_t _dynamicsNotation;

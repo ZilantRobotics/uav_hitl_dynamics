@@ -121,11 +121,13 @@ struct TablesWithCoeffs{
 class InnoVtolDynamicsSim : public UavDynamicsSimBase{
     public:
         InnoVtolDynamicsSim();
+        ~InnoVtolDynamicsSim() final = default;
+
         int8_t init() override;
         void setInitialPosition(const Eigen::Vector3d & position,
                                 const Eigen::Quaterniond& attitude) override;
         void land() override;
-        int8_t calibrate(CalibrationType_t calibrationType) override;
+        int8_t calibrate(SimMode_t calibrationType) override;
         void process(double dt_secs,
                      const std::vector<double>& motorSpeedCommandIn,
                      bool isCmdPercent) override;
@@ -164,10 +166,10 @@ class InnoVtolDynamicsSim : public UavDynamicsSimBase{
          * @note The methods below are should be public for test only
          * think about making test as friend
          */
-        Eigen::Vector3d calculateNormalForceWithoutMass();
+        Eigen::Vector3d calculateNormalForceWithoutMass() const;
         Eigen::Vector3d calculateWind();
         Eigen::Matrix3d calculateRotationMatrix() const;
-        double calculateDynamicPressure(double airSpeedMod);
+        double calculateDynamicPressure(double airSpeedMod) const;
         double calculateAnglesOfAtack(const Eigen::Vector3d& airSpeed) const;
         double calculateAnglesOfSideslip(const Eigen::Vector3d& airSpeed) const;
         void thruster(double actuator, double& thrust, double& torque, double& rpm) const;
@@ -210,7 +212,7 @@ class InnoVtolDynamicsSim : public UavDynamicsSimBase{
 
         Eigen::Vector3d calculateAngularAccel(const Eigen::Matrix<double, 3, 3, Eigen::RowMajor>& inertia,
                                               const Eigen::Vector3d& moment,
-                                              const Eigen::Vector3d& prevAngVel);
+                                              const Eigen::Vector3d& prevAngVel) const;
         /**
          * @note Similar to https://www.mathworks.com/help/matlab/ref/griddata.html
          * Implementation from https://en.wikipedia.org/wiki/Bilinear_interpolation
@@ -241,7 +243,7 @@ class InnoVtolDynamicsSim : public UavDynamicsSimBase{
         TablesWithCoeffs tables_;
 
         std::default_random_engine generator_;
-        std::normal_distribution<double> distribution_;
+        std::normal_distribution<double> distribution_{0.0, 1.0};
 };
 
 #endif  // VTOL_DYNAMICS_SIM_H

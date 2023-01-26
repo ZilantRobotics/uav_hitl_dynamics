@@ -33,7 +33,7 @@ bool PressureSensor::publish(float staticPressureHpa) {
 
     std_msgs::Float32 msg;
     msg.data = staticPressureHpa * 100;
-    msg.data += STATIC_PRESSURE_NOISE * normalDistribution_(randomGenerator_);
+    msg.data += static_cast<float>(STATIC_PRESSURE_NOISE * normalDistribution_(randomGenerator_));
     publisher_.publish(msg);
 
     nextPubTimeSec_ = crntTimeSec + PERIOD;

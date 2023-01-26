@@ -86,10 +86,10 @@ int8_t Uav_Dynamics::initDynamicsSimulator(){
     const char VEHICLE_NAME_IRIS[] = "iris";
     if(dynamicsTypeName_ == DYNAMICS_NAME_FLIGHTGOGGLES){
         dynamicsType_ = DYNAMICS_FLIGHTGOGGLES_MULTICOPTER;
-        uavDynamicsSim_ = new FlightgogglesDynamics;
+        uavDynamicsSim_ = std::make_shared<FlightgogglesDynamics>();
         _dynamicsNotation = ROS_ENU_FLU;
     }else if(dynamicsTypeName_ == DYNAMICS_NAME_INNO_VTOL){
-        uavDynamicsSim_ = new InnoVtolDynamicsSim;
+        uavDynamicsSim_ = std::make_shared<InnoVtolDynamicsSim>();
         dynamicsType_ = DYNAMICS_INNO_VTOL;
         _dynamicsNotation = PX4_NED_FRD;
     }else{
@@ -165,7 +165,7 @@ int8_t Uav_Dynamics::startClockAndThreads(){
  * @brief Main Simulator loop
  * @param event Wall clock timer event
  */
-void Uav_Dynamics::simulationLoopTimerCallback(const ros::WallTimerEvent& event){
+void Uav_Dynamics::simulationLoopTimerCallback(const ros::WallTimerEvent&){
     if (useSimTime_){
         currentTime_ += ros::Duration(dt_secs_);
         rosgraph_msgs::Clock clock_time;
@@ -178,12 +178,12 @@ void Uav_Dynamics::simulationLoopTimerCallback(const ros::WallTimerEvent& event)
     }
 }
 
-std::string COLOR_RED = "\033[1;31m";
-std::string COLOR_GREEN = "\033[1;32m";
-std::string COLOR_BOLD = "\033[1;29m";
-std::string COLOR_TAIL = "\033[0m";
+static const std::string COLOR_RED = "\033[1;31m";
+static const std::string COLOR_GREEN = "\033[1;32m";
+static const std::string COLOR_BOLD = "\033[1;29m";
+static const std::string COLOR_TAIL = "\033[0m";
 
-void logColorizeAndAddToStream(std::stringstream& logStream, bool is_ok, std::string& newData) {
+void logColorizeAndAddToStream(std::stringstream& logStream, bool is_ok, const std::string& newData) {
     if(!is_ok){
         logStream << COLOR_RED << newData << COLOR_TAIL;
     }else{
@@ -207,13 +207,13 @@ void Uav_Dynamics::performLogging(double periodSec){
 
         logStream << dynamicsTypeName_.c_str() << ". ";
 
-        float dynamicsCompleteness = dynamicsCounter_ * dt_secs_ / (clockScale_ * periodSec);
+        double dynamicsCompleteness = (double)dynamicsCounter_ * dt_secs_ / (clockScale_ * periodSec);
         std::string dyn_str = "dyn=" + std::to_string(dynamicsCompleteness);
         logColorizeAndAddToStream(logStream, dynamicsCompleteness >= 0.9, dyn_str);
         logStream << ", ";
         dynamicsCounter_ = 0;
 
-        float rosPubCompleteness = rosPubCounter_ * ROS_PUB_PERIOD_SEC / (clockScale_ * periodSec);
+        double rosPubCompleteness = (double)rosPubCounter_ * (double)ROS_PUB_PERIOD_SEC / (clockScale_ * periodSec);
         std::string ros_pub_str = "ros_pub=" + std::to_string(rosPubCompleteness);
         logColorizeAndAddToStream(logStream, rosPubCompleteness >= 0.9, ros_pub_str);
         logStream << ", ";
@@ -274,13 +274,13 @@ void Uav_Dynamics::proceedDynamics(double periodSec){
         auto time_point = crnt_time + sleed_period;
         dynamicsCounter_++;
 
-        if(calibrationType_ != UavDynamicsSimBase::CalibrationType_t::WORK_MODE){
+        if(calibrationType_ != UavDynamicsSimBase::SimMode_t::NORMAL){
             uavDynamicsSim_->calibrate(calibrationType_);
         }else if(armed_){
             static auto crnt_time = std::chrono::system_clock::now();
             auto prev_time = crnt_time;
             crnt_time = std::chrono::system_clock::now();
-            auto time_dif_sec = (crnt_time - prev_time).count() / 1000000000.0;
+            auto time_dif_sec = static_cast<double>((crnt_time - prev_time).count()) * 1e-9;
 
             ///< prevent big time jumping
             const double MAX_TIME_DIFF_SEC = 10 * periodSec;
@@ -359,8 +359,8 @@ void Uav_Dynamics::scenarioCallback(std_msgs::UInt8 msg){
 }
 
 void Uav_Dynamics::calibrationCallback(std_msgs::UInt8 msg){
-    if(calibrationType_ != msg.data){
+    if(calibrationType_ != static_cast<UavDynamicsSimBase::SimMode_t>(msg.data)){
         ROS_INFO_STREAM_THROTTLE(1, "calibration type: " << msg.data + 0);
     }
-    calibrationType_ = static_cast<UavDynamicsSimBase::CalibrationType_t>(msg.data);
+    calibrationType_ = static_cast<UavDynamicsSimBase::SimMode_t>(msg.data);
 }

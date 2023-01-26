@@ -12,7 +12,7 @@
 
 static const std::string MULTICOPTER_PARAMS_NS = "/uav/multicopter_params/";
 template <class T>
-static void getParameter(std::string name, T& parameter, T default_value, std::string unit = ""){
+static void getParameter(const std::string& name, T& parameter, T default_value, std::string unit = ""){
   if (!ros::param::get(MULTICOPTER_PARAMS_NS + name, parameter)){
     std::cout << "Did not get "
               << name
@@ -25,13 +25,14 @@ static void getParameter(std::string name, T& parameter, T default_value, std::s
   }
 }
 
-FlightgogglesDynamics::FlightgogglesDynamics(){
-}
-
 int8_t FlightgogglesDynamics::init(){
     // Vehicle parameters
-    double vehicleMass, motorTimeconstant, motorRotationalInertia,
-            thrustCoeff, torqueCoeff, dragCoeff;
+    double vehicleMass;
+    double motorTimeconstant;
+    double motorRotationalInertia;
+    double thrustCoeff;
+    double torqueCoeff;
+    double dragCoeff;
     getParameter("vehicle_mass",              vehicleMass,                1.,       "kg");
     getParameter("motor_time_constant",       motorTimeconstant,          0.02,     "sec");
     getParameter("motor_rotational_inertia",  motorRotationalInertia,     6.62e-6,  "kg m^2");
@@ -49,8 +50,10 @@ int8_t FlightgogglesDynamics::init(){
     getParameter("vehicle_inertia_yy",        vehicleInertia(1, 1),        0.0049,   "kg m^2");
     getParameter("vehicle_inertia_zz",        vehicleInertia(2, 2),        0.0069,   "kg m^2");
 
-    double minPropSpeed, maxPropSpeed, momentProcessNoiseAutoCorrelation, forceProcessNoiseAutoCorrelation;
-    minPropSpeed = 0.0;
+    double minPropSpeed = 0.0;
+    double maxPropSpeed;
+    double momentProcessNoiseAutoCorrelation;
+    double forceProcessNoiseAutoCorrelation;
     getParameter("max_prop_speed",            maxPropSpeed,               2200.0,   "rad/s");
     getParameter("moment_process_noise", momentProcessNoiseAutoCorrelation, 1.25e-7,  "(Nm)^2 s");
     getParameter("force_process_noise", forceProcessNoiseAutoCorrelation, 0.0005,   "N^2 s");
@@ -61,7 +64,7 @@ int8_t FlightgogglesDynamics::init(){
 
 
     // Create quadcopter simulator
-    multicopterSim_ = new MulticopterDynamicsSim(4, thrustCoeff, torqueCoeff,
+    multicopterSim_ = std::make_unique<MulticopterDynamicsSim>(4, thrustCoeff, torqueCoeff,
                         minPropSpeed, maxPropSpeed, motorTimeconstant, motorRotationalInertia,
                         vehicleMass, vehicleInertia,
                         aeroMomentCoefficient, dragCoeff, momentProcessNoiseAutoCorrelation,
@@ -72,9 +75,12 @@ int8_t FlightgogglesDynamics::init(){
 
 
     // Get and set IMU parameters
-    double accBiasProcessNoiseAutoCorrelation, gyroBiasProcessNoiseAutoCorrelation,
-           accBiasInitVar, gyroBiasInitVar,
-           accMeasNoiseVariance, gyroMeasNoiseVariance;
+    double accBiasProcessNoiseAutoCorrelation;
+    double gyroBiasProcessNoiseAutoCorrelation;
+    double accBiasInitVar;
+    double gyroBiasInitVar;
+    double accMeasNoiseVariance;
+    double gyroMeasNoiseVariance;
     getParameter("accelerometer_biasprocess", accBiasProcessNoiseAutoCorrelation, 1.0e-7, "m^2/s^5");
     getParameter("gyroscope_biasprocess",     accBiasProcessNoiseAutoCorrelation, 1.0e-7, "rad^2/s^3");
     getParameter("accelerometer_biasinitvar", accBiasInitVar,                     0.005,  "(m/s^2)^2");

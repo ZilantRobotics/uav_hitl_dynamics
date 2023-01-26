@@ -26,7 +26,7 @@ bool FuelTankSensor::publish(double fuelLevelPercentage) {
     auto crntTimeSec = ros::Time::now().toSec();
     if(_isEnabled && (nextPubTimeSec_ < crntTimeSec)){
         std_msgs::UInt8 fuelTankMsg;
-        fuelTankMsg.data = fuelLevelPercentage;
+        fuelTankMsg.data = static_cast<uint8_t>(fuelLevelPercentage);
         publisher_.publish(fuelTankMsg);
         nextPubTimeSec_ = crntTimeSec + PERIOD;
     }

@@ -36,7 +36,7 @@ Sensors::Sensors(ros::NodeHandle* nh) :
 {
 }
 
-int8_t Sensors::init(UavDynamicsSimBase* uavDynamicsSim) {
+int8_t Sensors::init(std::shared_ptr<UavDynamicsSimBase>& uavDynamicsSim) {
     _uavDynamicsSim = uavDynamicsSim;
 
     double latRef, lonRef, altRef;
@@ -80,8 +80,8 @@ int8_t Sensors::init(UavDynamicsSimBase* uavDynamicsSim) {
     return 0;
 }
 
-#define PX4_NED_FRD 0
-#define ROS_ENU_FLU 1
+static const constexpr uint8_t PX4_NED_FRD = 0;
+static const constexpr uint8_t ROS_ENU_FLU = 1;
 
 /**
  * @note Different simulators return data in different notation (PX4 or ROS)
@@ -131,7 +131,7 @@ void Sensors::publishStateToCommunicator(uint8_t dynamicsNotation) {
     diffPressureSensor.publish(diffPressureHpa);
     pressureSensor.publish(absPressureHpa);
     temperatureSensor.publish(temperatureKelvin);
-    gpsSensor.publish(gpsPosition, linVelNed);
+    gpsSensor.publish(gpsPosition);
 
     std::vector<double> motorsRpm;
     if(_uavDynamicsSim->getMotorsRpm(motorsRpm)){
@@ -152,5 +152,5 @@ void Sensors::publishStateToCommunicator(uint8_t dynamicsNotation) {
     fuelTankSensor.publish(fuelLevelPercentage);
 
     ///< @todo Battery is just constant, add model
-    batteryInfoSensor.publish(90.0);
+    batteryInfoSensor.publish(90.0f);
 }
