@@ -271,13 +271,13 @@ TEST(InnoVtolDynamicsSim, griddata){
     x_value = 2.25;
     y_value = 3.75;
     expected_result = 4.0;
-    actual_result = vtolDynamicsSim.griddata(x, y, f, x_value, y_value);
+    actual_result = Math::griddata(x, y, f, x_value, y_value);
     EXPECT_NEAR(actual_result, expected_result, 0.001);
 
     x_value = 1.1;
     y_value = 4.75;
     expected_result = 3.9250;
-    actual_result = vtolDynamicsSim.griddata(x, y, f, x_value, y_value);
+    actual_result = Math::griddata(x, y, f, x_value, y_value);
     EXPECT_NEAR(actual_result, expected_result, 0.001);
 }
 

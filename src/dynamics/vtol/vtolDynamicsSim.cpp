@@ -13,7 +13,6 @@
 #include "cs_converter.hpp"
 #include "common_math.hpp"
 
-#define STORE_SIM_PARAMETERS    true
 
 InnoVtolDynamicsSim::InnoVtolDynamicsSim(){
     state_.angularVel.setZero();
@@ -261,7 +260,7 @@ void InnoVtolDynamicsSim::process(double dtSecs,
 
 
 /**
- * @note Map motors indexes from StandardVTOL mixer into internal represenation
+ * @note Map motors indexes from StandardVTOL mixer into internal representation
  * Output indexes will be:
  * 0-3 - copter indexes, where 0 - right forward, 1 - left backward, 2 - left forward, 3 - right backward
  * 4 - throttle
@@ -300,7 +299,7 @@ std::vector<double> InnoVtolDynamicsSim::mapCmdToActuatorStandardVTOL(const std:
 }
 
 /**
- * @note Map motors indexes from InnoVTOL mixer into internal represenation
+ * @note Map motors indexes from InnoVTOL mixer into internal representation
  * @param cmd Input indexes should correspond InnoVTOL PX4 mixer
  * Few notes:
  * 4 - aileron default value is 0.5 and it can be [0, +1], where 0 wants to rotate to the right
@@ -552,7 +551,8 @@ void InnoVtolDynamicsSim::calculateNewState(const Eigen::Vector3d& Maero,
     state_.attitude.normalize();
 
     Eigen::Matrix3d rotationMatrix = calculateRotationMatrix();
-    auto Fspecific = std::accumulate(&state_.forces.motors[0], &state_.forces.motors[5], Faero) / params_.mass;
+    auto& Fmotors = state_.forces.motors;
+    Eigen::Vector3d Fspecific = std::accumulate(&Fmotors[0], &Fmotors[5], Faero) / params_.mass;
     Eigen::Vector3d Ftotal = (Fspecific + rotationMatrix * Eigen::Vector3d(0, 0, params_.gravity)) * params_.mass;
 
     state_.forces.total = Ftotal;
@@ -568,9 +568,7 @@ void InnoVtolDynamicsSim::calculateNewState(const Eigen::Vector3d& Maero,
         state_.forces.specific = Fspecific;
     }
 
-    #if STORE_SIM_PARAMETERS == true
     state_.bodylinearVel = rotationMatrix * state_.linearVel;
-    #endif
 }
 
 Eigen::Vector3d InnoVtolDynamicsSim::calculateNormalForceWithoutMass() const{
@@ -603,19 +601,19 @@ void InnoVtolDynamicsSim::calculateCmzPolynomial(double airSpeedMod,
     calculatePolynomialUsingTable(tables_.CmzPolynomial, airSpeedMod, polynomialCoeffs);
 }
 double InnoVtolDynamicsSim::calculateCSRudder(double rudder_pos, double airspeed) const{
-    return griddata(-tables_.actuator, tables_.airspeed, tables_.CS_rudder, rudder_pos, airspeed);
+    return Math::griddata(-tables_.actuator, tables_.airspeed, tables_.CS_rudder, rudder_pos, airspeed);
 }
 double InnoVtolDynamicsSim::calculateCSBeta(double AoS_deg, double airspeed) const{
-    return griddata(-tables_.AoS, tables_.airspeed, tables_.CS_beta, AoS_deg, airspeed);
+    return Math::griddata(-tables_.AoS, tables_.airspeed, tables_.CS_beta, AoS_deg, airspeed);
 }
 double InnoVtolDynamicsSim::calculateCmxAileron(double aileron_pos, double airspeed) const{
-    return griddata(tables_.actuator, tables_.airspeed, tables_.CmxAileron, aileron_pos, airspeed);
+    return Math::griddata(tables_.actuator, tables_.airspeed, tables_.CmxAileron, aileron_pos, airspeed);
 }
 double InnoVtolDynamicsSim::calculateCmyElevator(double elevator_pos, double airspeed) const{
-    return griddata(tables_.actuator, tables_.airspeed, tables_.CmyElevator, elevator_pos, airspeed);
+    return Math::griddata(tables_.actuator, tables_.airspeed, tables_.CmyElevator, elevator_pos, airspeed);
 }
 double InnoVtolDynamicsSim::calculateCmzRudder(double rudder_pos, double airspeed) const{
-    return griddata(tables_.actuator, tables_.airspeed, tables_.CmzRudder, rudder_pos, airspeed);
+    return Math::griddata(tables_.actuator, tables_.airspeed, tables_.CmzRudder, rudder_pos, airspeed);
 }
 
 bool InnoVtolDynamicsSim::calculatePolynomialUsingTable(const Eigen::MatrixXd& table,
@@ -652,26 +650,6 @@ Eigen::Vector3d InnoVtolDynamicsSim::calculateAngularAccel(const Eigen::Matrix<d
                                                            const Eigen::Vector3d& moment,
                                                            const Eigen::Vector3d& prevAngVel) const{
     return inertia.inverse() * (moment - prevAngVel.cross(inertia * prevAngVel));
-}
-
-
-double InnoVtolDynamicsSim::griddata(const Eigen::MatrixXd& x,
-                                 const Eigen::MatrixXd& y,
-                                 const Eigen::MatrixXd& z,
-                                 double x_val,
-                                 double y_val) const{
-    size_t x1_idx = Math::findPrevRowIdxInMonotonicSequence(x, x_val);
-    size_t y1_idx = Math::findPrevRowIdxInMonotonicSequence(y, y_val);
-    size_t x2_idx = x1_idx + 1;
-    size_t y2_idx = y1_idx + 1;
-    double Q11 = z(y1_idx, x1_idx);
-    double Q12 = z(y2_idx, x1_idx);
-    double Q21 = z(y1_idx, x2_idx);
-    double Q22 = z(y2_idx, x2_idx);
-    double R1 = ((x(x2_idx) - x_val) * Q11 + (x_val - x(x1_idx)) * Q21) / (x(x2_idx) - x(x1_idx));
-    double R2 = ((x(x2_idx) - x_val) * Q12 + (x_val - x(x1_idx)) * Q22) / (x(x2_idx) - x(x1_idx));
-    double f =  ((y(y2_idx) - y_val) * R1  + (y_val - y(y1_idx)) * R2)  / (y(y2_idx) - y(y1_idx));
-    return f;
 }
 
 /**

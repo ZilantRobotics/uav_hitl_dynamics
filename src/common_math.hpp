@@ -30,6 +30,16 @@ namespace Math
      * @note size should be greater or equel than 2!
      */
     size_t findPrevRowIdxInIncreasingSequence(const Eigen::MatrixXd& table, double value);
+
+    /**
+     * @note Similar to https://www.mathworks.com/help/matlab/ref/griddata.html
+     * Implementation from https://en.wikipedia.org/wiki/Bilinear_interpolation
+     */
+    double griddata(const Eigen::MatrixXd& x,
+                    const Eigen::MatrixXd& y,
+                    const Eigen::MatrixXd& z,
+                    double x_val,
+                    double y_val);
 }  // namespace Math
 
 #endif  // COMMON_MATH_HPP

@@ -208,16 +208,6 @@ class InnoVtolDynamicsSim : public UavDynamicsSimBase{
         Eigen::Vector3d calculateAngularAccel(const Eigen::Matrix<double, 3, 3, Eigen::RowMajor>& inertia,
                                               const Eigen::Vector3d& moment,
                                               const Eigen::Vector3d& prevAngVel) const;
-        /**
-         * @note Similar to https://www.mathworks.com/help/matlab/ref/griddata.html
-         * Implementation from https://en.wikipedia.org/wiki/Bilinear_interpolation
-         */
-        double griddata(const Eigen::MatrixXd& x,
-                        const Eigen::MatrixXd& y,
-                        const Eigen::MatrixXd& z,
-                        double xi,
-                        double yi) const;
-
 
         void setWindParameter(Eigen::Vector3d windMeanVelocity, double wind_velocityVariance);
         void setInitialVelocity(const Eigen::Vector3d& linearVelocity,
