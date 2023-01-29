@@ -75,52 +75,43 @@ void RvizVisualizator::publish(uint8_t) {
     const Eigen::Vector3d DRAG_FORCE(0.2, 0.8, 0.3);
     const Eigen::Vector3d SIDE_FORCE(0.2, 0.3, 0.8);
 
-    // publish moments
-    auto Maero = dynamic_cast<InnoVtolDynamicsSim*>(uavDynamicsSim.get())->getMaero();
-    aeroMomentPub.publish(makeArrow(Maero, MOMENT_COLOR, UAV_FRAME_ID));
+    auto moments = dynamic_cast<InnoVtolDynamicsSim*>(uavDynamicsSim.get())->getMoments();
+    auto forces = dynamic_cast<InnoVtolDynamicsSim*>(uavDynamicsSim.get())->getForces();
 
-    auto Mmotors = dynamic_cast<InnoVtolDynamicsSim*>(uavDynamicsSim.get())->getMmotors();
+    // publish moments
+    aeroMomentPub.publish(makeArrow(moments.aero, MOMENT_COLOR, UAV_FRAME_ID));
+
     for(size_t motorIdx = 0; motorIdx < 5; motorIdx++){
-        motorsMomentsPub[motorIdx].publish(makeArrow(Mmotors[motorIdx],
+        motorsMomentsPub[motorIdx].publish(makeArrow(moments.motors[motorIdx],
                                                         MOMENT_COLOR,
                                                         MOTOR_NAMES[motorIdx].c_str()));
     }
 
-    auto Mtotal = dynamic_cast<InnoVtolDynamicsSim*>(uavDynamicsSim.get())->getMtotal();
-    totalMomentPub.publish(makeArrow(Mtotal, MOMENT_COLOR, UAV_FRAME_ID));
+    totalMomentPub.publish(makeArrow(moments.total, MOMENT_COLOR, UAV_FRAME_ID));
 
-    auto Msteer = dynamic_cast<InnoVtolDynamicsSim*>(uavDynamicsSim.get())->getMsteer();
-    controlSurfacesMomentPub.publish(makeArrow(Msteer, MOMENT_COLOR, UAV_FRAME_ID));
+    controlSurfacesMomentPub.publish(makeArrow(moments.steer, MOMENT_COLOR, UAV_FRAME_ID));
 
-    auto Mairspeed = dynamic_cast<InnoVtolDynamicsSim*>(uavDynamicsSim.get())->getMairspeed();
-    aoaMomentPub.publish(makeArrow(Mairspeed, MOMENT_COLOR, UAV_FRAME_ID));
+    aoaMomentPub.publish(makeArrow(moments.airspeed, MOMENT_COLOR, UAV_FRAME_ID));
+
 
 
     // publish forces
-    auto Faero = dynamic_cast<InnoVtolDynamicsSim*>(uavDynamicsSim.get())->getFaero();
-    aeroForcePub.publish(makeArrow(Faero / 10, MOTORS_FORCES_COLOR, UAV_FRAME_ID));
+    aeroForcePub.publish(makeArrow(forces.aero / 10, MOTORS_FORCES_COLOR, UAV_FRAME_ID));
 
-    auto Fmotors = dynamic_cast<InnoVtolDynamicsSim*>(uavDynamicsSim.get())->getFmotors();
     for(size_t motorIdx = 0; motorIdx < 5; motorIdx++){
-        motorsForcesPub[motorIdx].publish(makeArrow(Fmotors[motorIdx] / 10,
+        motorsForcesPub[motorIdx].publish(makeArrow(forces.motors[motorIdx] / 10,
                                                         MOTORS_FORCES_COLOR,
                                                         MOTOR_NAMES[motorIdx].c_str()));
     }
 
-    auto Ftotal = dynamic_cast<InnoVtolDynamicsSim*>(uavDynamicsSim.get())->getFtotal();
-    totalForcePub.publish(makeArrow(Ftotal, Eigen::Vector3d(0.0, 1.0, 1.0), UAV_FRAME_ID));
+    totalForcePub.publish(makeArrow(forces.total, Eigen::Vector3d(0.0, 1.0, 1.0), UAV_FRAME_ID));
 
     auto velocity = dynamic_cast<InnoVtolDynamicsSim*>(uavDynamicsSim.get())->getBodyLinearVelocity();
     velocityPub.publish(makeArrow(velocity, SPEED_COLOR, UAV_FRAME_ID));
 
-    auto Flift = dynamic_cast<InnoVtolDynamicsSim*>(uavDynamicsSim.get())->getFlift();
-    liftForcePub.publish(makeArrow(Flift / 10, LIFT_FORCE, UAV_FRAME_ID));
-
-    auto Fdrug = dynamic_cast<InnoVtolDynamicsSim*>(uavDynamicsSim.get())->getFdrug();
-    drugForcePub.publish(makeArrow(Fdrug / 10, DRAG_FORCE, UAV_FRAME_ID));
-
-    auto Fside = dynamic_cast<InnoVtolDynamicsSim*>(uavDynamicsSim.get())->getFside();
-    sideForcePub.publish(makeArrow(Fside / 10, SIDE_FORCE, UAV_FRAME_ID));
+    liftForcePub.publish(makeArrow(forces.lift / 10, LIFT_FORCE, UAV_FRAME_ID));
+    drugForcePub.publish(makeArrow(forces.drug / 10, DRAG_FORCE, UAV_FRAME_ID));
+    sideForcePub.publish(makeArrow(forces.side / 10, SIDE_FORCE, UAV_FRAME_ID));
 }
 
 visualization_msgs::Marker& RvizVisualizator::makeArrow(const Eigen::Vector3d& vector3D,

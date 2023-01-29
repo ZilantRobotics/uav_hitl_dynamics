@@ -90,7 +90,7 @@ static const constexpr uint8_t ROS_ENU_FLU = 1;
  * But we must publish only in PX4 notation
  */
 void Sensors::publishStateToCommunicator(uint8_t dynamicsNotation) {
-    // 1. Get data from simulator    
+    // 1. Get data from simulator
     Eigen::Vector3d acc;
     Eigen::Vector3d gyro;
     _uavDynamicsSim->getIMUMeasurement(acc, gyro);

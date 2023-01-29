@@ -37,6 +37,27 @@ struct VtolParameters{
      */
     double massUncertainty;                         // multiplier
     double inertiaUncertainty;                      // multiplier
+
+    Eigen::Vector3d accelBias;
+    Eigen::Vector3d gyroBias;
+};
+
+struct Forces{
+    Eigen::Vector3d lift;
+    Eigen::Vector3d drug;
+    Eigen::Vector3d side;
+    Eigen::Vector3d aero;
+    std::array<Eigen::Vector3d, 5> motors;
+    Eigen::Vector3d specific;
+    Eigen::Vector3d total;
+};
+
+struct Moments{
+    Eigen::Vector3d aero;
+    Eigen::Vector3d steer;
+    Eigen::Vector3d airspeed;
+    std::array<Eigen::Vector3d, 5> motors;
+    Eigen::Vector3d total;
 };
 
 struct State{
@@ -56,37 +77,20 @@ struct State{
     Eigen::Vector3d angularVel;                     // rad/sec
     Eigen::Vector3d angularAccel;                   // rad/sec^2
 
-    Eigen::Vector3d Flift;                          // N
-    Eigen::Vector3d Fdrug;                          // N
-    Eigen::Vector3d Fside;                          // N
-    Eigen::Vector3d Faero;                          // N
-    Eigen::Vector3d Maero;                          // N*m
-    Eigen::Vector3d Msteer;                         // N*m
-    Eigen::Vector3d Mairspeed;                      // N*m
-    Eigen::Vector3d MmotorsTotal;                   // N*m
-    std::array<Eigen::Vector3d, 5> Fmotors;         // N
-    std::array<Eigen::Vector3d, 5> Mmotors;         // N*m
+    Forces forces;
+    Moments moments;
+
     std::array<double, 5> motorsRpm;                // rpm
-    Eigen::Vector3d Fspecific;                      // N
-    Eigen::Vector3d Ftotal;                         // N
-    Eigen::Vector3d Mtotal;                         // N*m
     Eigen::Vector3d bodylinearVel;                  // m/sec (just for debug only)
+    std::vector<double> prevActuators;              // rad/sec
+    std::vector<double> crntActuators;              // rad/sec
+};
 
-    /**
-     * @note parameters
-     */
-    Eigen::Vector3d accelBias;
-    Eigen::Vector3d gyroBias;
+struct Environment{
     double windVariance;
-
-    /**
-     * @note not ready yet
-     */
     Eigen::Vector3d windVelocity;                   // m/sec^2
     Eigen::Vector3d gustVelocity;                   // m/sec^2
     double gustVariance;
-    std::vector<double> prevActuators;              // rad/sec
-    std::vector<double> crntActuators;              // rad/sec
 };
 
 struct TablesWithCoeffs{
@@ -133,7 +137,7 @@ class InnoVtolDynamicsSim : public UavDynamicsSimBase{
                      bool isCmdPercent) override;
 
         /**
-         * @note These methods should return in ned format
+         * @note These methods should return in NED format
          */
         Eigen::Vector3d getVehiclePosition() const override;
         Eigen::Quaterniond getVehicleAttitude() const override;
@@ -143,24 +147,15 @@ class InnoVtolDynamicsSim : public UavDynamicsSimBase{
         bool getMotorsRpm(std::vector<double>& motorsRpm) override;
 
         /**
-         * @note These methods should be public for debug only (publish to ros topic)
-         * it's better to refactor them
+         * @note For RVIZ visualization only
          */
-        Eigen::Vector3d getFaero() const;
-        Eigen::Vector3d getFtotal() const;
-        Eigen::Vector3d getMaero() const;
-        Eigen::Vector3d getMtotal() const;
+        const Forces& getForces() const;
+        const Moments& getMoments() const;
+        Eigen::Vector3d getBodyLinearVelocity() const;
+
+        // For tests only
         Eigen::Vector3d getAngularAcceleration() const;
         Eigen::Vector3d getLinearAcceleration() const;
-        Eigen::Vector3d getMsteer() const;
-        Eigen::Vector3d getMairspeed() const;
-        Eigen::Vector3d getMmotorsTotal() const;
-        Eigen::Vector3d getBodyLinearVelocity() const;
-        Eigen::Vector3d getFlift() const;
-        Eigen::Vector3d getFdrug() const;
-        Eigen::Vector3d getFside() const;
-        const std::array<Eigen::Vector3d, 5>& getFmotors() const;
-        const std::array<Eigen::Vector3d, 5>& getMmotors() const;
 
         /**
          * @note The methods below are should be public for test only
@@ -241,6 +236,7 @@ class InnoVtolDynamicsSim : public UavDynamicsSimBase{
         VtolParameters params_;
         State state_;
         TablesWithCoeffs tables_;
+        Environment environment_;
 
         std::default_random_engine generator_;
         std::normal_distribution<double> distribution_{0.0, 1.0};

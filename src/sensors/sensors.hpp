@@ -46,7 +46,7 @@ private:
     ImuSensor imuSensor;
     VelocitySensor velocitySensor_;
     MagSensor magSensor;
-    DifferentialPressureSensor diffPressureSensor;
+    DiffPressureSensor diffPressureSensor;
     TemperatureSensor temperatureSensor;
     PressureSensor pressureSensor;
     GpsSensor gpsSensor;
