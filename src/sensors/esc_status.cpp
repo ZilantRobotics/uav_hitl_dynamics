@@ -32,7 +32,7 @@ bool EscStatusSensor::publish(const std::vector<double>& rpm) {
             nextEscIdx_ = 0;
         }
         escStatusMsg.count = nextEscIdx_;
-        escStatusMsg.rpm = static_cast<float>(rpm[nextEscIdx_]);
+        escStatusMsg.rpm = static_cast<int>(rpm[nextEscIdx_]);
         publisher_.publish(escStatusMsg);
         nextPubTimeSec_ = crntTimeSec + PERIOD / (double)rpm.size();
         nextEscIdx_++;

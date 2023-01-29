@@ -19,8 +19,8 @@
 #include "barometer.hpp"
 #include <std_msgs/Float32.h>
 
-static const double STATIC_PRESSURE_NOISE = 0.1;
-static const double TEMPERATURE_NOISE = 0.1;
+static const float STATIC_PRESSURE_NOISE = 0.1;
+static const float TEMPERATURE_NOISE = 0.1;
 
 PressureSensor::PressureSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
     publisher_ = node_handler_->advertise<std_msgs::Float32>(topic, 5);
@@ -33,7 +33,7 @@ bool PressureSensor::publish(float staticPressureHpa) {
 
     std_msgs::Float32 msg;
     msg.data = staticPressureHpa * 100;
-    msg.data += static_cast<float>(STATIC_PRESSURE_NOISE * normalDistribution_(randomGenerator_));
+    msg.data += STATIC_PRESSURE_NOISE * static_cast<float>(normalDistribution_(randomGenerator_));
     publisher_.publish(msg);
 
     nextPubTimeSec_ = crntTimeSec + PERIOD;
@@ -51,7 +51,7 @@ bool TemperatureSensor::publish(float staticTemperature) {
 
     std_msgs::Float32 msg;
     msg.data = staticTemperature + 5;
-    msg.data += TEMPERATURE_NOISE * normalDistribution_(randomGenerator_);
+    msg.data += TEMPERATURE_NOISE * static_cast<float>(normalDistribution_(randomGenerator_));
     publisher_.publish(msg);
 
     nextPubTimeSec_ = crntTimeSec + PERIOD;

@@ -40,7 +40,6 @@ int main(int argc, char **argv){
 Uav_Dynamics::Uav_Dynamics(ros::NodeHandle nh) :
     node_(nh),
     actuators_(8, 0.),
-    initPose_(7),
     _sensors(&nh),
     _rviz_visualizator(node_){
 }
@@ -87,11 +86,11 @@ int8_t Uav_Dynamics::initDynamicsSimulator(){
     if(dynamicsTypeName_ == DYNAMICS_NAME_FLIGHTGOGGLES){
         dynamicsType_ = DYNAMICS_FLIGHTGOGGLES_MULTICOPTER;
         uavDynamicsSim_ = std::make_shared<FlightgogglesDynamics>();
-        _dynamicsNotation = ROS_ENU_FLU;
+        _dynamicsNotation = DynamicsNotation_t::ROS_ENU_FLU;
     }else if(dynamicsTypeName_ == DYNAMICS_NAME_INNO_VTOL){
         uavDynamicsSim_ = std::make_shared<InnoVtolDynamicsSim>();
         dynamicsType_ = DYNAMICS_INNO_VTOL;
-        _dynamicsNotation = PX4_NED_FRD;
+        _dynamicsNotation = DynamicsNotation_t::PX4_NED_FRD;
     }else{
         ROS_ERROR("Dynamics type with name \"%s\" is not exist.", dynamicsTypeName_.c_str());
         return -1;
@@ -243,7 +242,7 @@ void Uav_Dynamics::performLogging(double periodSec){
         }
 
         auto pose = uavDynamicsSim_->getVehiclePosition();
-        auto enuPosition = (_dynamicsNotation == PX4_NED_FRD) ? Converter::nedToEnu(pose) : pose;
+        auto enuPosition = (_dynamicsNotation == DynamicsNotation_t::PX4_NED_FRD) ? Converter::nedToEnu(pose) : pose;
         logAddBoldStringToStream(logStream, "enu pose");
         logStream << std::setprecision(1) << std::fixed << " ["
                   << enuPosition[0] << ", "
@@ -294,7 +293,7 @@ void Uav_Dynamics::proceedDynamics(double periodSec){
             uavDynamicsSim_->land();
         }
 
-        _sensors.publishStateToCommunicator(_dynamicsNotation);
+        _sensors.publishStateToCommunicator((uint8_t)_dynamicsNotation);
 
         std::this_thread::sleep_until(time_point);
     }
@@ -307,12 +306,12 @@ void Uav_Dynamics::publishToRos(double period){
         auto time_point = crnt_time + sleed_period;
         rosPubCounter_++;
 
-        _rviz_visualizator.publishTf(_dynamicsNotation);
+        _rviz_visualizator.publishTf((uint8_t)_dynamicsNotation);
 
         static auto next_time = std::chrono::system_clock::now();
         if(crnt_time > next_time){
             if (dynamicsType_ == DYNAMICS_INNO_VTOL) {
-                _rviz_visualizator.publish(_dynamicsNotation);
+                _rviz_visualizator.publish((uint8_t)_dynamicsNotation);
             }
             next_time += std::chrono::milliseconds(int(50));
         }

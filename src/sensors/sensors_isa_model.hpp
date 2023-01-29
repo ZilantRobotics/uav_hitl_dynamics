@@ -38,7 +38,7 @@ namespace SensorModelISA
         const float densityRatio = powf((TEMPERATURE_MSL_KELVIN/temperatureKelvin), 4.256f);
         float rho = RHO_MSL / densityRatio;
         absPressureHpa = PRESSURE_MSL_HPA / pressureRatio;
-        diffPressureHpa = 0.005f * rho * linVelNed.norm() * linVelNed.norm();
+        diffPressureHpa = 0.005f * rho * (float)(linVelNed.norm() * linVelNed.norm());
     }
 
 }  // namespace SensorModelISA

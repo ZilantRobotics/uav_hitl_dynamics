@@ -35,7 +35,7 @@ class Uav_Dynamics {
         explicit Uav_Dynamics(ros::NodeHandle nh);
         int8_t init();
 
-        enum DynamicsNotation_t{
+        enum class DynamicsNotation_t{
             PX4_NED_FRD = 0,
             ROS_ENU_FLU = 1,
         };
@@ -58,7 +58,7 @@ class Uav_Dynamics {
         double clockScale_ = 1.0;
         bool useSimTime_;
 
-        std::vector<double> initPose_;
+        std::vector<double> initPose_{7};
 
         enum DynamicsType{
             DYNAMICS_FLIGHTGOGGLES_MULTICOPTER = 0,
@@ -80,7 +80,7 @@ class Uav_Dynamics {
         /// @name Communication with PX4
         //@{
         ros::Subscriber actuatorsSub_;
-        std::vector<double> actuators_;
+        std::vector<double> actuators_{8, 0.};
         uint64_t lastActuatorsTimestampUsec_;
         uint64_t prevActuatorsTimestampUsec_;
         uint64_t maxDelayUsec_;

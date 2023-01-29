@@ -36,7 +36,7 @@
 class Sensors {
 public:
     explicit Sensors(ros::NodeHandle* nh);
-    int8_t init(std::shared_ptr<UavDynamicsSimBase>& uavDynamicsSim);
+    int8_t init(const std::shared_ptr<UavDynamicsSimBase>& uavDynamicsSim);
     void publishStateToCommunicator(uint8_t dynamicsNotation);
 
     IceStatusSensor iceStatusSensor;
