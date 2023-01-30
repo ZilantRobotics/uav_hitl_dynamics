@@ -18,28 +18,28 @@
 #include <ros/ros.h>
 #include <ros/time.h>
 
-#include <sensor_msgs/Joy.h>
-#include <std_msgs/Bool.h>
 #include <std_msgs/UInt8.h>
 
 #include "uavDynamicsSimBase.hpp"
+#include "actuators.hpp"
 #include "sensors.hpp"
 #include "rviz_visualization.hpp"
 
-enum DynamicsType{
-    DYNAMICS_FLIGHTGOGGLES_MULTICOPTER = 0,
-    DYNAMICS_INNO_VTOL,
+enum class DynamicsType{
+    FLIGHTGOGGLES_MULTICOPTER = 0,
+    INNO_VTOL,
 };
 
-enum VehicleType{
-    VEHICLE_IRIS = 0,
-    VEHICLE_INNOPOLIS_VTOL,
+enum class VehicleType{
+    IRIS = 0,
+    INNOPOLIS_VTOL,
 };
 
 enum class DynamicsNotation_t{
     PX4_NED_FRD = 0,
     ROS_ENU_FLU = 1,
 };
+
 
 /**
  * @brief UAV Dynamics class used for dynamics, IMU, and angular rate control simulation node
@@ -76,21 +76,10 @@ class Uav_Dynamics {
         std::string dynamicsTypeName_;
 
         // Communication with PX4
-        ros::Subscriber actuatorsSub_;
-        std::vector<double> actuators_{8, 0.};
-        uint64_t lastActuatorsTimestampUsec_;
-        uint64_t prevActuatorsTimestampUsec_;
-        uint64_t maxDelayUsec_;
-        void actuatorsCallback(sensor_msgs::Joy::Ptr msg);
-
-        ros::Subscriber armSub_;
-        bool armed_ = false;
-        void armCallback(std_msgs::Bool msg);
-
         ros::Subscriber scenarioSub_;
-        uint8_t _scenarioType = 0;
         void scenarioCallback(std_msgs::UInt8 msg);
 
+        Actuators actuators_;
         Sensors _sensors;
         RvizVisualizator _rviz_visualizator;
 
@@ -100,7 +89,6 @@ class Uav_Dynamics {
         void calibrationCallback(std_msgs::UInt8 msg);
 
         // Diagnostic
-        uint64_t actuatorsMsgCounter_ = 0;
         uint64_t dynamicsCounter_;
         uint64_t rosPubCounter_;
 

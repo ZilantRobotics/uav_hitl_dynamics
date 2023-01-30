@@ -39,7 +39,6 @@ int main(int argc, char **argv){
 
 Uav_Dynamics::Uav_Dynamics(ros::NodeHandle nh) :
     node_(nh),
-    actuators_(8, 0.),
     _sensors(&nh),
     _rviz_visualizator(node_){
 }
@@ -84,12 +83,12 @@ int8_t Uav_Dynamics::initDynamicsSimulator(){
     const char VEHICLE_NAME_INNOPOLIS_VTOL[] = "innopolis_vtol";
     const char VEHICLE_NAME_IRIS[] = "iris";
     if(dynamicsTypeName_ == DYNAMICS_NAME_FLIGHTGOGGLES){
-        dynamicsType_ = DYNAMICS_FLIGHTGOGGLES_MULTICOPTER;
+        dynamicsType_ = DynamicsType::FLIGHTGOGGLES_MULTICOPTER;
         uavDynamicsSim_ = std::make_shared<FlightgogglesDynamics>();
         _dynamicsNotation = DynamicsNotation_t::ROS_ENU_FLU;
     }else if(dynamicsTypeName_ == DYNAMICS_NAME_INNO_VTOL){
         uavDynamicsSim_ = std::make_shared<InnoVtolDynamicsSim>();
-        dynamicsType_ = DYNAMICS_INNO_VTOL;
+        dynamicsType_ = DynamicsType::INNO_VTOL;
         _dynamicsNotation = DynamicsNotation_t::PX4_NED_FRD;
     }else{
         ROS_ERROR("Dynamics type with name \"%s\" is not exist.", dynamicsTypeName_.c_str());
@@ -97,9 +96,9 @@ int8_t Uav_Dynamics::initDynamicsSimulator(){
     }
 
     if(vehicleName_ == VEHICLE_NAME_INNOPOLIS_VTOL){
-        vehicleType_ = VEHICLE_INNOPOLIS_VTOL;
+        vehicleType_ = VehicleType::INNOPOLIS_VTOL;
     }else if(vehicleName_ == VEHICLE_NAME_IRIS){
-        vehicleType_ = VEHICLE_IRIS;
+        vehicleType_ = VehicleType::IRIS;
     }else{
         ROS_ERROR("Wrong vehicle. It should be 'innopolis_vtol' or 'iris'");
         return -1;
@@ -119,8 +118,7 @@ int8_t Uav_Dynamics::initDynamicsSimulator(){
 }
 
 int8_t Uav_Dynamics::initSensors(){
-    actuatorsSub_ = node_.subscribe("/uav/actuators", 1, &Uav_Dynamics::actuatorsCallback, this);
-    armSub_ = node_.subscribe("/uav/arm", 1, &Uav_Dynamics::armCallback, this);
+    actuators_.init(node_);
     scenarioSub_ = node_.subscribe("/uav/scenario", 1, &Uav_Dynamics::scenarioCallback, this);
     return _sensors.init(uavDynamicsSim_);
 }
@@ -199,9 +197,14 @@ void Uav_Dynamics::performLogging(double periodSec){
         auto crnt_time = std::chrono::system_clock::now();
         auto sleed_period = std::chrono::seconds(int(periodSec * clockScale_));
 
+        auto& actuators = actuators_.actuators_;
+        auto& maxDelayUsec = actuators_.maxDelayUsec_;
+        auto& actuatorsMsgCounter = actuators_.actuatorsMsgCounter_;
+        const auto& armed = actuators_.armed_;
+
         std::stringstream logStream;
 
-        std::string arm_str = armed_ ? COLOR_GREEN + "[Armed]" + COLOR_TAIL : "[Disarmed]";
+        std::string arm_str = armed ? COLOR_GREEN + "[Armed]" + COLOR_TAIL : "[Disarmed]";
         logStream << arm_str << ", ";
 
         logStream << dynamicsTypeName_.c_str() << ". ";
@@ -218,27 +221,27 @@ void Uav_Dynamics::performLogging(double periodSec){
         logStream << ", ";
         rosPubCounter_ = 0;
 
-        std::string actuator_str = "setpoint=" + std::to_string(actuatorsMsgCounter_);
-        bool is_actuator_ok = actuatorsMsgCounter_ > 100 && maxDelayUsec_ < 20000 && maxDelayUsec_ != 0;
+        std::string actuator_str = "setpoint=" + std::to_string(actuatorsMsgCounter);
+        bool is_actuator_ok = actuatorsMsgCounter > 100 && maxDelayUsec < 20000 && maxDelayUsec != 0;
         logColorizeAndAddToStream(logStream, is_actuator_ok, actuator_str);
         logStream << " msg/sec.\n";
-        actuatorsMsgCounter_ = 0;
-        maxDelayUsec_ = 0;
+        actuatorsMsgCounter = 0;
+        maxDelayUsec = 0;
 
         logAddBoldStringToStream(logStream, "mc");
         logStream << std::setprecision(2) << std::fixed << " ["
-                  << actuators_[0] << ", "
-                  << actuators_[1] << ", "
-                  << actuators_[2] << ", "
-                  << actuators_[3] << "] ";
+                  << actuators[0] << ", "
+                  << actuators[1] << ", "
+                  << actuators[2] << ", "
+                  << actuators[3] << "] ";
 
-        if(vehicleType_ == VEHICLE_INNOPOLIS_VTOL){
+        if(vehicleType_ == VehicleType::INNOPOLIS_VTOL){
             logAddBoldStringToStream(logStream, "fw rpy");
-            logStream << " [" << actuators_[4] << ", "
-                              << actuators_[5] << ", "
-                              << actuators_[6] << "]";
+            logStream << " [" << actuators[4] << ", "
+                              << actuators[5] << ", "
+                              << actuators[6] << "]";
             logAddBoldStringToStream(logStream, " throttle");
-            logStream << " [" << actuators_[7] << "] ";
+            logStream << " [" << actuators[7] << "] ";
         }
 
         auto pose = uavDynamicsSim_->getVehiclePosition();
@@ -275,7 +278,7 @@ void Uav_Dynamics::proceedDynamics(double periodSec){
 
         if(calibrationType_ != UavDynamicsSimBase::SimMode_t::NORMAL){
             uavDynamicsSim_->calibrate(calibrationType_);
-        }else if(armed_){
+        }else if(actuators_.armed_){
             static auto crnt_time = std::chrono::system_clock::now();
             auto prev_time = crnt_time;
             crnt_time = std::chrono::system_clock::now();
@@ -288,7 +291,7 @@ void Uav_Dynamics::proceedDynamics(double periodSec){
                 time_dif_sec = MAX_TIME_DIFF_SEC;
             }
 
-            uavDynamicsSim_->process(time_dif_sec, actuators_, true);
+            uavDynamicsSim_->process(time_dif_sec, actuators_.actuators_, true);
         }else{
             uavDynamicsSim_->land();
         }
@@ -310,7 +313,7 @@ void Uav_Dynamics::publishToRos(double period){
 
         static auto next_time = std::chrono::system_clock::now();
         if(crnt_time > next_time){
-            if (dynamicsType_ == DYNAMICS_INNO_VTOL) {
+            if (dynamicsType_ == DynamicsType::INNO_VTOL) {
                 _rviz_visualizator.publish((uint8_t)_dynamicsNotation);
             }
             next_time += std::chrono::milliseconds(int(50));
@@ -320,39 +323,11 @@ void Uav_Dynamics::publishToRos(double period){
     }
 }
 
-void Uav_Dynamics::actuatorsCallback(sensor_msgs::Joy::Ptr msg){
-    prevActuatorsTimestampUsec_ = lastActuatorsTimestampUsec_;
-    lastActuatorsTimestampUsec_ = msg->header.stamp.toNSec() / 1000;
-    auto crntDelayUsec = lastActuatorsTimestampUsec_ - prevActuatorsTimestampUsec_;
-    if(crntDelayUsec > maxDelayUsec_){
-        maxDelayUsec_ = crntDelayUsec;
-    }
-    actuatorsMsgCounter_++;
-
-    for(size_t idx = 0; idx < msg->axes.size(); idx++){
-        actuators_[idx] = msg->axes[idx];
-    }
-
-    if (_scenarioType == 1) {
-        actuators_[7] = 0.0;
-    }
-}
-
-void Uav_Dynamics::armCallback(std_msgs::Bool msg){
-    if(armed_ != msg.data){
-        /**
-         * @note why it publish few times when sim starts? hack: use throttle
-         */
-        ROS_INFO_STREAM_THROTTLE(1, "cmd: " << (msg.data ? "Arm" : "Disarm"));
-    }
-    armed_ = msg.data;
-}
-
 void Uav_Dynamics::scenarioCallback(std_msgs::UInt8 msg){
-    _scenarioType = msg.data;
-    if (_scenarioType == 0) {
+    actuators_._scenarioType = msg.data;
+    if (actuators_._scenarioType == 0) {
         _sensors.iceStatusSensor.stop_stall_emulation();
-    } else if (_scenarioType == 1) {
+    } else if (actuators_._scenarioType == 1) {
         _sensors.iceStatusSensor.start_stall_emulation();
     }
 }
