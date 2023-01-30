@@ -70,4 +70,33 @@ double griddata(const Eigen::MatrixXd& x,
     return f;
 }
 
+bool calculatePolynomial(const Eigen::MatrixXd& table,
+                         double airSpeedMod,
+                         Eigen::VectorXd& polynomialCoeffs){
+    if(table.cols() < 2 || table.rows() < 2 || polynomialCoeffs.rows() < table.cols() - 1){
+        return false;  // wrong input
+    }
+
+    const size_t prevRowIdx = Math::findPrevRowIdxInMonotonicSequence(table, airSpeedMod);
+    if(prevRowIdx + 2 > table.rows()){
+        return false;  // wrong found row
+    }
+
+    const size_t nextRowIdx = prevRowIdx + 1;
+    const double airspeedStep = table.row(nextRowIdx)(0, 0) - table.row(prevRowIdx)(0, 0);
+    if (abs(airspeedStep) < 0.001) {
+        return false;  // wrong table, prevent division on zero
+    }
+
+    double delta = (airSpeedMod - table.row(prevRowIdx)(0, 0)) / airspeedStep;
+    const size_t numberOfCoeffs = table.cols() - 1;
+    for(size_t coeff_idx = 0; coeff_idx < numberOfCoeffs; coeff_idx++){
+        const double prevValue = table.row(prevRowIdx)(0, coeff_idx + 1);
+        const double nextValue = table.row(nextRowIdx)(0, coeff_idx + 1);
+        polynomialCoeffs[coeff_idx] = Math::lerp(prevValue, nextValue, delta);
+    }
+
+    return true;
+}
+
 }  // namespace Math

@@ -578,27 +578,27 @@ Eigen::Vector3d InnoVtolDynamicsSim::calculateNormalForceWithoutMass() const{
 
 void InnoVtolDynamicsSim::calculateCLPolynomial(double airSpeedMod,
                                                 Eigen::VectorXd& polynomialCoeffs) const{
-    calculatePolynomialUsingTable(tables_.CLPolynomial, airSpeedMod, polynomialCoeffs);
+    Math::calculatePolynomial(tables_.CLPolynomial, airSpeedMod, polynomialCoeffs);
 }
 void InnoVtolDynamicsSim::calculateCSPolynomial(double airSpeedMod,
                                                 Eigen::VectorXd& polynomialCoeffs) const{
-    calculatePolynomialUsingTable(tables_.CSPolynomial, airSpeedMod, polynomialCoeffs);
+    Math::calculatePolynomial(tables_.CSPolynomial, airSpeedMod, polynomialCoeffs);
 }
 void InnoVtolDynamicsSim::calculateCDPolynomial(double airSpeedMod,
                                                 Eigen::VectorXd& polynomialCoeffs) const{
-    calculatePolynomialUsingTable(tables_.CDPolynomial, airSpeedMod, polynomialCoeffs);
+    Math::calculatePolynomial(tables_.CDPolynomial, airSpeedMod, polynomialCoeffs);
 }
 void InnoVtolDynamicsSim::calculateCmxPolynomial(double airSpeedMod,
                                                  Eigen::VectorXd& polynomialCoeffs) const{
-    calculatePolynomialUsingTable(tables_.CmxPolynomial, airSpeedMod, polynomialCoeffs);
+    Math::calculatePolynomial(tables_.CmxPolynomial, airSpeedMod, polynomialCoeffs);
 }
 void InnoVtolDynamicsSim::calculateCmyPolynomial(double airSpeedMod,
                                                  Eigen::VectorXd& polynomialCoeffs) const{
-    calculatePolynomialUsingTable(tables_.CmyPolynomial, airSpeedMod, polynomialCoeffs);
+    Math::calculatePolynomial(tables_.CmyPolynomial, airSpeedMod, polynomialCoeffs);
 }
 void InnoVtolDynamicsSim::calculateCmzPolynomial(double airSpeedMod,
                                                  Eigen::VectorXd& polynomialCoeffs) const{
-    calculatePolynomialUsingTable(tables_.CmzPolynomial, airSpeedMod, polynomialCoeffs);
+    Math::calculatePolynomial(tables_.CmzPolynomial, airSpeedMod, polynomialCoeffs);
 }
 double InnoVtolDynamicsSim::calculateCSRudder(double rudder_pos, double airspeed) const{
     return Math::griddata(-tables_.actuator, tables_.airspeed, tables_.CS_rudder, rudder_pos, airspeed);
@@ -614,35 +614,6 @@ double InnoVtolDynamicsSim::calculateCmyElevator(double elevator_pos, double air
 }
 double InnoVtolDynamicsSim::calculateCmzRudder(double rudder_pos, double airspeed) const{
     return Math::griddata(tables_.actuator, tables_.airspeed, tables_.CmzRudder, rudder_pos, airspeed);
-}
-
-bool InnoVtolDynamicsSim::calculatePolynomialUsingTable(const Eigen::MatrixXd& table,
-                                                        double airSpeedMod,
-                                                        Eigen::VectorXd& polynomialCoeffs) const{
-    if(table.cols() < 2 || table.rows() < 2 || polynomialCoeffs.rows() < table.cols() - 1){
-        return false;  // wrong input
-    }
-
-    const size_t prevRowIdx = Math::findPrevRowIdxInMonotonicSequence(table, airSpeedMod);
-    if(prevRowIdx + 2 > table.rows()){
-        return false;  // wrong found row
-    }
-
-    const size_t nextRowIdx = prevRowIdx + 1;
-    const double airspeedStep = table.row(nextRowIdx)(0, 0) - table.row(prevRowIdx)(0, 0);
-    if (abs(airspeedStep) < 0.001) {
-        return false;  // wrong table, prevent division on zero
-    }
-
-    double delta = (airSpeedMod - table.row(prevRowIdx)(0, 0)) / airspeedStep;
-    const size_t numberOfCoeffs = table.cols() - 1;
-    for(size_t coeff_idx = 0; coeff_idx < numberOfCoeffs; coeff_idx++){
-        const double prevValue = table.row(prevRowIdx)(0, coeff_idx + 1);
-        const double nextValue = table.row(nextRowIdx)(0, coeff_idx + 1);
-        polynomialCoeffs[coeff_idx] = Math::lerp(prevValue, nextValue, delta);
-    }
-
-    return true;
 }
 
 // Motion dynamics equation

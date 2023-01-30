@@ -26,6 +26,20 @@
 #include "sensors.hpp"
 #include "rviz_visualization.hpp"
 
+enum DynamicsType{
+    DYNAMICS_FLIGHTGOGGLES_MULTICOPTER = 0,
+    DYNAMICS_INNO_VTOL,
+};
+
+enum VehicleType{
+    VEHICLE_IRIS = 0,
+    VEHICLE_INNOPOLIS_VTOL,
+};
+
+enum class DynamicsNotation_t{
+    PX4_NED_FRD = 0,
+    ROS_ENU_FLU = 1,
+};
 
 /**
  * @brief UAV Dynamics class used for dynamics, IMU, and angular rate control simulation node
@@ -35,11 +49,6 @@ class Uav_Dynamics {
         explicit Uav_Dynamics(ros::NodeHandle nh);
         int8_t init();
 
-        enum class DynamicsNotation_t{
-            PX4_NED_FRD = 0,
-            ROS_ENU_FLU = 1,
-        };
-
     private:
         int8_t getParamsFromRos();
         int8_t initDynamicsSimulator();
@@ -47,8 +56,7 @@ class Uav_Dynamics {
         int8_t initCalibration();
         int8_t startClockAndThreads();
 
-        /// @name Simulator
-        //@{
+        // Simulator
         ros::NodeHandle node_;
         std::shared_ptr<UavDynamicsSimBase> uavDynamicsSim_;
         ros::Publisher clockPub_;
@@ -60,25 +68,14 @@ class Uav_Dynamics {
 
         std::vector<double> initPose_{7};
 
-        enum DynamicsType{
-            DYNAMICS_FLIGHTGOGGLES_MULTICOPTER = 0,
-            DYNAMICS_INNO_VTOL,
-        };
-        enum VehicleType{
-            VEHICLE_IRIS = 0,
-            VEHICLE_INNOPOLIS_VTOL,
-        };
-
         DynamicsType dynamicsType_;
         VehicleType vehicleType_;
+        DynamicsNotation_t _dynamicsNotation;
 
         std::string vehicleName_;
         std::string dynamicsTypeName_;
-        //@}
 
-
-        /// @name Communication with PX4
-        //@{
+        // Communication with PX4
         ros::Subscriber actuatorsSub_;
         std::vector<double> actuators_{8, 0.};
         uint64_t lastActuatorsTimestampUsec_;
@@ -96,24 +93,18 @@ class Uav_Dynamics {
 
         Sensors _sensors;
         RvizVisualizator _rviz_visualizator;
-        //@}
 
-        /// @name Calibration
-        //@{
+        // Calibration
         ros::Subscriber calibrationSub_;
         UavDynamicsSimBase::SimMode_t calibrationType_{UavDynamicsSimBase::SimMode_t::NORMAL};
         void calibrationCallback(std_msgs::UInt8 msg);
-        //@}
 
-        /// @name Diagnostic
-        //@{
+        // Diagnostic
         uint64_t actuatorsMsgCounter_ = 0;
         uint64_t dynamicsCounter_;
         uint64_t rosPubCounter_;
-        //@}
 
-        /// @name Timer and threads
-        //@{
+        // Timer and threads
         ros::WallTimer simulationLoopTimer_;
         std::thread proceedDynamicsTask;
         std::thread publishToRosTask;
@@ -125,9 +116,6 @@ class Uav_Dynamics {
         void performLogging(double period);
 
         const float ROS_PUB_PERIOD_SEC = 0.05f;
-        //@}
-
-        DynamicsNotation_t _dynamicsNotation;
 };
 
 #endif

@@ -189,16 +189,6 @@ class InnoVtolDynamicsSim : public UavDynamicsSimBase{
         void calculateCmyPolynomial(double airSpeedMod, Eigen::VectorXd& polynomialCoeffs) const;
         void calculateCmzPolynomial(double airSpeedMod, Eigen::VectorXd& polynomialCoeffs) const;
 
-        /**
-         * @param[in] table must have size (1 + NUM_OF_COEFFS, NUM_OF_POINTS), min size is (2, 2)
-         * @param[in] airSpeedMod should be between table(0, 0) and table(NUM_OF_COEFFS, 0)
-         * @param[in, out] polynomialCoeffs must have size should be at least NUM_OF_COEFFS
-         * @return true and modify polynomialCoeffs if input is ok, otherwise return false
-         */
-        bool calculatePolynomialUsingTable(const Eigen::MatrixXd& table,
-                                           double airSpeedMod,
-                                           Eigen::VectorXd& polynomialCoeffs) const;
-
         double calculateCSRudder(double rudder_pos, double airspeed) const;
         double calculateCSBeta(double AoS_deg, double airspeed) const;
         double calculateCmxAileron(double aileron_pos, double airspeed) const;

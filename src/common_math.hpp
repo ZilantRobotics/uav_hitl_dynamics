@@ -40,6 +40,18 @@ namespace Math
                     const Eigen::MatrixXd& z,
                     double x_val,
                     double y_val);
+
+    /**
+     * @param[in] table must have size (1 + NUM_OF_COEFFS, NUM_OF_POINTS), min size is (2, 2)
+     * @param[in] airSpeedMod should be between table(0, 0) and table(NUM_OF_COEFFS, 0)
+     * @param[in, out] polynomialCoeffs must have size should be at least NUM_OF_COEFFS
+     * @return true and modify polynomialCoeffs if input is ok, otherwise return false
+     */
+    bool calculatePolynomial(const Eigen::MatrixXd& table,
+                             double airSpeedMod,
+                             Eigen::VectorXd& polynomialCoeffs);
+
+
 }  // namespace Math
 
 #endif  // COMMON_MATH_HPP

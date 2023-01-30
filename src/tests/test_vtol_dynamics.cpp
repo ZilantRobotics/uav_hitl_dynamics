@@ -126,7 +126,7 @@ TEST(CommonMath, findPrevRowIdxInMonotonicSequenceDecreasing){
     ASSERT_EQ(Math::findPrevRowIdxInMonotonicSequence(table, 50.0), 0);
 }
 
-TEST(calculatePolynomialUsingTable, test_normal_scalar){
+TEST(calculateCLPolynomial, test_normal_scalar){
     InnoVtolDynamicsSim vtolDynamicsSim;
 
     Eigen::MatrixXd table(2, 2);
@@ -135,11 +135,11 @@ TEST(calculatePolynomialUsingTable, test_normal_scalar){
     double airSpeedMod = 0.5;
     Eigen::VectorXd polynomialCoeffs(1);
 
-    ASSERT_TRUE(vtolDynamicsSim.calculatePolynomialUsingTable(table, airSpeedMod, polynomialCoeffs));
+    ASSERT_TRUE(Math::calculatePolynomial(table, airSpeedMod, polynomialCoeffs));
     ASSERT_EQ(polynomialCoeffs[0], airSpeedMod);
 }
 
-TEST(calculatePolynomialUsingTable, test_normal_vector){
+TEST(calculateCLPolynomial, test_normal_vector){
     InnoVtolDynamicsSim vtolDynamicsSim;
     Eigen::VectorXd polynomialCoeffs(2);
 
@@ -151,12 +151,12 @@ TEST(calculatePolynomialUsingTable, test_normal_vector){
     Eigen::VectorXd expectedPolynomialCoeffs(2);
     expectedPolynomialCoeffs << 0.5, 1.5;
 
-    ASSERT_TRUE(vtolDynamicsSim.calculatePolynomialUsingTable(table, airSpeedMod, polynomialCoeffs));
+    ASSERT_TRUE(Math::calculatePolynomial(table, airSpeedMod, polynomialCoeffs));
     ASSERT_EQ(polynomialCoeffs[0], expectedPolynomialCoeffs[0]);
     ASSERT_EQ(polynomialCoeffs[1], expectedPolynomialCoeffs[1]);
 }
 
-TEST(calculatePolynomialUsingTable, test_wrong_input_size){
+TEST(calculateCLPolynomial, test_wrong_input_size){
     InnoVtolDynamicsSim vtolDynamicsSim;
 
     Eigen::MatrixXd table(1, 2);
@@ -164,10 +164,10 @@ TEST(calculatePolynomialUsingTable, test_wrong_input_size){
     double airSpeedMod = 0.5;
     Eigen::VectorXd polynomialCoeffs(1);
 
-    ASSERT_FALSE(vtolDynamicsSim.calculatePolynomialUsingTable(table, airSpeedMod, polynomialCoeffs));
+    ASSERT_FALSE(Math::calculatePolynomial(table, airSpeedMod, polynomialCoeffs));
 }
 
-TEST(calculatePolynomialUsingTable, test_wrong_table){
+TEST(calculateCLPolynomial, test_wrong_table){
     InnoVtolDynamicsSim vtolDynamicsSim;
 
     Eigen::MatrixXd table(2, 2);
@@ -176,7 +176,7 @@ TEST(calculatePolynomialUsingTable, test_wrong_table){
     double airSpeedMod = 0.5;
     Eigen::VectorXd polynomialCoeffs(1);
 
-    ASSERT_FALSE(vtolDynamicsSim.calculatePolynomialUsingTable(table, airSpeedMod, polynomialCoeffs));
+    ASSERT_FALSE(Math::calculatePolynomial(table, airSpeedMod, polynomialCoeffs));
 }
 
 TEST(InnoVtolDynamicsSim, calculateCLPolynomial){
