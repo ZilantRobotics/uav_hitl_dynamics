@@ -10,11 +10,13 @@ As a result of the CFD research, we need data sets that describe the main aerody
 
 The aerodynamic force is the sum of the lift, drag and sideslip forces. These forces can be calculated using the following equations:
 
-$$
+```math
+\displaylines{
 F_{lift} = \dfrac{1}{2} * q * C_{L_{\alpha}}\\
 F_{drag} = \dfrac{1}{2} * q * C_{D_{\alpha}}\\
 F_{sideslip} = \dfrac{1}{2} * q * (C_{S_{\alpha}} + C_{S_{\beta}} + C_{S_r})\\
-$$
+}
+```
 
 where 
 - $q$ is the dynamics pressure, $q = \rho * V^2 * S$, $\rho$ is atmoshpere pressure, $V$ is airspeed, $S$ is wing area;
@@ -25,17 +27,19 @@ where
 
 Aerodynamics moment is divided into 2 terms: first term depends on airspeed and angle of attack, second term depends on airspeed and control surface positions.
 
-$$
-M_{x} = \dfrac{1}{2} * q * l * (C_{mx} + C_{mxa} * {\delta}_{a})\\
-M_{y} = \dfrac{1}{2} * q * l * (C_{my} + C_{mye} * {\delta}_{e})\\
-M_{z} = \dfrac{1}{2} * q * l * (C_{mz} + C_{mzr} * {\delta}_{r})\\
-$$
+```math
+\displaylines{
+M_{x} = \dfrac{1}{2} * q * l * (C_{mx} + C_{mxa} * {\delta}_{a}) \\
+M_{y} = \dfrac{1}{2} * q * l * (C_{my} + C_{mye} * {\delta}_{e}) \\
+M_{z} = \dfrac{1}{2} * q * l * (C_{mz} + C_{mzr} * {\delta}_{r})  \\
+}
+```
 
 where 
 - $l$ is the characteristic length, 
 - $C_{mx}$, $C_{my}$, $C_{mz}$ are coefficients which define the first mention term, 
 - $C_{mxa}$, $C_{mye}$, $C_{mzr}$ are coefficients which describe the second, 
-- ${\delta}_{a}$, ${\delta}_{e}$, ${\delta}_{r}$ are aileron, elevator and rudder positions respectively.
+- $\delta_{a}$, $\delta_{e}$, $\delta_{r}$ are aileron, elevator and rudder positions respectively.
 
 # Aerodynamics Coefficients List
 
@@ -80,7 +84,7 @@ Grid data format is used for the $C_{S_{\beta}}$, $C_{S_r}$, $C_{mxa}$, $C_{mye}
 Grid data is a simple 2-dimensional table (grid).
 The row corresponds to the airspeed (listed in the `airspeed_table`). 
 The collumn corresponds to the angle: 
-- AoS ($\beta$) for $C_{S_{\beta}}$ (`CS_beta`), 
+- AoS ${\beta}$ for $C_{S_{\beta}}$ (`CS_beta`), 
 - rudder for $C_{S_r}$  (`CS_rudder_table`), 
 - aileron angle for $C_{mxa}$ (`CmxAileron`), 
 - elevator angle for $C_{mye}$ (`CmyElevator`), 
@@ -93,7 +97,10 @@ We do this for $C_{L_{\alpha}}$, $C_{D_{\alpha}}$, $C_{S_{\alpha}}$, $C_{mx}$, $
 (`CLPolynomial`, `CDPolynomial`, `CSPolynomial`, `CmxPolynomial`, `CmyPolynomial`, `CmzPolynomial`).
 
 The row corresponds to the airspeed (listed in the `airspeed_table`). The first column contains the airspeed values. The other columns contain the polynomial coefficients. The polynomial coefficients define the approximation of how aerodynamic coefficient depends on AoA: 
-$$f(x) = p_0*x^n + p_1*x^{n-1} + ... + p_n$$
+
+```math
+f(x) = p_0*x^n + p_1*x^{n-1} + ... + p_n
+```
 
 
 # The calculateAerodynamics function
