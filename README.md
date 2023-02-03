@@ -4,52 +4,51 @@ This package is the core of the [UAV HITL dynamics simulator](https://github.com
 
 ![VTOL plane](img/inno_vtol.png?raw=true "VTOL plane")
 
-Innopolis VTOL has UAVCAN onboard electronics based on [RaccoonLab UAVCAN sensors and actuators](http://raccoonlab.org/uavcan) (so it's a good example of full UAVCAN-based onboard control and object for new UAVCAN-HITL simulation approach).
+Innopolis VTOL has UAVCAN onboard electronics based on [RaccoonLab Cyphal/DroneCAN sensors and actuators](https://raccoonlab.co/store) (so it's a good example of full UAVCAN-based onboard control and object for new UAVCAN-HITL simulation approach).
 
 This package contains Innopolis VTOL simulation based on rigid body kinematics and dynamics, CFD analysis and actuators simulation.
 
 ![Innopolis VTOL plane dynamics structure](img/structure.jpeg?raw=true "Innopolis VTOL plane dynamics structure")
 
-The package is used inside a new UAVCAN-HITL . 
+The package is used inside a new Cyphal/DroneCAN-HITL . 
 
 The node from this package communicates with the flight stack via communicator `UAV dynamics` by subscribing and publishing to the following topics:
 
-| № | Subscribed topics | msg                                   |
-| - | ----------------- | ------------------------------------- |
-| 1 | /uav/actuators    | [sensor_msgs/Joy](https://docs.ros.org/en/api/sensor_msgs/html/msg/Joy.html) |
-| 2 | /uav/arm          | [std_msgs::Bool](http://docs.ros.org/en/noetic/api/std_msgs/html/msg/Bool.html) |
-| 3 | /uav/calibration  | [std_msgs::UInt8](http://docs.ros.org/en/noetic/api/std_msgs/html/msg/UInt8.html) |
-| 4 | /uav/scenario     | [std_msgs::UInt8](http://docs.ros.org/en/noetic/api/std_msgs/html/msg/UInt8.html) |
 
-Minimal sensors publishers list of topics:
+```mermaid
+flowchart LR
 
-| № | Advertised topics       | msg                                   |
-| - | ----------------------- | ------------------------------------- |
-| 1 | /uav/static_temperature | [std_msgs/Float32](http://docs.ros.org/en/melodic/api/std_msgs/html/msg/Float32.html) |
-| 2 | /uav/static_pressure | [std_msgs/Float32](http://docs.ros.org/en/melodic/api/std_msgs/html/msg/Float32.html) |
-| 3 | /uav/raw_air_data | [std_msgs/Float32](http://docs.ros.org/en/melodic/api/std_msgs/html/msg/Float32.html) |
-| 4 | /uav/gps_point | [sensor_msgs/NavSatFix](https://docs.ros.org/en/api/sensor_msgs/html/msg/NavSatFix.html) |
-| 5 | /uav/velocity | [geometry_msgs/Twist](http://docs.ros.org/en/noetic/api/geometry_msgs/html/msg/Twist.html) |
-| 6 | /uav/imu | [sensor_msgs/Imu](http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/Imu.html) |
-| 7 | /uav/mag | [sensor_msgs/MagneticField](http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/MagneticField.html) |
+actuators[ /uav/actuators, sensor_msgs/Joy] --> F(uav_hitl_node)
+arm[ /uav/arm, std_msgs/Bool] --> F(uav_hitl_node)
+calibration[ /uav/calibration, std_msgs/UInt8] --> F(uav_hitl_node)
+scenario[ /uav/scenario, std_msgs/UInt8] --> F(uav_hitl_node)
+F --> temperature[ /uav/static_temperature, std_msgs/Float32]
+F --> static_pressure[ /uav/static_pressure, std_msgs/Float32]
+F --> raw_air_data[ /uav/raw_air_data, std_msgs/Float32]
+F --> gps_point[ /uav/gps_point, sensor_msgs/NavSatFix]
+F --> velocity[ /uav/velocity, geometry_msgs/Twist]
+F --> imu[ /uav/imu, sensor_msgs/Imu]
+F --> mag[ /uav/mag, sensor_msgs/MagneticField]
+F --> esc_status[ /uav/esc_status, mavros_msgs/ESCTelemetryItem]
+F --> ice_rpm[ /uav/esc_status, mavros_msgs/ESCStatusItem]
+F --> ice_status[ /uav/ice_status, std_msgs/UInt8]
+F --> fuel_tank_status[ /uav/ice_status, std_msgs/UInt8]
+F --> battery_status[ /uav/battery_status, sensor_msgs/BatteryState]
+```
 
-Extended sensors publishers list of topics:
+Auxilliary topics might be enabled/disabled in the [sim_params.yaml](uav_dynamics/inno_vtol_dynamics/config/sim_params.yaml) config file. You may implement your own sensors in the [sensors.cpp](uav_dynamics/inno_vtol_dynamics/src/sensors/sensors.cpp) file.
 
-| № | Advertised topics         | msg                                   |
-| - | -------------------------- | ------------------------------------- |
-| 7 | /uav/esc_status | [mavros_msgs::ESCTelemetryItem](http://docs.ros.org/en/api/mavros_msgs/html/msg/ESCTelemetryItem.html) |
-| 8 | /uav/ice_rpm | [mavros_msgs::ESCStatusItem](http://docs.ros.org/en/api/mavros_msgs/html/msg/ESCStatusItem.html) |
-| 9 | /uav/ice_status | [std_msgs::UInt8](http://docs.ros.org/en/melodic/api/std_msgs/html/msg/UInt8.html) |
-| 10| /uav/fuel_tank_status | [std_msgs/UInt8](http://docs.ros.org/en/melodic/api/std_msgs/html/msg/UInt8.html) |
-| 11| /uav/battery_status | [sensor_msgs/BatteryState](http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/BatteryState.html) |
+To work in pair with [InnoSimulator](https://github.com/inno-robolab/InnoSimulator) as physics engine via [inno_sim_interface](https://github.com/RaccoonlabDev/inno_sim_interface) it publishes and subscribes on following topics.
 
-Here topics 1-6 are necessary for any simulation. The last 4 topics are auxiliary and you may enable/disable them in the [sim_params.yaml](uav_dynamics/inno_vtol_dynamics/config/sim_params.yaml) config file. You may implement your own sensors in the [sensors.cpp](uav_dynamics/inno_vtol_dynamics/src/sensors/sensors.cpp) file.
+```mermaid
+flowchart LR
 
-To work in pair with [InnoSimulator](https://github.com/inno-robolab/InnoSimulator) as physics engine via [inno_sim_interface](https://github.com/InnopolisAero/inno_sim_interface) it publishes and subscribes on following topics.
-
-| № | Advertised topics | msg                             |
-| - | ----------------- | ------------------------------- |
-| 1 | /uav/actuators    | [sensor_msgs/Joy](https://docs.ros.org/en/api/sensor_msgs/html/msg/Joy.html)                 |
-| 2 | /uav/gps_point | [sensor_msgs/NavSatFix](https://docs.ros.org/en/api/sensor_msgs/html/msg/NavSatFix.html) |
-| 3 | /uav/velocity | [geometry_msgs/Twist](http://docs.ros.org/en/noetic/api/geometry_msgs/html/msg/Twist.html) |
-| 4 | /uav/attitude     | geometry_msgs/QuaternionStamped |
+F(uav_hitl_node) --> actuators[ /uav/actuators, sensor_msgs/Joy]
+F --> gps_point[ /uav/gps_point, sensor_msgs/NavSatFix]
+F --> velocity[ /uav/velocity, geometry_msgs/Twist]
+F --> attitude[ /uav/attitude, geometry_msgs/QuaternionStamped]
+actuators --> G(inno_sim_interface)
+gps_point --> G
+velocity --> G
+attitude --> G
+```
