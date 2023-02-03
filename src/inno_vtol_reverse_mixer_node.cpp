@@ -45,12 +45,13 @@ enum INNO_VTOL_OUTPUTS {
 
 class BaseReverseMixer {
     public:
-        explicit BaseReverseMixer(ros::NodeHandle nh): node_(nh) {}
+        explicit BaseReverseMixer(const ros::NodeHandle& nh): node_(nh) {}
+        virtual ~BaseReverseMixer() = default;
         int8_t init();
-    protected:
+        virtual void rawActuatorsCallback(sensor_msgs::Joy msg) = 0;
+
         ros::Publisher mappedActuatorPub_;
         sensor_msgs::Joy mappedActuatorMsg_;
-        virtual void rawActuatorsCallback(sensor_msgs::Joy msg) = 0;
     private:
         ros::NodeHandle node_;
         ros::Subscriber rawActuatorsSub_;
@@ -65,11 +66,12 @@ int8_t BaseReverseMixer::init() {
 
 class BabysharkReverseMixer : public BaseReverseMixer {
     public:
-        explicit BabysharkReverseMixer(ros::NodeHandle nh) : BaseReverseMixer(nh) {
+        explicit BabysharkReverseMixer(const ros::NodeHandle& nh) : BaseReverseMixer(nh) {
             for (size_t channel = 0; channel < 8; channel++) {
                 mappedActuatorMsg_.axes.push_back(0);
             }
         }
+        ~BabysharkReverseMixer() final = default;
     protected:
         void rawActuatorsCallback(sensor_msgs::Joy msg) override;
 };
@@ -87,11 +89,11 @@ void BabysharkReverseMixer::rawActuatorsCallback(sensor_msgs::Joy msg) {
         mappedActuatorMsg_.axes[VTOL_ROLL] = roll;
 
         float pitch = -msg.axes[BABY_SHARK_A_TAIL_LEFT] + msg.axes[BABY_SHARK_A_TAIL_RIGHT];
-        pitch = (pitch < 0) ? 0.0 : pitch / 0.8;
+        pitch = (pitch < 0) ? 0.0f : pitch / 0.8f;
         mappedActuatorMsg_.axes[VTOL_PITCH] = pitch;
 
         float yaw = msg.axes[BABY_SHARK_A_TAIL_LEFT] + msg.axes[BABY_SHARK_A_TAIL_RIGHT];
-        yaw = (yaw < 0) ? 0.0 : (1.0 - yaw) / 0.7;
+        yaw = (yaw < 0) ? 0.0f : (1.0f - yaw) / 0.7f;
         mappedActuatorMsg_.axes[VTOL_YAW] = yaw;
 
         mappedActuatorMsg_.axes[VTOL_THROTTLE] = msg.axes[BABY_SHARK_PUSHER_MOTOR];
@@ -102,7 +104,8 @@ void BabysharkReverseMixer::rawActuatorsCallback(sensor_msgs::Joy msg) {
 
 class InnoVtolReverseMixer : public BaseReverseMixer {
     public:
-        explicit InnoVtolReverseMixer(ros::NodeHandle nh) : BaseReverseMixer(nh) {}
+        using BaseReverseMixer::BaseReverseMixer;
+        ~InnoVtolReverseMixer() final = default;
     protected:
         void rawActuatorsCallback(sensor_msgs::Joy msg) override;
 };
@@ -111,9 +114,9 @@ void InnoVtolReverseMixer::rawActuatorsCallback(sensor_msgs::Joy msg) {
         if (msg.axes[4] < 0) {
             msg.axes[4] = 0.5;
         }
-        msg.axes[5] = (msg.axes[5] >= 0) ? msg.axes[5] * 2 - 1.0 : 0.0;
-        msg.axes[6] = (msg.axes[6] >= 0) ? msg.axes[6] * 2 - 1.0 : 0.0;
-        msg.axes[7] = msg.axes[7] / 0.75;
+        msg.axes[5] = (msg.axes[5] >= 0) ? msg.axes[5] * 2.0f - 1.0f : 0.0f;
+        msg.axes[6] = (msg.axes[6] >= 0) ? msg.axes[6] * 2.0f - 1.0f : 0.0f;
+        msg.axes[7] = msg.axes[7] / 0.75f;
         mappedActuatorPub_.publish(msg);
     } else if (msg.axes.size() == 4) {
         msg.axes.push_back(0.5);
@@ -126,11 +129,12 @@ void InnoVtolReverseMixer::rawActuatorsCallback(sensor_msgs::Joy msg) {
 
 class IrisReverseMixer : public BaseReverseMixer {
     public:
-        explicit IrisReverseMixer(ros::NodeHandle nh) : BaseReverseMixer(nh) {
+        explicit IrisReverseMixer(const ros::NodeHandle& nh) : BaseReverseMixer(nh) {
             for (size_t channel = 0; channel < 4; channel++) {
                 mappedActuatorMsg_.axes.push_back(0);
             }
         }
+        ~IrisReverseMixer() final = default;
     protected:
         void rawActuatorsCallback(sensor_msgs::Joy msg) override;
 };
@@ -160,13 +164,13 @@ int main(int argc, char **argv){
         return -1;
     }
 
-    BaseReverseMixer* reverseMixer;
+    std::unique_ptr<BaseReverseMixer> reverseMixer;
     if (airframe == "babyshark_standard_vtol") {
-        reverseMixer = new BabysharkReverseMixer(node_handler);
+        reverseMixer = std::make_unique<BabysharkReverseMixer>(node_handler);
     } else if (airframe == "inno_standard_vtol") {
-        reverseMixer = new InnoVtolReverseMixer(node_handler);
+        reverseMixer = std::make_unique<InnoVtolReverseMixer>(node_handler);
     } else if (airframe == "iris") {
-        reverseMixer = new IrisReverseMixer(node_handler);
+        reverseMixer = std::make_unique<IrisReverseMixer>(node_handler);
     } else {
         ROS_ERROR("ReverseMixer: Wrong `/uav/sim_params/airframe` parameter.");
         return -1;

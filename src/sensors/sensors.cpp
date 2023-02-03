@@ -21,6 +21,7 @@
 #include "cs_converter.hpp"
 
 Sensors::Sensors(ros::NodeHandle* nh) :
+    iceStatusSensor(nh,     "/uav/ice",                 0.25),
     attitudeSensor(nh,      "/uav/attitude",            0.005),
     imuSensor(nh,           "/uav/imu",                 0.00333),
     velocitySensor_(nh,     "/uav/velocity",            0.05),
@@ -30,16 +31,17 @@ Sensors::Sensors(ros::NodeHandle* nh) :
     pressureSensor(nh,      "/uav/static_pressure",     0.05),
     gpsSensor(nh,           "/uav/gps_point",           0.1),
     escStatusSensor(nh,     "/uav/esc_status",          0.25),
-    iceStatusSensor(nh,     "/uav/ice",                 0.25),
     fuelTankSensor(nh,      "/uav/fuel_tank",           2.0),
     batteryInfoSensor(nh,   "/uav/battery",             1.0)
 {
 }
 
-int8_t Sensors::init(UavDynamicsSimBase* uavDynamicsSim) {
+int8_t Sensors::init(const std::shared_ptr<UavDynamicsSimBase>& uavDynamicsSim) {
     _uavDynamicsSim = uavDynamicsSim;
 
-    double latRef, lonRef, altRef;
+    double latRef;
+    double lonRef;
+    double altRef;
     const std::string SIM_PARAMS_PATH = "/uav/sim_params/";
     bool isEnabled;
 
@@ -80,8 +82,8 @@ int8_t Sensors::init(UavDynamicsSimBase* uavDynamicsSim) {
     return 0;
 }
 
-#define PX4_NED_FRD 0
-#define ROS_ENU_FLU 1
+static const constexpr uint8_t PX4_NED_FRD = 0;
+static const constexpr uint8_t ROS_ENU_FLU = 1;
 
 /**
  * @note Different simulators return data in different notation (PX4 or ROS)
@@ -89,16 +91,21 @@ int8_t Sensors::init(UavDynamicsSimBase* uavDynamicsSim) {
  */
 void Sensors::publishStateToCommunicator(uint8_t dynamicsNotation) {
     // 1. Get data from simulator
-    Eigen::Vector3d position, linVel, acc, gyro, angVel;
-    Eigen::Quaterniond attitude;
-    position = _uavDynamicsSim->getVehiclePosition();
-    linVel = _uavDynamicsSim->getVehicleVelocity();
+    Eigen::Vector3d acc;
+    Eigen::Vector3d gyro;
     _uavDynamicsSim->getIMUMeasurement(acc, gyro);
-    angVel = _uavDynamicsSim->getVehicleAngularVelocity();
-    attitude = _uavDynamicsSim->getVehicleAttitude();
+    Eigen::Vector3d position = _uavDynamicsSim->getVehiclePosition();
+    Eigen::Vector3d linVel = _uavDynamicsSim->getVehicleVelocity();
+    Eigen::Vector3d angVel = _uavDynamicsSim->getVehicleAngularVelocity();
+    Eigen::Quaterniond attitude = _uavDynamicsSim->getVehicleAttitude();
 
     // 2. Convert them to appropriate CS
-    Eigen::Vector3d gpsPosition, enuPosition, linVelNed, accFrd, gyroFrd, angVelFrd;
+    Eigen::Vector3d gpsPosition;
+    Eigen::Vector3d enuPosition;
+    Eigen::Vector3d linVelNed;
+    Eigen::Vector3d accFrd;
+    Eigen::Vector3d gyroFrd;
+    Eigen::Vector3d angVelFrd;
     Eigen::Quaterniond attitudeFrdToNed;
     if(dynamicsNotation == PX4_NED_FRD){
         enuPosition = Converter::nedToEnu(position);
@@ -119,7 +126,9 @@ void Sensors::publishStateToCommunicator(uint8_t dynamicsNotation) {
                                    &gpsPosition[0], &gpsPosition[1], &gpsPosition[2]);
 
     // 3. Calculate temperature, abs pressure and diff pressure using ISA model
-    float temperatureKelvin, absPressureHpa, diffPressureHpa;
+    float temperatureKelvin;
+    float absPressureHpa;
+    float diffPressureHpa;
     SensorModelISA::EstimateAtmosphere(gpsPosition, linVelNed,
                                        temperatureKelvin, absPressureHpa, diffPressureHpa);
 
@@ -131,7 +140,7 @@ void Sensors::publishStateToCommunicator(uint8_t dynamicsNotation) {
     diffPressureSensor.publish(diffPressureHpa);
     pressureSensor.publish(absPressureHpa);
     temperatureSensor.publish(temperatureKelvin);
-    gpsSensor.publish(gpsPosition, linVelNed);
+    gpsSensor.publish(gpsPosition);
 
     std::vector<double> motorsRpm;
     if(_uavDynamicsSim->getMotorsRpm(motorsRpm)){
@@ -141,7 +150,6 @@ void Sensors::publishStateToCommunicator(uint8_t dynamicsNotation) {
         }
     }
 
-    ///< @todo Simplified Fuel tank model, refactor it
     static double fuelLevelPercentage = 100.0;
     if(motorsRpm.size() == 5 && motorsRpm[4] >= 1) {
         fuelLevelPercentage -= 0.002;
@@ -151,6 +159,5 @@ void Sensors::publishStateToCommunicator(uint8_t dynamicsNotation) {
     }
     fuelTankSensor.publish(fuelLevelPercentage);
 
-    ///< @todo Battery is just constant, add model
-    batteryInfoSensor.publish(90.0);
+    batteryInfoSensor.publish(90.0f);
 }

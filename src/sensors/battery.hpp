@@ -24,7 +24,7 @@
 class BatteryInfoSensor : public BaseSensor{
     public:
         BatteryInfoSensor(ros::NodeHandle* nh, const char* topic, double period);
-        bool publish(double rpm);
+        bool publish(float percentage);
 };
 
 #endif  // SRC_SENSORS_BATTERY_HPP

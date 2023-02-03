@@ -23,7 +23,7 @@
 GpsSensor::GpsSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
     publisher_ = node_handler_->advertise<sensor_msgs::NavSatFix>(topic, 5);
 }
-bool GpsSensor::publish(const Eigen::Vector3d& gpsPosition, const Eigen::Vector3d& nedVelocity) {
+bool GpsSensor::publish(const Eigen::Vector3d& gpsPosition) {
     auto crntTimeSec = ros::Time::now().toSec();
     if(!_isEnabled || (nextPubTimeSec_ > crntTimeSec)){
         return false;

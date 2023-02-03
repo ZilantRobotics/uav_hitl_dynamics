@@ -37,6 +37,27 @@ struct VtolParameters{
      */
     double massUncertainty;                         // multiplier
     double inertiaUncertainty;                      // multiplier
+
+    Eigen::Vector3d accelBias;
+    Eigen::Vector3d gyroBias;
+};
+
+struct Forces{
+    Eigen::Vector3d lift;
+    Eigen::Vector3d drug;
+    Eigen::Vector3d side;
+    Eigen::Vector3d aero;
+    std::array<Eigen::Vector3d, 5> motors;
+    Eigen::Vector3d specific;
+    Eigen::Vector3d total;
+};
+
+struct Moments{
+    Eigen::Vector3d aero;
+    Eigen::Vector3d steer;
+    Eigen::Vector3d airspeed;
+    std::array<Eigen::Vector3d, 5> motors;
+    Eigen::Vector3d total;
 };
 
 struct State{
@@ -56,37 +77,20 @@ struct State{
     Eigen::Vector3d angularVel;                     // rad/sec
     Eigen::Vector3d angularAccel;                   // rad/sec^2
 
-    Eigen::Vector3d Flift;                          // N
-    Eigen::Vector3d Fdrug;                          // N
-    Eigen::Vector3d Fside;                          // N
-    Eigen::Vector3d Faero;                          // N
-    Eigen::Vector3d Maero;                          // N*m
-    Eigen::Vector3d Msteer;                         // N*m
-    Eigen::Vector3d Mairspeed;                      // N*m
-    Eigen::Vector3d MmotorsTotal;                   // N*m
-    std::array<Eigen::Vector3d, 5> Fmotors;         // N
-    std::array<Eigen::Vector3d, 5> Mmotors;         // N*m
+    Forces forces;
+    Moments moments;
+
     std::array<double, 5> motorsRpm;                // rpm
-    Eigen::Vector3d Fspecific;                      // N
-    Eigen::Vector3d Ftotal;                         // N
-    Eigen::Vector3d Mtotal;                         // N*m
     Eigen::Vector3d bodylinearVel;                  // m/sec (just for debug only)
+    std::vector<double> prevActuators;              // rad/sec
+    std::vector<double> crntActuators;              // rad/sec
+};
 
-    /**
-     * @note parameters
-     */
-    Eigen::Vector3d accelBias;
-    Eigen::Vector3d gyroBias;
+struct Environment{
     double windVariance;
-
-    /**
-     * @note not ready yet
-     */
     Eigen::Vector3d windVelocity;                   // m/sec^2
     Eigen::Vector3d gustVelocity;                   // m/sec^2
     double gustVariance;
-    std::vector<double> prevActuators;              // rad/sec
-    std::vector<double> crntActuators;              // rad/sec
 };
 
 struct TablesWithCoeffs{
@@ -121,17 +125,19 @@ struct TablesWithCoeffs{
 class InnoVtolDynamicsSim : public UavDynamicsSimBase{
     public:
         InnoVtolDynamicsSim();
+        ~InnoVtolDynamicsSim() final = default;
+
         int8_t init() override;
         void setInitialPosition(const Eigen::Vector3d & position,
                                 const Eigen::Quaterniond& attitude) override;
         void land() override;
-        int8_t calibrate(CalibrationType_t calibrationType) override;
+        int8_t calibrate(SimMode_t calibrationType) override;
         void process(double dt_secs,
                      const std::vector<double>& motorSpeedCommandIn,
                      bool isCmdPercent) override;
 
         /**
-         * @note These methods should return in ned format
+         * @note These methods should return in NED format
          */
         Eigen::Vector3d getVehiclePosition() const override;
         Eigen::Quaterniond getVehicleAttitude() const override;
@@ -141,33 +147,24 @@ class InnoVtolDynamicsSim : public UavDynamicsSimBase{
         bool getMotorsRpm(std::vector<double>& motorsRpm) override;
 
         /**
-         * @note These methods should be public for debug only (publish to ros topic)
-         * it's better to refactor them
+         * @note For RVIZ visualization only
          */
-        Eigen::Vector3d getFaero() const;
-        Eigen::Vector3d getFtotal() const;
-        Eigen::Vector3d getMaero() const;
-        Eigen::Vector3d getMtotal() const;
+        const Forces& getForces() const;
+        const Moments& getMoments() const;
+        Eigen::Vector3d getBodyLinearVelocity() const;
+
+        // For tests only
         Eigen::Vector3d getAngularAcceleration() const;
         Eigen::Vector3d getLinearAcceleration() const;
-        Eigen::Vector3d getMsteer() const;
-        Eigen::Vector3d getMairspeed() const;
-        Eigen::Vector3d getMmotorsTotal() const;
-        Eigen::Vector3d getBodyLinearVelocity() const;
-        Eigen::Vector3d getFlift() const;
-        Eigen::Vector3d getFdrug() const;
-        Eigen::Vector3d getFside() const;
-        const std::array<Eigen::Vector3d, 5>& getFmotors() const;
-        const std::array<Eigen::Vector3d, 5>& getMmotors() const;
 
         /**
          * @note The methods below are should be public for test only
          * think about making test as friend
          */
-        Eigen::Vector3d calculateNormalForceWithoutMass();
+        Eigen::Vector3d calculateNormalForceWithoutMass() const;
         Eigen::Vector3d calculateWind();
         Eigen::Matrix3d calculateRotationMatrix() const;
-        double calculateDynamicPressure(double airSpeedMod);
+        double calculateDynamicPressure(double airSpeedMod) const;
         double calculateAnglesOfAtack(const Eigen::Vector3d& airSpeed) const;
         double calculateAnglesOfSideslip(const Eigen::Vector3d& airSpeed) const;
         void thruster(double actuator, double& thrust, double& torque, double& rpm) const;
@@ -192,16 +189,6 @@ class InnoVtolDynamicsSim : public UavDynamicsSimBase{
         void calculateCmyPolynomial(double airSpeedMod, Eigen::VectorXd& polynomialCoeffs) const;
         void calculateCmzPolynomial(double airSpeedMod, Eigen::VectorXd& polynomialCoeffs) const;
 
-        /**
-         * @param[in] table must have size (1 + NUM_OF_COEFFS, NUM_OF_POINTS), min size is (2, 2)
-         * @param[in] airSpeedMod should be between table(0, 0) and table(NUM_OF_COEFFS, 0)
-         * @param[in, out] polynomialCoeffs must have size should be at least NUM_OF_COEFFS
-         * @return true and modify polynomialCoeffs if input is ok, otherwise return false
-         */
-        bool calculatePolynomialUsingTable(const Eigen::MatrixXd& table,
-                                           double airSpeedMod,
-                                           Eigen::VectorXd& polynomialCoeffs) const;
-
         double calculateCSRudder(double rudder_pos, double airspeed) const;
         double calculateCSBeta(double AoS_deg, double airspeed) const;
         double calculateCmxAileron(double aileron_pos, double airspeed) const;
@@ -210,17 +197,7 @@ class InnoVtolDynamicsSim : public UavDynamicsSimBase{
 
         Eigen::Vector3d calculateAngularAccel(const Eigen::Matrix<double, 3, 3, Eigen::RowMajor>& inertia,
                                               const Eigen::Vector3d& moment,
-                                              const Eigen::Vector3d& prevAngVel);
-        /**
-         * @note Similar to https://www.mathworks.com/help/matlab/ref/griddata.html
-         * Implementation from https://en.wikipedia.org/wiki/Bilinear_interpolation
-         */
-        double griddata(const Eigen::MatrixXd& x,
-                        const Eigen::MatrixXd& y,
-                        const Eigen::MatrixXd& z,
-                        double xi,
-                        double yi) const;
-
+                                              const Eigen::Vector3d& prevAngVel) const;
 
         void setWindParameter(Eigen::Vector3d windMeanVelocity, double wind_velocityVariance);
         void setInitialVelocity(const Eigen::Vector3d& linearVelocity,
@@ -239,9 +216,10 @@ class InnoVtolDynamicsSim : public UavDynamicsSimBase{
         VtolParameters params_;
         State state_;
         TablesWithCoeffs tables_;
+        Environment environment_;
 
         std::default_random_engine generator_;
-        std::normal_distribution<double> distribution_;
+        std::normal_distribution<double> distribution_{0.0, 1.0};
 };
 
 #endif  // VTOL_DYNAMICS_SIM_H

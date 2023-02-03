@@ -37,7 +37,7 @@ class IceStatusSensor : public BaseSensor{
         double _rpm{0};
         uint8_t _state{0};
         double _stallTsMs = 0;
-        uint32_t _startTsSec = 0;
+        double _startTsSec = 0;
 };
 
 #endif  // SRC_SENSORS_ICE_HPP

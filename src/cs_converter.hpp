@@ -17,8 +17,8 @@ Eigen::Vector3d enuToNed(Eigen::Vector3d enu);
 Eigen::Vector3d frdToFlu(Eigen::Vector3d frd);
 Eigen::Vector3d fluToFrd(Eigen::Vector3d flu);
 
-Eigen::Quaterniond frdNedTofluEnu(Eigen::Quaterniond q_frd_to_ned);
-Eigen::Quaterniond fluEnuToFrdNed(Eigen::Quaterniond q_flu_to_enu);
+Eigen::Quaterniond frdNedTofluEnu(const Eigen::Quaterniond& q_frd_to_ned);
+Eigen::Quaterniond fluEnuToFrdNed(const Eigen::Quaterniond& q_flu_to_enu);
 
 }  // namespace Converter
 

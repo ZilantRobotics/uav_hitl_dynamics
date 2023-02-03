@@ -21,9 +21,9 @@
 
 #include "sensor_base.hpp"
 
-class DifferentialPressureSensor : public BaseSensor{
+class DiffPressureSensor : public BaseSensor{
     public:
-        DifferentialPressureSensor(ros::NodeHandle* nh, const char* topic, double period);
+        DiffPressureSensor(ros::NodeHandle* nh, const char* topic, double period);
         bool publish(float diffPressureHpa);
 };
 

@@ -49,11 +49,11 @@ Eigen::Vector3d fluToFrd(Eigen::Vector3d flu){
 }
 
 
-Eigen::Quaterniond frdNedTofluEnu(Eigen::Quaterniond q_frd_to_ned){
+Eigen::Quaterniond frdNedTofluEnu(const Eigen::Quaterniond& q_frd_to_ned){
     return Q_ENU_TO_NED * q_frd_to_ned * Q_FRD_FLU;
 }
 
-Eigen::Quaterniond fluEnuToFrdNed(Eigen::Quaterniond q_flu_to_enu){
+Eigen::Quaterniond fluEnuToFrdNed(const Eigen::Quaterniond& q_flu_to_enu){
     return Q_ENU_TO_NED.inverse() * q_flu_to_enu * Q_FRD_FLU;
 }
 

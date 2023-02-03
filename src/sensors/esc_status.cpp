@@ -26,15 +26,15 @@ EscStatusSensor::EscStatusSensor(ros::NodeHandle* nh, const char* topic, double 
 bool EscStatusSensor::publish(const std::vector<double>& rpm) {
     ///< The idea here is to publish each esc status with equal interval instead of burst
     auto crntTimeSec = ros::Time::now().toSec();
-    if(_isEnabled && rpm.size() > 0 && rpm.size() <= 8 && (nextPubTimeSec_ < crntTimeSec)){
+    if(_isEnabled && !rpm.empty() && rpm.size() <= 8 && (nextPubTimeSec_ < crntTimeSec)){
         mavros_msgs::ESCTelemetryItem escStatusMsg;
         if(nextEscIdx_ >= rpm.size()){
             nextEscIdx_ = 0;
         }
         escStatusMsg.count = nextEscIdx_;
-        escStatusMsg.rpm = rpm[nextEscIdx_];
+        escStatusMsg.rpm = static_cast<int>(rpm[nextEscIdx_]);
         publisher_.publish(escStatusMsg);
-        nextPubTimeSec_ = crntTimeSec + PERIOD / rpm.size();
+        nextPubTimeSec_ = crntTimeSec + PERIOD / (double)rpm.size();
         nextEscIdx_++;
     }
     return true;

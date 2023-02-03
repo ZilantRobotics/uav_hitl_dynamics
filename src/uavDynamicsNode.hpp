@@ -18,13 +18,27 @@
 #include <ros/ros.h>
 #include <ros/time.h>
 
-#include <sensor_msgs/Joy.h>
-#include <std_msgs/Bool.h>
 #include <std_msgs/UInt8.h>
 
 #include "uavDynamicsSimBase.hpp"
+#include "actuators.hpp"
 #include "sensors.hpp"
 #include "rviz_visualization.hpp"
+
+enum class DynamicsType{
+    FLIGHTGOGGLES_MULTICOPTER = 0,
+    INNO_VTOL,
+};
+
+enum class VehicleType{
+    IRIS = 0,
+    INNOPOLIS_VTOL,
+};
+
+enum class DynamicsNotation_t{
+    PX4_NED_FRD = 0,
+    ROS_ENU_FLU = 1,
+};
 
 
 /**
@@ -35,11 +49,6 @@ class Uav_Dynamics {
         explicit Uav_Dynamics(ros::NodeHandle nh);
         int8_t init();
 
-        enum DynamicsNotation_t{
-            PX4_NED_FRD = 0,
-            ROS_ENU_FLU = 1,
-        };
-
     private:
         int8_t getParamsFromRos();
         int8_t initDynamicsSimulator();
@@ -47,78 +56,43 @@ class Uav_Dynamics {
         int8_t initCalibration();
         int8_t startClockAndThreads();
 
-        /// @name Simulator
-        //@{
+        // Simulator
         ros::NodeHandle node_;
-        UavDynamicsSimBase* uavDynamicsSim_;
+        std::shared_ptr<UavDynamicsSimBase> uavDynamicsSim_;
         ros::Publisher clockPub_;
 
         ros::Time currentTime_;
         double dt_secs_ = 1.0f/960.;
-        bool useAutomaticClockscale_ = false;
         double clockScale_ = 1.0;
-        double actualFps_  = -1;
         bool useSimTime_;
 
-        double latRef_;
-        double lonRef_;
-        double altRef_;
-        std::vector<double> initPose_;
-
-        enum DynamicsType{
-            DYNAMICS_FLIGHTGOGGLES_MULTICOPTER = 0,
-            DYNAMICS_INNO_VTOL,
-        };
-        enum VehicleType{
-            VEHICLE_IRIS = 0,
-            VEHICLE_INNOPOLIS_VTOL,
-        };
+        std::vector<double> initPose_{7};
 
         DynamicsType dynamicsType_;
         VehicleType vehicleType_;
+        DynamicsNotation_t _dynamicsNotation;
 
         std::string vehicleName_;
         std::string dynamicsTypeName_;
-        //@}
 
-
-        /// @name Communication with PX4
-        //@{
-        ros::Subscriber actuatorsSub_;
-        std::vector<double> actuators_;
-        uint64_t lastActuatorsTimestampUsec_;
-        uint64_t prevActuatorsTimestampUsec_;
-        uint64_t maxDelayUsec_;
-        void actuatorsCallback(sensor_msgs::Joy::Ptr msg);
-
-        ros::Subscriber armSub_;
-        bool armed_ = false;
-        void armCallback(std_msgs::Bool msg);
-
+        // Communication with PX4
         ros::Subscriber scenarioSub_;
-        uint8_t _scenarioType = 0;
         void scenarioCallback(std_msgs::UInt8 msg);
 
+        Actuators actuators_;
         Sensors _sensors;
         RvizVisualizator _rviz_visualizator;
-        //@}
 
-        /// @name Calibration
-        //@{
+        // Calibration
         ros::Subscriber calibrationSub_;
-        UavDynamicsSimBase::CalibrationType_t calibrationType_ = UavDynamicsSimBase::WORK_MODE;
+        UavDynamicsSimBase::SimMode_t calibrationType_{UavDynamicsSimBase::SimMode_t::NORMAL};
         void calibrationCallback(std_msgs::UInt8 msg);
-        //@}
 
-        /// @name Diagnostic
-        //@{
-        uint64_t actuatorsMsgCounter_ = 0;
+        // Diagnostic
         uint64_t dynamicsCounter_;
         uint64_t rosPubCounter_;
-        //@}
 
-        /// @name Timer and threads
-        //@{
+        // Timer and threads
         ros::WallTimer simulationLoopTimer_;
         std::thread proceedDynamicsTask;
         std::thread publishToRosTask;
@@ -129,10 +103,7 @@ class Uav_Dynamics {
         void publishToRos(double period);
         void performLogging(double period);
 
-        const float ROS_PUB_PERIOD_SEC = 0.05;
-        //@}
-
-        DynamicsNotation_t _dynamicsNotation;
+        const float ROS_PUB_PERIOD_SEC = 0.05f;
 };
 
 #endif

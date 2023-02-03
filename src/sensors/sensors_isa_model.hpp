@@ -29,16 +29,16 @@ namespace SensorModelISA
         const float PRESSURE_MSL_HPA = 1013.250f;
         const float TEMPERATURE_MSL_KELVIN = 288.0f;
         const float RHO_MSL = 1.225f;
-        const float LAPSE_TEMPERATURE_RATE = 1 / 152.4;
+        const float LAPSE_TEMPERATURE_RATE = 1.0f / 152.4f;
 
-        float alt_msl = gpsPosition.z();
+        auto alt_msl = static_cast<float>(gpsPosition.z());
 
         temperatureKelvin = TEMPERATURE_MSL_KELVIN - LAPSE_TEMPERATURE_RATE * alt_msl;
         float pressureRatio = powf((TEMPERATURE_MSL_KELVIN/temperatureKelvin), 5.256f);
         const float densityRatio = powf((TEMPERATURE_MSL_KELVIN/temperatureKelvin), 4.256f);
         float rho = RHO_MSL / densityRatio;
         absPressureHpa = PRESSURE_MSL_HPA / pressureRatio;
-        diffPressureHpa = 0.005f * rho * linVelNed.norm() * linVelNed.norm();
+        diffPressureHpa = 0.005f * rho * (float)(linVelNed.norm() * linVelNed.norm());
     }
 
 }  // namespace SensorModelISA

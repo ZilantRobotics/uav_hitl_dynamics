@@ -11,22 +11,23 @@
 
 class FlightgogglesDynamics: public UavDynamicsSimBase{
 public:
-    FlightgogglesDynamics();
+    FlightgogglesDynamics() = default;
+    ~FlightgogglesDynamics() final = default;
 
     int8_t init() override;
     void setInitialPosition(const Eigen::Vector3d & position,
                             const Eigen::Quaterniond& attitude) override;
 
-    virtual void process(double dt_secs, const std::vector<double> & motorSpeedCommandIn, bool isCmdPercent);
+    void process(double dt_secs, const std::vector<double> & motorSpeedCommandIn, bool isCmdPercent) override;
 
-    virtual Eigen::Vector3d getVehiclePosition() const;
-    virtual Eigen::Quaterniond getVehicleAttitude() const;
-    virtual Eigen::Vector3d getVehicleVelocity(void) const;
-    virtual Eigen::Vector3d getVehicleAngularVelocity(void) const;
-    virtual void getIMUMeasurement(Eigen::Vector3d & accOutput, Eigen::Vector3d & gyroOutput);
+    Eigen::Vector3d getVehiclePosition() const override;
+    Eigen::Quaterniond getVehicleAttitude() const override;
+    Eigen::Vector3d getVehicleVelocity(void) const override;
+    Eigen::Vector3d getVehicleAngularVelocity(void) const override;
+    void getIMUMeasurement(Eigen::Vector3d & accOutput, Eigen::Vector3d & gyroOutput) override;
 
 private:
-    MulticopterDynamicsSim * multicopterSim_;
+    std::unique_ptr<MulticopterDynamicsSim> multicopterSim_;
 
     void initStaticMotorTransform();
 

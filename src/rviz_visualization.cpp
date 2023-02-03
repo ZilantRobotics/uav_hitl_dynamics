@@ -20,19 +20,18 @@
 #include "cs_converter.hpp"
 #include "vtolDynamicsSim.hpp"
 
-// @todo fix this hack
-#define PX4_NED_FRD 0
-#define ROS_ENU_FLU 1
+static const constexpr uint8_t PX4_NED_FRD = 0;
+static const constexpr uint8_t ROS_ENU_FLU = 1;
 
-const std::string MOTOR_NAMES[5] = {"motor0", "motor1", "motor2", "motor3", "ICE"};
-static char GLOBAL_FRAME_ID[] = "world";
-static char UAV_FRAME_ID[] = "uav/enu";
-static char UAV_FIXED_FRAME_ID[] = "uav/com";
+static const std::array<std::string, 5> MOTOR_NAMES = {"motor0", "motor1", "motor2", "motor3", "ICE"};
+static const char GLOBAL_FRAME_ID[] = "world";
+static const char UAV_FRAME_ID[] = "uav/enu";
+static const char UAV_FIXED_FRAME_ID[] = "uav/com";
 
 RvizVisualizator::RvizVisualizator(ros::NodeHandle& nh) : node(nh) {
 }
 
-int8_t RvizVisualizator::init(UavDynamicsSimBase* uavDynamicsSim_) {
+int8_t RvizVisualizator::init(const std::shared_ptr<UavDynamicsSimBase>& uavDynamicsSim_) {
     uavDynamicsSim = uavDynamicsSim_;
 
     if (uavDynamicsSim_ == nullptr) {
@@ -67,74 +66,65 @@ int8_t RvizVisualizator::init(UavDynamicsSimBase* uavDynamicsSim_) {
 }
 
 
-void RvizVisualizator::publish(uint8_t dynamicsNotation) {
+void RvizVisualizator::publish(uint8_t) {
     arrowMarkers.header.stamp = ros::Time();
-    Eigen::Vector3d MOMENT_COLOR(0.5, 0.5, 0.0),
-                    MOTORS_FORCES_COLOR(0.0, 0.5, 0.5),
-                    SPEED_COLOR(0.7, 0.5, 1.3),
-                    LIFT_FORCE(0.8, 0.2, 0.3),
-                    DRAG_FORCE(0.2, 0.8, 0.3),
-                    SIDE_FORCE(0.2, 0.3, 0.8);
+    const Eigen::Vector3d MOMENT_COLOR(0.5, 0.5, 0.0);
+    const Eigen::Vector3d MOTORS_FORCES_COLOR(0.0, 0.5, 0.5);
+    const Eigen::Vector3d SPEED_COLOR(0.7, 0.5, 1.3);
+    const Eigen::Vector3d LIFT_FORCE(0.8, 0.2, 0.3);
+    const Eigen::Vector3d DRAG_FORCE(0.2, 0.8, 0.3);
+    const Eigen::Vector3d SIDE_FORCE(0.2, 0.3, 0.8);
+
+    auto moments = dynamic_cast<InnoVtolDynamicsSim*>(uavDynamicsSim.get())->getMoments();
+    auto forces = dynamic_cast<InnoVtolDynamicsSim*>(uavDynamicsSim.get())->getForces();
 
     // publish moments
-    auto Maero = static_cast<InnoVtolDynamicsSim*>(uavDynamicsSim)->getMaero();
-    aeroMomentPub.publish(makeArrow(Maero, MOMENT_COLOR, UAV_FRAME_ID));
+    aeroMomentPub.publish(makeArrow(moments.aero, MOMENT_COLOR, UAV_FRAME_ID));
 
-    auto Mmotors = static_cast<InnoVtolDynamicsSim*>(uavDynamicsSim)->getMmotors();
     for(size_t motorIdx = 0; motorIdx < 5; motorIdx++){
-        motorsMomentsPub[motorIdx].publish(makeArrow(Mmotors[motorIdx],
+        motorsMomentsPub[motorIdx].publish(makeArrow(moments.motors[motorIdx],
                                                         MOMENT_COLOR,
                                                         MOTOR_NAMES[motorIdx].c_str()));
     }
 
-    auto Mtotal = static_cast<InnoVtolDynamicsSim*>(uavDynamicsSim)->getMtotal();
-    totalMomentPub.publish(makeArrow(Mtotal, MOMENT_COLOR, UAV_FRAME_ID));
+    totalMomentPub.publish(makeArrow(moments.total, MOMENT_COLOR, UAV_FRAME_ID));
 
-    auto Msteer = static_cast<InnoVtolDynamicsSim*>(uavDynamicsSim)->getMsteer();
-    controlSurfacesMomentPub.publish(makeArrow(Msteer, MOMENT_COLOR, UAV_FRAME_ID));
+    controlSurfacesMomentPub.publish(makeArrow(moments.steer, MOMENT_COLOR, UAV_FRAME_ID));
 
-    auto Mairspeed = static_cast<InnoVtolDynamicsSim*>(uavDynamicsSim)->getMairspeed();
-    aoaMomentPub.publish(makeArrow(Mairspeed, MOMENT_COLOR, UAV_FRAME_ID));
+    aoaMomentPub.publish(makeArrow(moments.airspeed, MOMENT_COLOR, UAV_FRAME_ID));
+
 
 
     // publish forces
-    auto Faero = static_cast<InnoVtolDynamicsSim*>(uavDynamicsSim)->getFaero();
-    aeroForcePub.publish(makeArrow(Faero / 10, MOTORS_FORCES_COLOR, UAV_FRAME_ID));
+    aeroForcePub.publish(makeArrow(forces.aero / 10, MOTORS_FORCES_COLOR, UAV_FRAME_ID));
 
-    auto Fmotors = static_cast<InnoVtolDynamicsSim*>(uavDynamicsSim)->getFmotors();
     for(size_t motorIdx = 0; motorIdx < 5; motorIdx++){
-        motorsForcesPub[motorIdx].publish(makeArrow(Fmotors[motorIdx] / 10,
+        motorsForcesPub[motorIdx].publish(makeArrow(forces.motors[motorIdx] / 10,
                                                         MOTORS_FORCES_COLOR,
                                                         MOTOR_NAMES[motorIdx].c_str()));
     }
 
-    auto Ftotal = static_cast<InnoVtolDynamicsSim*>(uavDynamicsSim)->getFtotal();
-    totalForcePub.publish(makeArrow(Ftotal, Eigen::Vector3d(0.0, 1.0, 1.0), UAV_FRAME_ID));
+    totalForcePub.publish(makeArrow(forces.total, Eigen::Vector3d(0.0, 1.0, 1.0), UAV_FRAME_ID));
 
-    auto velocity = static_cast<InnoVtolDynamicsSim*>(uavDynamicsSim)->getBodyLinearVelocity();
+    auto velocity = dynamic_cast<InnoVtolDynamicsSim*>(uavDynamicsSim.get())->getBodyLinearVelocity();
     velocityPub.publish(makeArrow(velocity, SPEED_COLOR, UAV_FRAME_ID));
 
-    auto Flift = static_cast<InnoVtolDynamicsSim*>(uavDynamicsSim)->getFlift();
-    liftForcePub.publish(makeArrow(Flift / 10, LIFT_FORCE, UAV_FRAME_ID));
-
-    auto Fdrug = static_cast<InnoVtolDynamicsSim*>(uavDynamicsSim)->getFdrug();
-    drugForcePub.publish(makeArrow(Fdrug / 10, DRAG_FORCE, UAV_FRAME_ID));
-
-    auto Fside = static_cast<InnoVtolDynamicsSim*>(uavDynamicsSim)->getFside();
-    sideForcePub.publish(makeArrow(Fside / 10, SIDE_FORCE, UAV_FRAME_ID));
+    liftForcePub.publish(makeArrow(forces.lift / 10, LIFT_FORCE, UAV_FRAME_ID));
+    drugForcePub.publish(makeArrow(forces.drug / 10, DRAG_FORCE, UAV_FRAME_ID));
+    sideForcePub.publish(makeArrow(forces.side / 10, SIDE_FORCE, UAV_FRAME_ID));
 }
 
 visualization_msgs::Marker& RvizVisualizator::makeArrow(const Eigen::Vector3d& vector3D,
                                                         const Eigen::Vector3d& rgbColor,
-                                                        const char* frameId = UAV_FRAME_ID){
+                                                        const char*){
     auto fluVector = Converter::frdToFlu(vector3D);
     arrowMarkers.header.frame_id = UAV_FRAME_ID;
     arrowMarkers.points[1].x = fluVector[0];
     arrowMarkers.points[1].y = fluVector[1];
     arrowMarkers.points[1].z = fluVector[2];
-    arrowMarkers.color.r = rgbColor[0];
-    arrowMarkers.color.g = rgbColor[1];
-    arrowMarkers.color.b = rgbColor[2];
+    arrowMarkers.color.r = static_cast<float>(rgbColor[0]);
+    arrowMarkers.color.g = static_cast<float>(rgbColor[1]);
+    arrowMarkers.color.b = static_cast<float>(rgbColor[2]);
     return arrowMarkers;
 }
 
@@ -149,15 +139,16 @@ void RvizVisualizator::initMarkers(){
     arrowMarkers.lifetime = ros::Duration();
     arrowMarkers.color.a = 1.0;
 
-    geometry_msgs::Point startPoint, endPoint;
+    geometry_msgs::Point startPoint;
     startPoint.x = 0;
     startPoint.y = 0;
     startPoint.z = 0;
+    arrowMarkers.points.push_back(startPoint);
+
+    geometry_msgs::Point endPoint;
     endPoint.x = 0;
     endPoint.y = 0;
     endPoint.z = 0;
-
-    arrowMarkers.points.push_back(startPoint);
     arrowMarkers.points.push_back(endPoint);
 }
 

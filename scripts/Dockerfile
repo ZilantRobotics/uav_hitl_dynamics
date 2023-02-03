@@ -34,11 +34,13 @@ COPY package.xml        package.xml
 COPY requirements.txt   requirements.txt
 
 # 5. Build
-RUN source /opt/ros/$ROS_DISTRO/setup.bash && cd /catkin_ws && catkin build
+# RUN source /opt/ros/$ROS_DISTRO/setup.bash && cd /catkin_ws && catkin build
 
 COPY config/ config/
 COPY launch/ launch/
 COPY catkin_test.sh catkin_test.sh
+COPY sonar/ /sonar/
+COPY sonar.sh sonar.sh
 
 CMD echo "main process has been started"                                        &&  \
     source /opt/ros/$ROS_DISTRO/setup.bash                                      &&  \

@@ -21,10 +21,10 @@
 
 static const double STATIC_PRESSURE_NOISE = 0.5;
 
-DifferentialPressureSensor::DifferentialPressureSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
+DiffPressureSensor::DiffPressureSensor(ros::NodeHandle* nh, const char* topic, double period) : BaseSensor(nh, period){
     publisher_ = node_handler_->advertise<std_msgs::Float32>(topic, 5);
 }
-bool DifferentialPressureSensor::publish(float diffPressureHpa) {
+bool DiffPressureSensor::publish(float diffPressureHpa) {
     auto crntTimeSec = ros::Time::now().toSec();
     if(!_isEnabled || (nextPubTimeSec_ > crntTimeSec)){
         return false;
@@ -32,7 +32,7 @@ bool DifferentialPressureSensor::publish(float diffPressureHpa) {
 
     std_msgs::Float32 msg;
     msg.data = diffPressureHpa * 100;
-    msg.data += STATIC_PRESSURE_NOISE * normalDistribution_(randomGenerator_);
+    msg.data += static_cast<float>(STATIC_PRESSURE_NOISE * normalDistribution_(randomGenerator_));
     publisher_.publish(msg);
 
     nextPubTimeSec_ = crntTimeSec + PERIOD;

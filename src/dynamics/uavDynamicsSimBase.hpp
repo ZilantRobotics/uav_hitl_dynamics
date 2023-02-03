@@ -16,7 +16,8 @@
 
 class UavDynamicsSimBase{
 public:
-    UavDynamicsSimBase() {}
+    UavDynamicsSimBase() = default;
+    virtual ~UavDynamicsSimBase() = default;
 
     /**
      * @brief Use rosparam here to initialize sim 
@@ -26,7 +27,9 @@ public:
     virtual void setInitialPosition(const Eigen::Vector3d & position,
                                     const Eigen::Quaterniond& attitude) = 0;
 
-    virtual void land() {}
+    virtual void land() {
+        // do nothing by default
+    }
     virtual void process(double dt_secs,
                          const std::vector<double> & motorSpeedCommandIn,
                          bool isCmdPercent) = 0;
@@ -38,28 +41,29 @@ public:
     virtual void getIMUMeasurement(Eigen::Vector3d & accOutput, Eigen::Vector3d & gyroOutput) = 0;
     virtual bool getMotorsRpm(std::vector<double>& motorsRpm);
 
-    enum CalibrationType_t{
-        WORK_MODE,
+    enum class SimMode_t{
+        NORMAL = 0,
+
         MAG_1_NORMAL = 1,           // ROLL OK              ROTATE YAW POSITIVE
-        MAG_2_OVERTURNED,           // ROLL INVERTED        ROTATE YAW NEGATIVE
-        MAG_3_HEAD_DOWN,            // PITCH POSITIVE pi/2  ROTATE YAW POSITIVE
-        MAG_4_HEAD_UP,              // PITCH NEGATIVE pi/2  ROTATE YAW NEGATIVE
-        MAG_5_TURNED_LEFT,          // ROLL POSITIVE pi/2   ROTATE YAW POSITIVE
-        MAG_6_TURNED_RIGHT,         // ROLL NEGATIVE pi/2   ROTATE YAW NEGATIVE
-        MAG_7_ARDUPILOT,            // Random rotations
-        MAG_8_ARDUPILOT,            // Random rotations
-        MAG_9_ARDUPILOT,            // Random rotations
+        MAG_2_OVERTURNED = 2,       // ROLL INVERTED        ROTATE YAW NEGATIVE
+        MAG_3_HEAD_DOWN = 3,        // PITCH POSITIVE pi/2  ROTATE YAW POSITIVE
+        MAG_4_HEAD_UP = 4,          // PITCH NEGATIVE pi/2  ROTATE YAW NEGATIVE
+        MAG_5_TURNED_LEFT = 5,      // ROLL POSITIVE pi/2   ROTATE YAW POSITIVE
+        MAG_6_TURNED_RIGHT = 6,     // ROLL NEGATIVE pi/2   ROTATE YAW NEGATIVE
+        MAG_7_ARDUPILOT = 7,        // Random rotations
+        MAG_8_ARDUPILOT = 8,        // Random rotations
+        MAG_9_ARDUPILOT = 9,        // Random rotations
 
         ACC_1_NORMAL = 11,          // ROLL OK
-        ACC_2_OVERTURNED,           // ROLL INVERTED
-        ACC_3_HEAD_DOWN,            // PITCH POSITIVE pi/2
-        ACC_4_HEAD_UP,              // PITCH NEGATIVE pi/2
-        ACC_5_TURNED_LEFT,          // ROLL POSITIVE pi/2
-        ACC_6_TURNED_RIGHT,         // ROLL NEGATIVE pi/2
+        ACC_2_OVERTURNED = 12,      // ROLL INVERTED
+        ACC_3_HEAD_DOWN = 13,       // PITCH POSITIVE pi/2
+        ACC_4_HEAD_UP = 14,         // PITCH NEGATIVE pi/2
+        ACC_5_TURNED_LEFT = 15,     // ROLL POSITIVE pi/2
+        ACC_6_TURNED_RIGHT = 16,    // ROLL NEGATIVE pi/2
 
         AIRSPEED = 21,              // Emulate airspeed
     };
-    virtual int8_t calibrate(CalibrationType_t calibrationType) { return -1; }
+    virtual int8_t calibrate(SimMode_t calibrationType) { return -1; }
 };
 
 

@@ -25,7 +25,7 @@
 class GpsSensor : public BaseSensor{
     public:
         GpsSensor(ros::NodeHandle* nh, const char* topic, double period);
-        bool publish(const Eigen::Vector3d& gpsPosition, const Eigen::Vector3d& nedVelocity);
+        bool publish(const Eigen::Vector3d& gpsPosition);
 };
 
 #endif  // SRC_SENSORS_GNSS_HPP

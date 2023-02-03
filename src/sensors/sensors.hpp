@@ -36,7 +36,7 @@
 class Sensors {
 public:
     explicit Sensors(ros::NodeHandle* nh);
-    int8_t init(UavDynamicsSimBase* uavDynamicsSim);
+    int8_t init(const std::shared_ptr<UavDynamicsSimBase>& uavDynamicsSim);
     void publishStateToCommunicator(uint8_t dynamicsNotation);
 
     IceStatusSensor iceStatusSensor;
@@ -46,7 +46,7 @@ private:
     ImuSensor imuSensor;
     VelocitySensor velocitySensor_;
     MagSensor magSensor;
-    DifferentialPressureSensor diffPressureSensor;
+    DiffPressureSensor diffPressureSensor;
     TemperatureSensor temperatureSensor;
     PressureSensor pressureSensor;
     GpsSensor gpsSensor;
@@ -56,7 +56,7 @@ private:
     BatteryInfoSensor batteryInfoSensor;
 
     geodetic_converter::GeodeticConverter geodeticConverter;
-    UavDynamicsSimBase* _uavDynamicsSim;
+    std::shared_ptr<UavDynamicsSimBase> _uavDynamicsSim;
 };
 
 #endif  // SRC_SENSORS_SENSORS_HPP_
