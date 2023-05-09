@@ -32,6 +32,9 @@ bool EscStatusSensor::publish(const std::vector<double>& rpm) {
             nextEscIdx_ = 0;
         }
         escStatusMsg.count = nextEscIdx_;
+        escStatusMsg.temperature = 300;
+        escStatusMsg.voltage = 50.0 - rpm[nextEscIdx_] * 0.001;
+        escStatusMsg.current = 0.1 + rpm[nextEscIdx_] * 0.001;
         escStatusMsg.rpm = static_cast<int>(rpm[nextEscIdx_]);
         publisher_.publish(escStatusMsg);
         nextPubTimeSec_ = crntTimeSec + PERIOD / (double)rpm.size();
