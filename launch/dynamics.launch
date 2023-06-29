@@ -14,7 +14,7 @@
     <arg name="run_sitl_flight_stack"   default="true"                          doc="[true means sitl, false means do nothing]"/>
     <arg name="run_sitl_communicator"   default="false"                         doc="[true means run mavlink communicator, false means do nothing]"/>
     <arg name="run_hitl_communicator"   default="false"                         doc="[true means run uavcan  communicator, false means do nothing]"/>
-    <arg name="run_inno_sim_bridge"     default="true"                          doc="[true, false]"/>
+    <arg name="run_inno_sim_bridge"     default="false"                         doc="[true, false]"/>
     <arg name="run_cyphal_communicator" default="false"                         doc="[true, false]"/>
     <arg name="run_dronecan_communicator" default="false"                       doc="[true, false]"/>
 
