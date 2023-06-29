@@ -43,7 +43,7 @@ enum class Scenario {
 
 struct ScenarioManager {
     ScenarioManager(ros::NodeHandle& node, Actuators& actuators, Sensors& sensors) :
-        _node(node), _actuators(actuators), _sensors(sensors) {};
+        _node(node), _actuators(actuators), _sensors(sensors) {}
     void init();
 private:
     ros::Subscriber _scenarioSub;
@@ -54,4 +54,4 @@ private:
     void scenarioCallback(std_msgs::UInt8 msg);
 };
 
-#endif // UAV_DYNAMICS_SCENARIOS_HPP
+#endif  // UAV_DYNAMICS_SCENARIOS_HPP

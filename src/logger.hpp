@@ -25,7 +25,7 @@
 
 struct StateLogger {
     StateLogger(Actuators& actuators, Sensors& sensors, DynamicsInfo& info) :
-         _actuators(actuators), _sensors(sensors), _info(info) {};
+         _actuators(actuators), _sensors(sensors), _info(info) {}
     void init(double clockScale, double dt_secs);
     void createStringStream(std::stringstream& logStream,
                             const Eigen::Vector3d& pose,
@@ -45,4 +45,4 @@ private:
     double _dt_secs;
 };
 
-#endif // UAV_DYNAMICS_LOGER_HPP
+#endif  // UAV_DYNAMICS_LOGER_HPP

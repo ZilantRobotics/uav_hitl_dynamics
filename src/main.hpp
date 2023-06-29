@@ -96,4 +96,4 @@ class Uav_Dynamics {
         const float ROS_PUB_PERIOD_SEC = 0.05f;
 };
 
-#endif // SRC_MAIN_HPP
+#endif  // SRC_MAIN_HPP

@@ -40,7 +40,6 @@ void StateLogger::createStringStream(std::stringstream& logStream,
                                      double dynamicsCounter,
                                      double rosPubCounter,
                                      double periodSec) {
-
     auto& actuators = _actuators._actuators;
     auto& maxDelayUsec = _actuators.maxDelayUsec_;
     auto& actuatorsMsgCounter = _actuators.actuatorsMsgCounter_;

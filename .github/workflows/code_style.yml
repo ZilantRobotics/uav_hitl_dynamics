@@ -4,6 +4,7 @@ on: [push]
 jobs:
   cpplint:
     runs-on: ubuntu-22.04
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v2
         with:
