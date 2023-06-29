@@ -33,28 +33,26 @@
 
 #include "uavDynamicsSimBase.hpp"
 
-class Sensors {
-public:
+struct Sensors {
     explicit Sensors(ros::NodeHandle* nh);
     int8_t init(const std::shared_ptr<UavDynamicsSimBase>& uavDynamicsSim);
     void publishStateToCommunicator(uint8_t dynamicsNotation);
 
-    IceStatusSensor iceStatusSensor;
-
-private:
     AttitudeSensor attitudeSensor;
+    PressureSensor pressureSensor;
+    TemperatureSensor temperatureSensor;
+    DiffPressureSensor diffPressureSensor;
+    IceStatusSensor iceStatusSensor;
     ImuSensor imuSensor;
     VelocitySensor velocitySensor_;
-    MagSensor magSensor;
-    DiffPressureSensor diffPressureSensor;
-    TemperatureSensor temperatureSensor;
-    PressureSensor pressureSensor;
     GpsSensor gpsSensor;
+    MagSensor magSensor;
 
     EscStatusSensor escStatusSensor;
     FuelTankSensor fuelTankSensor;
     BatteryInfoSensor batteryInfoSensor;
 
+private:
     geodetic_converter::GeodeticConverter geodeticConverter;
     std::shared_ptr<UavDynamicsSimBase> _uavDynamicsSim;
 };

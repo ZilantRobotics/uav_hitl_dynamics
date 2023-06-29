@@ -21,15 +21,15 @@
 #include "cs_converter.hpp"
 
 Sensors::Sensors(ros::NodeHandle* nh) :
-    iceStatusSensor(nh,     "/uav/ice",                 0.25),
     attitudeSensor(nh,      "/uav/attitude",            0.005),
+    pressureSensor(nh,      "/uav/static_pressure",     0.05),
+    temperatureSensor(nh,   "/uav/static_temperature",  0.05),
+    diffPressureSensor(nh,  "/uav/raw_air_data",        0.05),
+    iceStatusSensor(nh,     "/uav/ice",                 0.25),
     imuSensor(nh,           "/uav/imu",                 0.00333),
     velocitySensor_(nh,     "/uav/velocity",            0.05),
-    magSensor(nh,           "/uav/mag",                 0.03),
-    diffPressureSensor(nh,  "/uav/raw_air_data",        0.05),
-    temperatureSensor(nh,   "/uav/static_temperature",  0.05),
-    pressureSensor(nh,      "/uav/static_pressure",     0.05),
     gpsSensor(nh,           "/uav/gps_point",           0.1),
+    magSensor(nh,           "/uav/mag",                 0.03),
     escStatusSensor(nh,     "/uav/esc_status",          0.25),
     fuelTankSensor(nh,      "/uav/fuel_tank",           2.0),
     batteryInfoSensor(nh,   "/uav/battery",             1.0)

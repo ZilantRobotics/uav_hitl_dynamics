@@ -45,7 +45,7 @@ enum INNO_VTOL_OUTPUTS {
 
 class BaseReverseMixer {
     public:
-        explicit BaseReverseMixer(const ros::NodeHandle& nh): node_(nh) {}
+        explicit BaseReverseMixer(const ros::NodeHandle& nh): _node(nh) {}
         virtual ~BaseReverseMixer() = default;
         int8_t init();
         virtual void rawActuatorsCallback(sensor_msgs::Joy msg) = 0;
@@ -53,13 +53,13 @@ class BaseReverseMixer {
         ros::Publisher mappedActuatorPub_;
         sensor_msgs::Joy mappedActuatorMsg_;
     private:
-        ros::NodeHandle node_;
+        ros::NodeHandle _node;
         ros::Subscriber rawActuatorsSub_;
 };
 
 int8_t BaseReverseMixer::init() {
-    rawActuatorsSub_ = node_.subscribe(RAW_ACTUATOR_TOPIC, 2, &BaseReverseMixer::rawActuatorsCallback, this);
-    mappedActuatorPub_ = node_.advertise<sensor_msgs::Joy>(MAPPED_ACTUATOR_TOPIC, 5);
+    rawActuatorsSub_ = _node.subscribe(RAW_ACTUATOR_TOPIC, 2, &BaseReverseMixer::rawActuatorsCallback, this);
+    mappedActuatorPub_ = _node.advertise<sensor_msgs::Joy>(MAPPED_ACTUATOR_TOPIC, 5);
     return 0;
 }
 

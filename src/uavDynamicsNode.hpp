@@ -23,6 +23,7 @@
 #include "uavDynamicsSimBase.hpp"
 #include "actuators.hpp"
 #include "sensors.hpp"
+#include "scenarios.hpp"
 #include "rviz_visualization.hpp"
 
 enum class DynamicsType{
@@ -57,7 +58,7 @@ class Uav_Dynamics {
         int8_t startClockAndThreads();
 
         // Simulator
-        ros::NodeHandle node_;
+        ros::NodeHandle _node;
         std::shared_ptr<UavDynamicsSimBase> uavDynamicsSim_;
         ros::Publisher clockPub_;
 
@@ -75,13 +76,12 @@ class Uav_Dynamics {
         std::string vehicleName_;
         std::string dynamicsTypeName_;
 
-        // Communication with PX4
-        ros::Subscriber scenarioSub_;
-        void scenarioCallback(std_msgs::UInt8 msg);
 
-        Actuators actuators_;
+        // Communication with PX4
+        Actuators _actuators;
         Sensors _sensors;
         RvizVisualizator _rviz_visualizator;
+        ScenarioManager _scenarioManager;
 
         // Calibration
         ros::Subscriber calibrationSub_;

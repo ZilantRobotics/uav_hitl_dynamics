@@ -29,11 +29,11 @@ void Actuators::actuatorsCallback(sensor_msgs::Joy::Ptr msg){
     actuatorsMsgCounter_++;
 
     for(size_t idx = 0; idx < msg->axes.size(); idx++){
-        actuators_[idx] = msg->axes[idx];
+        _actuators[idx] = msg->axes[idx];
     }
 
     if (_scenarioType == 1) {
-        actuators_[7] = 0.0;
+        _actuators[7] = 0.0;
     }
 }
 

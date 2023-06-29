@@ -38,9 +38,10 @@ int main(int argc, char **argv){
 
 
 Uav_Dynamics::Uav_Dynamics(ros::NodeHandle nh) :
-    node_(nh),
+    _node(nh),
     _sensors(&nh),
-    _rviz_visualizator(node_){
+    _rviz_visualizator(_node),
+    _scenarioManager(_node, _actuators, _sensors){
 }
 
 
@@ -68,8 +69,8 @@ int8_t Uav_Dynamics::init(){
 int8_t Uav_Dynamics::getParamsFromRos(){
     const std::string SIM_PARAMS_PATH = "/uav/sim_params/";
     if(!ros::param::get(SIM_PARAMS_PATH + "use_sim_time",       useSimTime_ )           ||
-       !node_.getParam("vehicle",                               vehicleName_)           ||
-       !node_.getParam("dynamics",                              dynamicsTypeName_)      ||
+       !_node.getParam("vehicle",                               vehicleName_)           ||
+       !_node.getParam("dynamics",                              dynamicsTypeName_)      ||
        !ros::param::get(SIM_PARAMS_PATH + "init_pose",          initPose_)){
         ROS_ERROR("Dynamics: There is no at least one of required simulator parameters.");
         return -1;
@@ -118,20 +119,20 @@ int8_t Uav_Dynamics::initDynamicsSimulator(){
 }
 
 int8_t Uav_Dynamics::initSensors(){
-    actuators_.init(node_);
-    scenarioSub_ = node_.subscribe("/uav/scenario", 1, &Uav_Dynamics::scenarioCallback, this);
+    _actuators.init(_node);
+    _scenarioManager.init();
     return _sensors.init(uavDynamicsSim_);
 }
 
 int8_t Uav_Dynamics::initCalibration(){
-    calibrationSub_ = node_.subscribe("/uav/calibration", 1, &Uav_Dynamics::calibrationCallback, this);
+    calibrationSub_ = _node.subscribe("/uav/calibration", 1, &Uav_Dynamics::calibrationCallback, this);
     return 0;
 }
 
 int8_t Uav_Dynamics::startClockAndThreads(){
     ros::Duration(0.1).sleep();
     if(useSimTime_){
-        clockPub_ = node_.advertise<rosgraph_msgs::Clock>("/clock", 1);
+        clockPub_ = _node.advertise<rosgraph_msgs::Clock>("/clock", 1);
         rosgraph_msgs::Clock clock_time;
         clock_time.clock = currentTime_;
         clockPub_.publish(clock_time);
@@ -141,7 +142,7 @@ int8_t Uav_Dynamics::startClockAndThreads(){
     }
 
 
-    simulationLoopTimer_ = node_.createWallTimer(ros::WallDuration(dt_secs_/clockScale_),
+    simulationLoopTimer_ = _node.createWallTimer(ros::WallDuration(dt_secs_/clockScale_),
                                                  &Uav_Dynamics::simulationLoopTimerCallback,
                                                  this);
     simulationLoopTimer_.start();
@@ -197,10 +198,10 @@ void Uav_Dynamics::performLogging(double periodSec){
         auto crnt_time = std::chrono::system_clock::now();
         auto sleed_period = std::chrono::seconds(int(periodSec * clockScale_));
 
-        auto& actuators = actuators_.actuators_;
-        auto& maxDelayUsec = actuators_.maxDelayUsec_;
-        auto& actuatorsMsgCounter = actuators_.actuatorsMsgCounter_;
-        const auto& armed = actuators_.armed_;
+        auto& actuators = _actuators._actuators;
+        auto& maxDelayUsec = _actuators.maxDelayUsec_;
+        auto& actuatorsMsgCounter = _actuators.actuatorsMsgCounter_;
+        const auto& armed = _actuators.armed_;
 
         std::stringstream logStream;
 
@@ -278,7 +279,7 @@ void Uav_Dynamics::proceedDynamics(double periodSec){
 
         if(calibrationType_ != UavDynamicsSimBase::SimMode_t::NORMAL){
             uavDynamicsSim_->calibrate(calibrationType_);
-        }else if(actuators_.armed_){
+        }else if(_actuators.armed_){
             static auto crnt_time = std::chrono::system_clock::now();
             auto prev_time = crnt_time;
             crnt_time = std::chrono::system_clock::now();
@@ -291,7 +292,7 @@ void Uav_Dynamics::proceedDynamics(double periodSec){
                 time_dif_sec = MAX_TIME_DIFF_SEC;
             }
 
-            uavDynamicsSim_->process(time_dif_sec, actuators_.actuators_, true);
+            uavDynamicsSim_->process(time_dif_sec, _actuators._actuators, true);
         }else{
             uavDynamicsSim_->land();
         }
@@ -320,15 +321,6 @@ void Uav_Dynamics::publishToRos(double period){
         }
 
         std::this_thread::sleep_until(time_point);
-    }
-}
-
-void Uav_Dynamics::scenarioCallback(std_msgs::UInt8 msg){
-    actuators_._scenarioType = msg.data;
-    if (actuators_._scenarioType == 0) {
-        _sensors.iceStatusSensor.stop_stall_emulation();
-    } else if (actuators_._scenarioType == 1) {
-        _sensors.iceStatusSensor.start_stall_emulation();
     }
 }
 

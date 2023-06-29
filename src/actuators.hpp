@@ -24,14 +24,14 @@
 #include <std_msgs/Bool.h>
 
 struct Actuators {
-    Actuators() : actuators_(8, 0.0) {}
+    Actuators() : _actuators(8, 0.0) {}
     void init(ros::NodeHandle& node){
         actuatorsSub_ = node.subscribe("/uav/actuators", 1, &Actuators::actuatorsCallback, this);
         armSub_ = node.subscribe("/uav/arm", 1, &Actuators::armCallback, this);
     }
 
     ros::Subscriber actuatorsSub_;
-    std::vector<double> actuators_;
+    std::vector<double> _actuators;
     uint64_t lastActuatorsTimestampUsec_;
     uint64_t prevActuatorsTimestampUsec_;
     uint64_t maxDelayUsec_;
