@@ -20,7 +20,7 @@
 
 #include <Eigen/Geometry>
 
-#include "uavDynamicsNode.hpp"
+#include "main.hpp"
 #include "cs_converter.hpp"
 
 static const std::string COLOR_RED = "\033[1;31m";

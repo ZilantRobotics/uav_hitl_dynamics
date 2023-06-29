@@ -1,15 +1,24 @@
-/**
- * @file uavDynamicsNode.hpp
- * @author Dmitry Ponomarev
- * @author Roman Fedorenko
- * @author Ezra Tal
- * @author Winter Guerra
- * @author Varun Murali
- * @brief Header file for UAV dynamics, IMU, and angular rate control simulation node
+/*
+ * Copyright (c) 2020-2023 RaccoonLab.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authors: Dmitry Ponomarev <ponomarevda96@gmail.com>
+ *          Roman Fedorenko <frontwise@gmail.com>
  */
 
-#ifndef UAV_DYNAMICS_HPP
-#define UAV_DYNAMICS_HPP
+#ifndef SRC_MAIN_HPP
+#define SRC_MAIN_HPP
 
 #include <thread>
 #include <random>
@@ -93,4 +102,4 @@ class Uav_Dynamics {
         const float ROS_PUB_PERIOD_SEC = 0.05f;
 };
 
-#endif
+#endif // SRC_MAIN_HPP

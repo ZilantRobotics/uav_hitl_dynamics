@@ -74,7 +74,7 @@ add_library(${PROJECT_NAME} src/dynamics/vtol/vtolDynamicsSim.cpp
 )
 
 ## 1. Declare a C++ uav_dynamics_node executable
-add_executable(${PROJECT_NAME}_node src/uavDynamicsNode.cpp)
+add_executable(${PROJECT_NAME}_node src/main.cpp)
 target_include_directories(${PROJECT_NAME}_node
                 BEFORE
                 PUBLIC ${MAVLINK_INCLUDE_DIRS})
