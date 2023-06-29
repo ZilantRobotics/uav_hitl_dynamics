@@ -30,10 +30,7 @@ static const std::string COLOR_TAIL = "\033[0m";
 
 static const float ROS_PUB_PERIOD_SEC = 0.05f;
 
-void StateLogger::init(const std::string& dynamicsTypeName, DynamicsNotation_t dynamicsNotation, VehicleType vehicleType, double clockScale, double dt_secs) {
-    _dynamicsTypeName = dynamicsTypeName;
-    _dynamicsNotation = dynamicsNotation;
-    _vehicleType = vehicleType;
+void StateLogger::init(double clockScale, double dt_secs) {
     _clockScale = clockScale;
     _dt_secs = dt_secs;
 }
@@ -52,7 +49,7 @@ void StateLogger::createStringStream(std::stringstream& logStream,
     std::string arm_str = armed ? COLOR_GREEN + "[Armed]" + COLOR_TAIL : "[Disarmed]";
     logStream << arm_str << ", ";
 
-    logStream << _dynamicsTypeName.c_str() << ". ";
+    logStream << _info.dynamicsName.c_str() << ". ";
 
     double dynamicsCompleteness = (double)dynamicsCounter * _dt_secs / (_clockScale * periodSec);
     std::string dyn_str = "dyn=" + std::to_string(dynamicsCompleteness);
@@ -78,7 +75,7 @@ void StateLogger::createStringStream(std::stringstream& logStream,
                 << actuators[2] << ", "
                 << actuators[3] << "] ";
 
-    if(_vehicleType == VehicleType::INNOPOLIS_VTOL){
+    if(_info.vehicleType == VehicleType::INNOPOLIS_VTOL){
         addBold(logStream, "fw rpy");
         logStream << " [" << actuators[4] << ", "
                             << actuators[5] << ", "
@@ -87,7 +84,7 @@ void StateLogger::createStringStream(std::stringstream& logStream,
         logStream << " [" << actuators[7] << "] ";
     }
 
-    auto enuPosition = (_dynamicsNotation == DynamicsNotation_t::PX4_NED_FRD) ? Converter::nedToEnu(pose) : pose;
+    auto enuPosition = (_info.notation == DynamicsNotation_t::PX4_NED_FRD) ? Converter::nedToEnu(pose) : pose;
     addBold(logStream, "enu pose");
     logStream << std::setprecision(1) << std::fixed << " ["
                 << enuPosition[0] << ", "

@@ -24,10 +24,14 @@
 #include "dynamics.hpp"
 
 struct StateLogger {
-    StateLogger(Actuators& actuators, Sensors& sensors) :
-         _actuators(actuators), _sensors(sensors) {};
-    void init(const std::string& dynamicsTypeName, DynamicsNotation_t dynamicsNotation, VehicleType vehicleType, double clockScale, double dt_secs);
-    void createStringStream(std::stringstream& logStream, const Eigen::Vector3d& pose, double dynamicsCounter, double rosPubCounter, double periodSec);
+    StateLogger(Actuators& actuators, Sensors& sensors, DynamicsInfo& info) :
+         _actuators(actuators), _sensors(sensors), _info(info) {};
+    void init(double clockScale, double dt_secs);
+    void createStringStream(std::stringstream& logStream,
+                            const Eigen::Vector3d& pose,
+                            double dynamicsCounter,
+                            double rosPubCounter,
+                            double periodSec);
 
 private:
     static void colorize(std::stringstream& logStream, bool is_ok, const std::string& newData);
@@ -35,9 +39,8 @@ private:
 
     Actuators& _actuators;
     Sensors& _sensors;
-    std::string _dynamicsTypeName;
-    DynamicsNotation_t _dynamicsNotation;
-    VehicleType _vehicleType;
+    DynamicsInfo& _info;
+
     double _clockScale;
     double _dt_secs;
 };

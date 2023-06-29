@@ -34,4 +34,15 @@ enum class DynamicsNotation_t{
     ROS_ENU_FLU = 1,
 };
 
+struct DynamicsInfo {
+    std::string dynamicsName;
+    DynamicsType dynamicsType;
+
+    VehicleType vehicleType;
+    std::string vehicleName;
+
+    DynamicsNotation_t notation;
+};
+
+
 #endif  // SRC_DYNAMICS_DYNAMICS_HPP

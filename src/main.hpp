@@ -65,13 +65,7 @@ class Uav_Dynamics {
 
         std::vector<double> initPose_{7};
 
-        DynamicsType dynamicsType_;
-        VehicleType vehicleType_;
-        DynamicsNotation_t _dynamicsNotation;
-
-        std::string vehicleName_;
-        std::string dynamicsTypeName_;
-
+        DynamicsInfo info;
 
         Actuators _actuators;
         Sensors _sensors;

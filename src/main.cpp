@@ -51,7 +51,7 @@ Uav_Dynamics::Uav_Dynamics(ros::NodeHandle nh) :
     _sensors(&nh),
     _rviz_visualizator(_node),
     _scenarioManager(_node, _actuators, _sensors),
-    _logger(_actuators, _sensors){
+    _logger(_actuators, _sensors, info){
 }
 
 
@@ -79,8 +79,8 @@ int8_t Uav_Dynamics::init(){
 int8_t Uav_Dynamics::getParamsFromRos(){
     const std::string SIM_PARAMS_PATH = "/uav/sim_params/";
     if(!ros::param::get(SIM_PARAMS_PATH + "use_sim_time",       useSimTime_ )           ||
-       !_node.getParam("vehicle",                               vehicleName_)           ||
-       !_node.getParam("dynamics",                              dynamicsTypeName_)      ||
+       !_node.getParam("vehicle",                               info.vehicleName)       ||
+       !_node.getParam("dynamics",                              info.dynamicsName)      ||
        !ros::param::get(SIM_PARAMS_PATH + "init_pose",          initPose_)){
         ROS_ERROR("Dynamics: There is no at least one of required simulator parameters.");
         return -1;
@@ -93,23 +93,23 @@ int8_t Uav_Dynamics::initDynamicsSimulator(){
     const char DYNAMICS_NAME_INNO_VTOL[] = "inno_vtol";
     const char VEHICLE_NAME_INNOPOLIS_VTOL[] = "innopolis_vtol";
     const char VEHICLE_NAME_IRIS[] = "iris";
-    if(dynamicsTypeName_ == DYNAMICS_NAME_FLIGHTGOGGLES){
-        dynamicsType_ = DynamicsType::FLIGHTGOGGLES_MULTICOPTER;
+    if(info.dynamicsName == DYNAMICS_NAME_FLIGHTGOGGLES){
+        info.dynamicsType = DynamicsType::FLIGHTGOGGLES_MULTICOPTER;
         uavDynamicsSim_ = std::make_shared<FlightgogglesDynamics>();
-        _dynamicsNotation = DynamicsNotation_t::ROS_ENU_FLU;
-    }else if(dynamicsTypeName_ == DYNAMICS_NAME_INNO_VTOL){
+        info.notation = DynamicsNotation_t::ROS_ENU_FLU;
+    }else if(info.dynamicsName == DYNAMICS_NAME_INNO_VTOL){
         uavDynamicsSim_ = std::make_shared<InnoVtolDynamicsSim>();
-        dynamicsType_ = DynamicsType::INNO_VTOL;
-        _dynamicsNotation = DynamicsNotation_t::PX4_NED_FRD;
+        info.dynamicsType = DynamicsType::INNO_VTOL;
+        info.notation = DynamicsNotation_t::PX4_NED_FRD;
     }else{
-        ROS_ERROR("Dynamics type with name \"%s\" is not exist.", dynamicsTypeName_.c_str());
+        ROS_ERROR("Dynamics type with name \"%s\" is not exist.", info.dynamicsName.c_str());
         return -1;
     }
 
-    if(vehicleName_ == VEHICLE_NAME_INNOPOLIS_VTOL){
-        vehicleType_ = VehicleType::INNOPOLIS_VTOL;
-    }else if(vehicleName_ == VEHICLE_NAME_IRIS){
-        vehicleType_ = VehicleType::IRIS;
+    if(info.vehicleName == VEHICLE_NAME_INNOPOLIS_VTOL){
+        info.vehicleType = VehicleType::INNOPOLIS_VTOL;
+    }else if(info.vehicleName == VEHICLE_NAME_IRIS){
+        info.vehicleType = VehicleType::IRIS;
     }else{
         ROS_ERROR("Wrong vehicle. It should be 'innopolis_vtol' or 'iris'");
         return -1;
@@ -131,7 +131,7 @@ int8_t Uav_Dynamics::initDynamicsSimulator(){
 int8_t Uav_Dynamics::initSensors(){
     _actuators.init(_node);
     _scenarioManager.init();
-    _logger.init(dynamicsTypeName_, _dynamicsNotation, vehicleType_, clockScale_, dt_secs_);
+    _logger.init(clockScale_, dt_secs_);
     return _sensors.init(uavDynamicsSim_);
 }
 
@@ -243,7 +243,7 @@ void Uav_Dynamics::proceedDynamics(double periodSec){
             uavDynamicsSim_->land();
         }
 
-        _sensors.publishStateToCommunicator((uint8_t)_dynamicsNotation);
+        _sensors.publishStateToCommunicator((uint8_t)info.notation);
 
         std::this_thread::sleep_until(time_point);
     }
@@ -256,12 +256,12 @@ void Uav_Dynamics::publishToRos(double period){
         auto time_point = crnt_time + sleed_period;
         rosPubCounter_++;
 
-        _rviz_visualizator.publishTf((uint8_t)_dynamicsNotation);
+        _rviz_visualizator.publishTf((uint8_t)info.notation);
 
         static auto next_time = std::chrono::system_clock::now();
         if(crnt_time > next_time){
-            if (dynamicsType_ == DynamicsType::INNO_VTOL) {
-                _rviz_visualizator.publish((uint8_t)_dynamicsNotation);
+            if (info.dynamicsType == DynamicsType::INNO_VTOL) {
+                _rviz_visualizator.publish((uint8_t)info.notation);
             }
             next_time += std::chrono::milliseconds(int(50));
         }
