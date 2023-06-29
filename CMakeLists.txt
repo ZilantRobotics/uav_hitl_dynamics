@@ -55,8 +55,9 @@ add_library(${PROJECT_NAME} src/dynamics/vtol/vtolDynamicsSim.cpp
                             src/actuators.cpp
                             src/common_math.cpp
                             src/cs_converter.cpp
-                            src/scenarios.cpp
+                            src/logger.cpp
                             src/rviz_visualization.cpp
+                            src/scenarios.cpp
 
                             src/sensors/attitude.cpp
                             src/sensors/barometer.cpp

@@ -41,7 +41,8 @@ Uav_Dynamics::Uav_Dynamics(ros::NodeHandle nh) :
     _node(nh),
     _sensors(&nh),
     _rviz_visualizator(_node),
-    _scenarioManager(_node, _actuators, _sensors){
+    _scenarioManager(_node, _actuators, _sensors),
+    _logger(_actuators, _sensors){
 }
 
 
@@ -121,6 +122,7 @@ int8_t Uav_Dynamics::initDynamicsSimulator(){
 int8_t Uav_Dynamics::initSensors(){
     _actuators.init(_node);
     _scenarioManager.init();
+    _logger.init(dynamicsTypeName_, _dynamicsNotation, vehicleType_, clockScale_, dt_secs_);
     return _sensors.init(uavDynamicsSim_);
 }
 
@@ -176,82 +178,17 @@ void Uav_Dynamics::simulationLoopTimerCallback(const ros::WallTimerEvent&){
     }
 }
 
-static const std::string COLOR_RED = "\033[1;31m";
-static const std::string COLOR_GREEN = "\033[1;32m";
-static const std::string COLOR_BOLD = "\033[1;29m";
-static const std::string COLOR_TAIL = "\033[0m";
-
-void logColorizeAndAddToStream(std::stringstream& logStream, bool is_ok, const std::string& newData) {
-    if(!is_ok){
-        logStream << COLOR_RED << newData << COLOR_TAIL;
-    }else{
-        logStream << newData;
-    }
-}
-
-void logAddBoldStringToStream(std::stringstream& logStream, const char* newData) {
-    logStream << COLOR_BOLD << newData << COLOR_TAIL;
-}
-
 void Uav_Dynamics::performLogging(double periodSec){
     while(ros::ok()){
         auto crnt_time = std::chrono::system_clock::now();
         auto sleed_period = std::chrono::seconds(int(periodSec * clockScale_));
 
-        auto& actuators = _actuators._actuators;
-        auto& maxDelayUsec = _actuators.maxDelayUsec_;
-        auto& actuatorsMsgCounter = _actuators.actuatorsMsgCounter_;
-        const auto& armed = _actuators.armed_;
-
         std::stringstream logStream;
-
-        std::string arm_str = armed ? COLOR_GREEN + "[Armed]" + COLOR_TAIL : "[Disarmed]";
-        logStream << arm_str << ", ";
-
-        logStream << dynamicsTypeName_.c_str() << ". ";
-
-        double dynamicsCompleteness = (double)dynamicsCounter_ * dt_secs_ / (clockScale_ * periodSec);
-        std::string dyn_str = "dyn=" + std::to_string(dynamicsCompleteness);
-        logColorizeAndAddToStream(logStream, dynamicsCompleteness >= 0.9, dyn_str);
-        logStream << ", ";
+        auto pose = uavDynamicsSim_->getVehiclePosition();
+        _logger.createStringStream(logStream, pose, dynamicsCounter_, rosPubCounter_, periodSec);
         dynamicsCounter_ = 0;
-
-        double rosPubCompleteness = (double)rosPubCounter_ * (double)ROS_PUB_PERIOD_SEC / (clockScale_ * periodSec);
-        std::string ros_pub_str = "ros_pub=" + std::to_string(rosPubCompleteness);
-        logColorizeAndAddToStream(logStream, rosPubCompleteness >= 0.9, ros_pub_str);
-        logStream << ", ";
         rosPubCounter_ = 0;
 
-        std::string actuator_str = "setpoint=" + std::to_string(actuatorsMsgCounter);
-        bool is_actuator_ok = actuatorsMsgCounter > 100 && maxDelayUsec < 20000 && maxDelayUsec != 0;
-        logColorizeAndAddToStream(logStream, is_actuator_ok, actuator_str);
-        logStream << " msg/sec.\n";
-        actuatorsMsgCounter = 0;
-        maxDelayUsec = 0;
-
-        logAddBoldStringToStream(logStream, "mc");
-        logStream << std::setprecision(2) << std::fixed << " ["
-                  << actuators[0] << ", "
-                  << actuators[1] << ", "
-                  << actuators[2] << ", "
-                  << actuators[3] << "] ";
-
-        if(vehicleType_ == VehicleType::INNOPOLIS_VTOL){
-            logAddBoldStringToStream(logStream, "fw rpy");
-            logStream << " [" << actuators[4] << ", "
-                              << actuators[5] << ", "
-                              << actuators[6] << "]";
-            logAddBoldStringToStream(logStream, " throttle");
-            logStream << " [" << actuators[7] << "] ";
-        }
-
-        auto pose = uavDynamicsSim_->getVehiclePosition();
-        auto enuPosition = (_dynamicsNotation == DynamicsNotation_t::PX4_NED_FRD) ? Converter::nedToEnu(pose) : pose;
-        logAddBoldStringToStream(logStream, "enu pose");
-        logStream << std::setprecision(1) << std::fixed << " ["
-                  << enuPosition[0] << ", "
-                  << enuPosition[1] << ", "
-                  << enuPosition[2] << "].";
 
         ROS_INFO_STREAM(logStream.str());
         fflush(stdout);

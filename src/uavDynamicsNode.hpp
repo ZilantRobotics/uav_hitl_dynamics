@@ -21,25 +21,12 @@
 #include <std_msgs/UInt8.h>
 
 #include "uavDynamicsSimBase.hpp"
+#include "dynamics.hpp"
 #include "actuators.hpp"
 #include "sensors.hpp"
 #include "scenarios.hpp"
+#include "logger.hpp"
 #include "rviz_visualization.hpp"
-
-enum class DynamicsType{
-    FLIGHTGOGGLES_MULTICOPTER = 0,
-    INNO_VTOL,
-};
-
-enum class VehicleType{
-    IRIS = 0,
-    INNOPOLIS_VTOL,
-};
-
-enum class DynamicsNotation_t{
-    PX4_NED_FRD = 0,
-    ROS_ENU_FLU = 1,
-};
 
 
 /**
@@ -77,11 +64,11 @@ class Uav_Dynamics {
         std::string dynamicsTypeName_;
 
 
-        // Communication with PX4
         Actuators _actuators;
         Sensors _sensors;
         RvizVisualizator _rviz_visualizator;
         ScenarioManager _scenarioManager;
+        StateLogger _logger;
 
         // Calibration
         ros::Subscriber calibrationSub_;
