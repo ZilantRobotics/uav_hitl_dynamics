@@ -133,7 +133,7 @@ void Sensors::publishStateToCommunicator(uint8_t dynamicsNotation) {
                                        temperatureKelvin, absPressureHpa, diffPressureHpa);
 
     // Publish state to communicator
-    attitudeSensor.publish(attitudeFrdToNed);
+    attitudeSensor.publish(Converter::frdNedTofluEnu(attitudeFrdToNed));
     imuSensor.publish(accFrd, gyroFrd);
     velocitySensor_.publish(linVelNed, angVelFrd);
     magSensor.publish(gpsPosition, attitudeFrdToNed);
