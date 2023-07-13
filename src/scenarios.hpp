@@ -39,6 +39,9 @@ enum class Scenario {
 
     MAG_DISABLE,
     MAG_ENABLE,
+
+    ESC_FEEDBACK_DISABLE,
+    ESC_FEEDBACK_ENABLE,
 };
 
 struct ScenarioManager {

@@ -63,6 +63,13 @@ void ScenarioManager::scenarioCallback(std_msgs::UInt8 msg){
             _sensors.magSensor.enable();
             break;
 
+        case Scenario::ESC_FEEDBACK_DISABLE:
+            _sensors.escStatusSensor.disable();
+            break;
+        case Scenario::ESC_FEEDBACK_ENABLE:
+            _sensors.escStatusSensor.enable();
+            break;
+
         default:
             break;
     }
