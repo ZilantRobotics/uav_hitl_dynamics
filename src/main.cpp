@@ -22,7 +22,8 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <std_msgs/Time.h>
 
-#include "flightgogglesDynamicsSim.hpp"
+#include "quadcopter.hpp"
+#include "octocopter.hpp"
 #include "vtolDynamicsSim.hpp"
 #include "cs_converter.hpp"
 
@@ -89,15 +90,15 @@ int8_t Uav_Dynamics::getParamsFromRos(){
 }
 
 int8_t Uav_Dynamics::initDynamicsSimulator(){
-    const char DYNAMICS_NAME_FLIGHTGOGGLES[] = "flightgoggles_multicopter";
-    const char DYNAMICS_NAME_INNO_VTOL[] = "inno_vtol";
-    const char VEHICLE_NAME_INNOPOLIS_VTOL[] = "innopolis_vtol";
-    const char VEHICLE_NAME_IRIS[] = "iris";
-    if(info.dynamicsName == DYNAMICS_NAME_FLIGHTGOGGLES){
-        info.dynamicsType = DynamicsType::FLIGHTGOGGLES_MULTICOPTER;
-        uavDynamicsSim_ = std::make_shared<FlightgogglesDynamics>();
+    if(info.dynamicsName == "quadcopter"){
+        info.dynamicsType = DynamicsType::QUADCOPTER;
+        uavDynamicsSim_ = std::make_shared<QuadcopterDynamics>();
         info.notation = DynamicsNotation_t::ROS_ENU_FLU;
-    }else if(info.dynamicsName == DYNAMICS_NAME_INNO_VTOL){
+    }else if(info.dynamicsName == "octocopter"){
+        info.dynamicsType = DynamicsType::OCTOCOPTER;
+        uavDynamicsSim_ = std::make_shared<OctocopterDynamics>();
+        info.notation = DynamicsNotation_t::ROS_ENU_FLU;
+    }else if(info.dynamicsName == "inno_vtol"){
         uavDynamicsSim_ = std::make_shared<InnoVtolDynamicsSim>();
         info.dynamicsType = DynamicsType::INNO_VTOL;
         info.notation = DynamicsNotation_t::PX4_NED_FRD;
@@ -106,9 +107,9 @@ int8_t Uav_Dynamics::initDynamicsSimulator(){
         return -1;
     }
 
-    if(info.vehicleName == VEHICLE_NAME_INNOPOLIS_VTOL){
+    if(info.vehicleName == "innopolis_vtol"){
         info.vehicleType = VehicleType::INNOPOLIS_VTOL;
-    }else if(info.vehicleName == VEHICLE_NAME_IRIS){
+    }else if(info.vehicleName == "iris"){
         info.vehicleType = VehicleType::IRIS;
     }else{
         ROS_ERROR("Wrong vehicle. It should be 'innopolis_vtol' or 'iris'");

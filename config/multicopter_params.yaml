@@ -7,6 +7,9 @@ drag_coefficient:           0.1       # N/(m/s)
 aeromoment_coefficient_xx:  0.003     # Nm/(rad/s)^2
 aeromoment_coefficient_yy:  0.003     # Nm/(rad/s)^2
 aeromoment_coefficient_zz:  0.003     # Nm/(rad/s)^2
+vehicle_inertia_xx:         0.0100    #
+vehicle_inertia_yy:         0.0100    #
+vehicle_inertia_zz:         0.0150    #
 max_prop_speed:             2200      # rad/s
 moment_process_noise:       1.25e-7   # (Nm)^2 s
 force_process_noise:        0.0005    # N^2 s"

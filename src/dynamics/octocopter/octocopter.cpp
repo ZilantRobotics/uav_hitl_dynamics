@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 RaccoonLab.
+ * Copyright (c) 2020-2023 RaccoonLab.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,34 +16,15 @@
  * Author: Dmitry Ponomarev <ponomarevda96@gmail.com>
  */
 
-#ifndef SRC_DYNAMICS_DYNAMICS_HPP
-#define SRC_DYNAMICS_DYNAMICS_HPP
 
-enum class DynamicsType{
-    QUADCOPTER = 0,
-    INNO_VTOL,
-    OCTOCOPTER,
-};
+#include "octocopter.hpp"
+#include <iostream>
+#include <ros/ros.h>
+#include <geometry_msgs/TransformStamped.h>
 
-enum class VehicleType{
-    IRIS = 0,
-    INNOPOLIS_VTOL,
-};
+void OctocopterDynamics::initStaticMotorTransform(double momentArm){
+}
 
-enum class DynamicsNotation_t{
-    PX4_NED_FRD = 0,
-    ROS_ENU_FLU = 1,
-};
-
-struct DynamicsInfo {
-    std::string dynamicsName;
-    DynamicsType dynamicsType;
-
-    VehicleType vehicleType;
-    std::string vehicleName;
-
-    DynamicsNotation_t notation;
-};
-
-
-#endif  // SRC_DYNAMICS_DYNAMICS_HPP
+std::vector<double> OctocopterDynamics::mapCmdActuator(std::vector<double> initialCmd) const{
+    return initialCmd;
+}

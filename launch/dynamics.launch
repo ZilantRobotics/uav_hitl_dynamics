@@ -9,7 +9,7 @@
      -->
     <arg name="vehicle"                 default="innopolis_vtol"                doc="[innopolis_vtol, iris]"/>
     <arg name="airframe"                default="inno_standard_vtol"            doc="[inno_standard_vtol, babyshark_standard_vtol, iris]"/>
-    <arg name="dynamics"                default="inno_vtol"                     doc="[inno_vtol, flightgoggles_multicopter]"/>
+    <arg name="dynamics"                default="inno_vtol"                     doc="[inno_vtol, quadcopter]"/>
     <arg name="run_rviz"                default="false"                         doc="[true, false]"/>
     <arg name="run_sitl_flight_stack"   default="true"                          doc="[true means sitl, false means do nothing]"/>
     <arg name="run_sitl_communicator"   default="false"                         doc="[true means run mavlink communicator, false means do nothing]"/>
