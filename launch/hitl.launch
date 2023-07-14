@@ -1,15 +1,15 @@
 <launch>
-    <arg name="vehicle"                 default="innopolis_vtol"                doc="[innopolis_vtol, iris]"/>
-    <arg name="airframe"                default="inno_standard_vtol"            doc="[inno_standard_vtol, babyshark_standard_vtol, iris]"/>
-    <arg name="dynamics"                default="inno_vtol"                     doc="[inno_vtol, quadcopter]"/>
-    <arg name="run_rviz"                default="false"                         doc="[true, false]"/>
-    <arg name="run_inno_sim_bridge"     default="false"                         doc="[true, false]"/>
-    <arg name="run_cyphal_communicator" default="false"                         doc="[true, false]"/>
-    <arg name="run_dronecan_communicator" default="false"                       doc="[true, false]"/>
+    <arg name="vehicle"                     default="innopolis_vtol"    doc="[innopolis_vtol, iris]"/>
+    <arg name="mixer"                       default="inno_vtol_mixer"   doc="[inno_vtol_mixer, babyshark_standard_vtol_mixer, direct_mixer]"/>
+    <arg name="dynamics"                    default="inno_vtol"         doc="[inno_vtol, quadcopter]"/>
+    <arg name="run_rviz"                    default="false"             doc="[true, false]"/>
+    <arg name="run_inno_sim_bridge"         default="false"             doc="[true, false]"/>
+    <arg name="run_cyphal_communicator"     default="false"             doc="[true, false]"/>
+    <arg name="run_dronecan_communicator"   default="false"             doc="[true, false]"/>
 
     <include file="$(find innopolis_vtol_dynamics)/launch/dynamics.launch">
         <arg name="vehicle"                 value="$(arg vehicle)"/>
-        <arg name="airframe"                value="$(arg airframe)"/>
+        <arg name="mixer"                   value="$(arg mixer)"/>
         <arg name="dynamics"                value="$(arg dynamics)"/>
         <arg name="run_rviz"                value="$(arg run_rviz)"/>
         <arg name="run_inno_sim_bridge"     value="$(arg run_inno_sim_bridge)"/>
