@@ -15,25 +15,25 @@ $$ r = [x, y, z]^T $$
   
 - **Velocity (V)**: The first time derivative of the position.
 
-  $$ V = \frac{dr}{dt} = [\dot{x}, \dot{y}, \dot{z}]^T $$
+$$ V = \frac{dr}{dt} = [\dot{x}, \dot{y}, \dot{z}]^T $$
   
 - **Attitude (q)**: A quaternion representing the VTOL's orientation in space.
 
-  $$ q = [q_w, q_x, q_y, q_z]^T $$
+$$ q = [q_w, q_x, q_y, q_z]^T $$
   
 - **Angular velocity (ω)**: The time derivative of the attitude.
 
-  $$ \omega = [\omega_x, \omega_y, \omega_z]^T $$
+$$ \omega = [\omega_x, \omega_y, \omega_z]^T $$
 
 The kinematic equations relating these variables are:
 
 - The derivative of position is equal to the velocity.
 
-  $$ \frac{dr}{dt} = V $$
+$$ \frac{dr}{dt} = V $$
 
 - The derivative of quaternion is related to the angular velocity.
 
-  $$ \frac{dq}{dt} = 0.5 * [0, \omega] \otimes q $$
+$$ \frac{dq}{dt} = 0.5 * [0, \omega] \otimes q $$
 
 where:
 
