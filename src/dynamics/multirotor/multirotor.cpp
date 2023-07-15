@@ -17,14 +17,14 @@
  */
 
 
-#include "flightgogglesDynamicsSim.hpp"
+#include "octocopter.hpp"
 #include <iostream>
 #include <ros/ros.h>
 #include <geometry_msgs/TransformStamped.h>
 
 
 
-static const std::string MULTICOPTER_PARAMS_NS = "/uav/multicopter_params/";
+static const std::string MULTICOPTER_PARAMS_NS = "/uav/aerodynamics_coeffs/";
 template <class T>
 static void getParameter(const std::string& name, T& parameter, T default_value, std::string unit = ""){
   if (!ros::param::get(MULTICOPTER_PARAMS_NS + name, parameter)){
@@ -39,7 +39,7 @@ static void getParameter(const std::string& name, T& parameter, T default_value,
   }
 }
 
-int8_t FlightgogglesDynamics::init(){
+int8_t MultirotorDynamics::init(){
     // Vehicle parameters
     double vehicleMass;
     double motorTimeconstant;
@@ -76,9 +76,11 @@ int8_t FlightgogglesDynamics::init(){
     // Set gravity vector according to ROS reference axis system, see header file
     Eigen::Vector3d gravity(0., 0., -9.81);
 
+    double momentArm;
+    getParameter("moment_arm",                momentArm,                  0.08,     "m");
 
     // Create quadcopter simulator
-    multicopterSim_ = std::make_unique<MulticopterDynamicsSim>(4, thrustCoeff, torqueCoeff,
+    multicopterSim_ = std::make_unique<MulticopterDynamicsSim>(number_of_motors, thrustCoeff, torqueCoeff,
                         minPropSpeed, maxPropSpeed, motorTimeconstant, motorRotationalInertia,
                         vehicleMass, vehicleInertia,
                         aeroMomentCoefficient, dragCoeff, momentProcessNoiseAutoCorrelation,
@@ -105,63 +107,36 @@ int8_t FlightgogglesDynamics::init(){
                                   accBiasProcessNoiseAutoCorrelation, gyroBiasProcessNoiseAutoCorrelation);
     multicopterSim_->imu_.setNoiseVariance(accMeasNoiseVariance, gyroMeasNoiseVariance);
 
-    initStaticMotorTransform();
+    initStaticMotorTransform(momentArm);
 
     return 0;
 }
 
-void FlightgogglesDynamics::initStaticMotorTransform(){
-    Eigen::Isometry3d motorFrame = Eigen::Isometry3d::Identity();
-    double momentArm;
-    getParameter("moment_arm",                momentArm,                  0.08,     "m");
-
-    motorFrame.translation() = Eigen::Vector3d(momentArm, momentArm, 0.);
-    multicopterSim_->setMotorFrame(motorFrame, 1, 0);
-
-    motorFrame.translation() = Eigen::Vector3d(-momentArm, momentArm, 0.);
-    multicopterSim_->setMotorFrame(motorFrame, -1, 1);
-
-    motorFrame.translation() = Eigen::Vector3d(-momentArm, -momentArm, 0.);
-    multicopterSim_->setMotorFrame(motorFrame, 1, 2);
-
-    motorFrame.translation() = Eigen::Vector3d(momentArm, -momentArm, 0.);
-    multicopterSim_->setMotorFrame(motorFrame, -1, 3);
-}
-
-void FlightgogglesDynamics::setInitialPosition(const Eigen::Vector3d & position,
+void MultirotorDynamics::setInitialPosition(const Eigen::Vector3d & position,
                                                const Eigen::Quaterniond& attitude){
     multicopterSim_->setVehiclePosition(position, attitude);
 }
 
-void FlightgogglesDynamics::process(double dt_secs,
+void MultirotorDynamics::process(double dt_secs,
                                     const std::vector<double> & motorSpeedCommandIn,
                                     bool isCmdPercent){
     auto actuators = mapCmdActuator(motorSpeedCommandIn);
     multicopterSim_->proceedState_ExplicitEuler(dt_secs, actuators, isCmdPercent);
 }
 
-Eigen::Vector3d FlightgogglesDynamics::getVehiclePosition() const{
+Eigen::Vector3d MultirotorDynamics::getVehiclePosition() const{
     return multicopterSim_->getVehiclePosition();
 }
-Eigen::Quaterniond FlightgogglesDynamics::getVehicleAttitude() const{
+Eigen::Quaterniond MultirotorDynamics::getVehicleAttitude() const{
     return multicopterSim_->getVehicleAttitude();
 }
-Eigen::Vector3d FlightgogglesDynamics::getVehicleVelocity(void) const{
+Eigen::Vector3d MultirotorDynamics::getVehicleVelocity(void) const{
     return multicopterSim_->getVehicleVelocity();
 }
-Eigen::Vector3d FlightgogglesDynamics::getVehicleAngularVelocity(void) const{
+Eigen::Vector3d MultirotorDynamics::getVehicleAngularVelocity(void) const{
     return multicopterSim_->getVehicleAngularVelocity();
 }
-void FlightgogglesDynamics::getIMUMeasurement(Eigen::Vector3d & accOutput,
+void MultirotorDynamics::getIMUMeasurement(Eigen::Vector3d & accOutput,
                                               Eigen::Vector3d & gyroOutput){
     return multicopterSim_->getIMUMeasurement(accOutput, gyroOutput);
-}
-
-std::vector<double> FlightgogglesDynamics::mapCmdActuator(std::vector<double> initialCmd) const{
-    std::vector<double> mappedCmd;
-    mappedCmd.push_back(initialCmd[2]);     // PX4: motor 3, front left
-    mappedCmd.push_back(initialCmd[1]);     // PX4: motor 2, tail left
-    mappedCmd.push_back(initialCmd[3]);     // PX4: motor 4, tail right
-    mappedCmd.push_back(initialCmd[0]);     // PX4: motor 1, front right
-    return mappedCmd;
 }

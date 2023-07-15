@@ -139,28 +139,33 @@ void InnoVtolReverseMixer::rawActuatorsCallback(sensor_msgs::Joy msg) {
     }
 }
 
-class IrisReverseMixer : public BaseReverseMixer {
+
+class DirectMixer : public BaseReverseMixer {
     public:
-        explicit IrisReverseMixer(const ros::NodeHandle& nh) : BaseReverseMixer(nh) {
-            for (size_t channel = 0; channel < 4; channel++) {
+        explicit DirectMixer(const ros::NodeHandle& nh) : BaseReverseMixer(nh) {
+            for (size_t channel = 0; channel < MAX_CHANNELS; channel++) {
                 mappedActuatorMsg_.axes.push_back(0);
             }
         }
-        ~IrisReverseMixer() final = default;
+        ~DirectMixer() final = default;
     protected:
         void rawActuatorsCallback(sensor_msgs::Joy msg) override;
+        static constexpr uint8_t MAX_CHANNELS = 8;
 };
-void IrisReverseMixer::rawActuatorsCallback(sensor_msgs::Joy msg) {
-    if (msg.axes.size() >= 4) {
-        mappedActuatorMsg_.axes[0] = msg.axes[0];
-        mappedActuatorMsg_.axes[1] = msg.axes[1];
-        mappedActuatorMsg_.axes[2] = msg.axes[2];
-        mappedActuatorMsg_.axes[3] = msg.axes[3];
-
-        mappedActuatorMsg_.header = msg.header;
-        mappedActuatorPub_.publish(mappedActuatorMsg_);
+void DirectMixer::rawActuatorsCallback(sensor_msgs::Joy msg) {
+    if (msg.axes.size() < 4) {
+        return;
     }
+
+    auto channels_amount = std::min(MAX_CHANNELS, (uint8_t)msg.axes.size());
+    for (uint8_t idx = 0; idx < channels_amount; idx++) {
+        mappedActuatorMsg_.axes[idx] = msg.axes[idx];
+    }
+
+    mappedActuatorMsg_.header = msg.header;
+    mappedActuatorPub_.publish(mappedActuatorMsg_);
 }
+constexpr uint8_t DirectMixer::MAX_CHANNELS;
 
 
 int main(int argc, char **argv){
@@ -170,24 +175,24 @@ int main(int argc, char **argv){
     }
 
     ros::NodeHandle node_handler("inno_vtol_reverse_mixer");
-    std::string airframe;
-    if(!node_handler.getParam("airframe", airframe)){
-        ROS_ERROR("ReverseMixer: There is no `airframe` parameter.");
+    std::string mixer;
+    if(!node_handler.getParam("mixer", mixer)){
+        ROS_ERROR("ReverseMixer: There is no `mixer` parameter.");
         return -1;
     }
 
     std::unique_ptr<BaseReverseMixer> reverseMixer;
-    if (airframe == "babyshark_standard_vtol") {
+    if (mixer == "babyshark_standard_vtol_mixer") {
         reverseMixer = std::make_unique<BabysharkReverseMixer>(node_handler);
-    } else if (airframe == "inno_standard_vtol") {
+    } else if (mixer == "inno_vtol_mixer") {
         reverseMixer = std::make_unique<InnoVtolReverseMixer>(node_handler);
-    } else if (airframe == "iris") {
-        reverseMixer = std::make_unique<IrisReverseMixer>(node_handler);
+    } else if (mixer == "direct_mixer") {
+        reverseMixer = std::make_unique<DirectMixer>(node_handler);
     } else {
-        ROS_ERROR("ReverseMixer: Wrong `/uav/sim_params/airframe` parameter.");
+        ROS_ERROR("ReverseMixer: Wrong `/uav/sim_params/mixer` parameter.");
         return -1;
     }
-    ROS_INFO_STREAM("ReverseMixer: airframe is " << airframe.c_str());
+    ROS_INFO_STREAM("ReverseMixer: mixer is " << mixer.c_str());
 
     if (reverseMixer->init() == -1){
         ROS_ERROR("Shutdown.");

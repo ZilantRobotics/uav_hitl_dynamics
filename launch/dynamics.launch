@@ -7,16 +7,17 @@
         Prerequirements for HITL, for example for cuav v5:
         make px4_fmu-v5_default upload
      -->
-    <arg name="vehicle"                 default="innopolis_vtol"                doc="[innopolis_vtol, iris]"/>
-    <arg name="airframe"                default="inno_standard_vtol"            doc="[inno_standard_vtol, babyshark_standard_vtol, iris]"/>
-    <arg name="dynamics"                default="inno_vtol"                     doc="[inno_vtol, flightgoggles_multicopter]"/>
-    <arg name="run_rviz"                default="false"                         doc="[true, false]"/>
-    <arg name="run_sitl_flight_stack"   default="true"                          doc="[true means sitl, false means do nothing]"/>
-    <arg name="run_sitl_communicator"   default="false"                         doc="[true means run mavlink communicator, false means do nothing]"/>
-    <arg name="run_hitl_communicator"   default="false"                         doc="[true means run uavcan  communicator, false means do nothing]"/>
-    <arg name="run_inno_sim_bridge"     default="false"                         doc="[true, false]"/>
-    <arg name="run_cyphal_communicator" default="false"                         doc="[true, false]"/>
-    <arg name="run_dronecan_communicator" default="false"                       doc="[true, false]"/>
+    <arg name="vehicle"                     default="innopolis_vtol"    doc="[innopolis_vtol, iris]"/>
+    <arg name="mixer"                       default="inno_vtol_mixer"   doc="[inno_vtol_mixer, babyshark_standard_vtol_mixer, direct_mixer]"/>
+    <arg name="dynamics"                    default="inno_vtol"         doc="[inno_vtol, quadcopter]"/>
+    <arg name="vehicle_params"              default="quadrotor_params"  doc="[quadrotor_params, octorotor_params, vtol_params]"/>
+    <arg name="run_rviz"                    default="false"             doc="[true, false]"/>
+    <arg name="run_sitl_flight_stack"       default="true"              doc="[true means sitl, false means do nothing]"/>
+    <arg name="run_sitl_communicator"       default="false"             doc="[true means run mavlink communicator, false means do nothing]"/>
+    <arg name="run_hitl_communicator"       default="false"             doc="[true means run uavcan  communicator, false means do nothing]"/>
+    <arg name="run_inno_sim_bridge"         default="false"             doc="[true, false]"/>
+    <arg name="run_cyphal_communicator"     default="false"             doc="[true, false]"/>
+    <arg name="run_dronecan_communicator"   default="false"             doc="[true, false]"/>
 
 
     <!-- 1. Run SITL flight stack -->
@@ -39,7 +40,7 @@
     <group if="$(arg run_hitl_communicator)">
         <node pkg="innopolis_vtol_dynamics" type="inno_vtol_reverse_mixer_node" name="inno_vtol_reverse_mixer" output="screen">
             <param name="vehicle"   value="$(arg vehicle)"  />
-            <param name="airframe"  value="$(arg airframe)" />
+            <param name="mixer"     value="$(arg mixer)" />
         </node>
         <group if="$(arg run_dronecan_communicator)">
             <include file="$(find innopolis_vtol_dynamics)/launch/uavcan_communicator.launch">
@@ -52,7 +53,9 @@
     </group>
 
     <!-- 3. Run dynamics simulation -->
-    <include file="$(find innopolis_vtol_dynamics)/launch/load_parameters.launch"/>
+    <include file="$(find innopolis_vtol_dynamics)/launch/load_parameters.launch">
+        <arg name="vehicle_params" value="$(arg vehicle_params)" />
+    </include>
     <node pkg="innopolis_vtol_dynamics" type="node" name="inno_dynamics_sim" output="screen" required="true">
         <param name="vehicle"   value="$(arg vehicle)"  />
         <param name="dynamics"  value="$(arg dynamics)" />

@@ -43,7 +43,7 @@ InnoVtolDynamicsSim::InnoVtolDynamicsSim(){
 
 int8_t InnoVtolDynamicsSim::init(){
     loadTables("/uav/aerodynamics_coeffs/");
-    loadParams("/uav/vtol_params/");
+    loadParams("/uav/aerodynamics_coeffs/");
     return 0;
 }
 
