@@ -87,9 +87,13 @@ Our model implements a data-driven and empirical approach, where aerodynamic for
 
 Aerodynamic forces, i.e., lift, drag, and sideslip forces, can be described by the following equations:
 
-$$F_{lift} = \frac{1}{2} \cdot q \cdot C_{L_{\alpha}}$$
-$$F_{drag} = \frac{1}{2} \cdot q \cdot C_{D_{\alpha}}$$
-$$F_{sideslip} = \frac{1}{2} \cdot q \cdot (C_{S_{\alpha}} + C_{S_{\beta}} + C_{S_r})$$
+```math
+\displaylines{
+F_{lift} = \frac{1}{2} \cdot q \cdot C_{L_{\alpha}}\\
+F_{drag} = \frac{1}{2} \cdot q \cdot C_{D_{\alpha}}\\
+F_{sideslip} = \frac{1}{2} \cdot q \cdot (C_{S_{\alpha}} + C_{S_{\beta}} + C_{S_r})\\
+}
+```
 
 Where:
 - $q = \rho \cdot V^2 \cdot S$ is the dynamic pressure with $\rho$ as atmosphere pressure, $V$ as airspeed, and $S$ as wing area.
@@ -97,9 +101,13 @@ Where:
 
 Similarly, aerodynamic moments, divided into two terms, depend on airspeed, angle of attack, and control surface positions:
 
-$$M_{x} = \frac{1}{2} \cdot q \cdot l \cdot (C_{mx} + C_{mxa} \cdot {\delta}_{a})$$
-$$M_{y} = \frac{1}{2} \cdot q \cdot l \cdot (C_{my} + C_{mye} \cdot {\delta}_{e})$$
-$$M_{z} = \frac{1}{2} \cdot q \cdot l \cdot (C_{mz} + C_{mzr} \cdot {\delta}_{r})$$
+```math
+\displaylines{
+M_{x} = \frac{1}{2} \cdot q \cdot l \cdot (C_{mx} + C_{mxa} \cdot {\delta}_{a})\\
+M_{y} = \frac{1}{2} \cdot q \cdot l \cdot (C_{my} + C_{mye} \cdot {\delta}_{e})\\
+M_{z} = \frac{1}{2} \cdot q \cdot l \cdot (C_{mz} + C_{mzr} \cdot {\delta}_{r})\\
+}
+```
 
 Where:
 - $l$ is the characteristic length,
