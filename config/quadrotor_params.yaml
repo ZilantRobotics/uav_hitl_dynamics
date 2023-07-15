@@ -14,7 +14,7 @@ max_prop_speed:             2200      # rad/s
 moment_process_noise:       1.25e-7   # (Nm)^2 s
 force_process_noise:        0.0005    # N^2 s"
 
-moment_arm:                 0.08      # m ???
+moment_arm:                 0.08      # m
 
 accelerometer_biasprocess:  0.0       # m^2/s^5, 1.0e-7
 gyroscope_biasprocess:      0.0       # rad^2/s^3, 1.0e-7

@@ -1,8 +1,8 @@
-# Octorotor Coaxial dynamics
+# Quadcopter dynamics
 
 PX4 is based on FRD notation and has the following motors enumeration:
 
-<img src="https://dev.px4.io/master/assets/airframes/types/OctoRotorXCoaxial.svg" alt="drawing" width="150">
+<img src="https://dev.px4.io/master/assets/airframes/types/QuadRotorX.svg" alt="drawing" width="150">
 
 The dynamics library is based on FLU notation and has the following motors enumeration:
 

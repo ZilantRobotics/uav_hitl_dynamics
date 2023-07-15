@@ -23,8 +23,44 @@
 #include <geometry_msgs/TransformStamped.h>
 
 void OctocopterDynamics::initStaticMotorTransform(double momentArm){
+    Eigen::Isometry3d motorFrame = Eigen::Isometry3d::Identity();
+
+    motorFrame.translation() = Eigen::Vector3d(momentArm, momentArm, 0.);
+    multicopterSim_->setMotorFrame(motorFrame, 1, 0);
+
+    motorFrame.translation() = Eigen::Vector3d(-momentArm, momentArm, 0.);
+    multicopterSim_->setMotorFrame(motorFrame, -1, 1);
+
+    motorFrame.translation() = Eigen::Vector3d(-momentArm, -momentArm, 0.);
+    multicopterSim_->setMotorFrame(motorFrame, 1, 2);
+
+    motorFrame.translation() = Eigen::Vector3d(momentArm, -momentArm, 0.);
+    multicopterSim_->setMotorFrame(motorFrame, -1, 3);
+
+    motorFrame.translation() = Eigen::Vector3d(momentArm, momentArm, 0.);
+    multicopterSim_->setMotorFrame(motorFrame, 1, 4);
+
+    motorFrame.translation() = Eigen::Vector3d(-momentArm, momentArm, 0.);
+    multicopterSim_->setMotorFrame(motorFrame, -1, 5);
+
+    motorFrame.translation() = Eigen::Vector3d(-momentArm, -momentArm, 0.);
+    multicopterSim_->setMotorFrame(motorFrame, 1, 6);
+
+    motorFrame.translation() = Eigen::Vector3d(momentArm, -momentArm, 0.);
+    multicopterSim_->setMotorFrame(motorFrame, -1, 7);
 }
 
 std::vector<double> OctocopterDynamics::mapCmdActuator(std::vector<double> initialCmd) const{
-    return initialCmd;
+    std::vector<double> mappedCmd;
+    mappedCmd.push_back(initialCmd[1]);
+    mappedCmd.push_back(initialCmd[2]);
+    mappedCmd.push_back(initialCmd[3]);
+    mappedCmd.push_back(initialCmd[0]);
+
+    mappedCmd.push_back(initialCmd[4]);
+    mappedCmd.push_back(initialCmd[7]);
+    mappedCmd.push_back(initialCmd[6]);
+    mappedCmd.push_back(initialCmd[5]);
+
+    return mappedCmd;
 }

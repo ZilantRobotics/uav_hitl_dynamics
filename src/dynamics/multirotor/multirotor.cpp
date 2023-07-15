@@ -24,7 +24,7 @@
 
 
 
-static const std::string MULTICOPTER_PARAMS_NS = "/uav/multicopter_params/";
+static const std::string MULTICOPTER_PARAMS_NS = "/uav/aerodynamics_coeffs/";
 template <class T>
 static void getParameter(const std::string& name, T& parameter, T default_value, std::string unit = ""){
   if (!ros::param::get(MULTICOPTER_PARAMS_NS + name, parameter)){

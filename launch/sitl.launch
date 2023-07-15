@@ -1,5 +1,6 @@
 <launch>
     <arg name="vehicle"                 default="innopolis_vtol"        doc="[innopolis_vtol, iris]"/>
+    <arg name="vehicle_params"          default="quadrotor_params"      doc="[quadrotor_params, octorotor_params, vtol_params]"/>
     <arg name="mixer"                   default="inno_vtol_mixer"       doc="[inno_vtol_mixer, babyshark_standard_vtol_mixer, direct_mixer]"/>
     <arg name="dynamics"                default="inno_vtol"             doc="[inno_vtol, quadcopter]"/>
     <arg name="run_rviz"                default="false"                 doc="[true, false]"/>
@@ -8,6 +9,7 @@
 
     <include file="$(find innopolis_vtol_dynamics)/launch/dynamics.launch">
         <arg name="vehicle"                 value="$(arg vehicle)"/>
+        <arg name="vehicle_params"          value="$(arg vehicle_params)"/>
         <arg name="mixer"                   value="$(arg mixer)"/>
         <arg name="dynamics"                value="$(arg dynamics)"/>
         <arg name="run_rviz"                value="$(arg run_rviz)"/>
