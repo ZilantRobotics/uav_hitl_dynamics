@@ -160,3 +160,8 @@ and $\hat{e}_z$ is the unit vector along the z-axis (downwards).
 This equation computes the net moment created by the thrusts and accelerations of the motors. The first term in the sum represents the moment due to the thrust force (force times distance), while the second term represents the moment due to the change in motor speed (moment of inertia times angular acceleration). 
 
 Please note that these are highly simplified models of the motor dynamics and in reality, these can be much more complex including effects of current, voltage, temperature, magnetic fields and more. The simplicity of this model makes it computationally efficient and good enough for our applications.
+
+
+# Parameters and Configurating
+
+Please refer to [`MultirotorDynamics` README.md](../multirotor/README.md) `Drone Simulation Configuration` Section.
