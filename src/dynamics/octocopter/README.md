@@ -19,7 +19,7 @@ The dynamics library is based on FLU notation and has the following motors enume
 
 # Mathematical Model
 
-For the detailed description of basic mathematical model used, please, check [quadcopter/README.md, Mathematical Model Section](../quadcopter/README.md)
+For the detailed description of basic mathematical model used, please, check [multirotor/README.md, Mathematical Model Section](../multirotor/README.md)
 
 # Parameters and Configurating
 
