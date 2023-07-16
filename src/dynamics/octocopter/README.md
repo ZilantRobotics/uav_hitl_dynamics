@@ -16,3 +16,7 @@ The dynamics library is based on FLU notation and has the following motors enume
 | 5 | tail left   | negative moment around | -0.08, +0.08
 | 6 | tail right  | positive moment around | -0.08, -0.08
 | 7 | front right | negative moment around | +0.08, -0.08
+
+# Mathematical Model
+
+For the detailed description of basic mathematical model used, please, check [quadcopter/README.md, Mathematical Model Section](../quadcopter/README.md)
