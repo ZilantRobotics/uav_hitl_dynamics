@@ -16,4 +16,4 @@ init_pose: [0.00, 0.00, 0.0,
 esc_status: true
 ice_status: true
 fuel_tank_status: true
-battery_status: false
+battery_status: true
