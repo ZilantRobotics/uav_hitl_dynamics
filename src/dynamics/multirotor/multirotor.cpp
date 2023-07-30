@@ -140,3 +140,12 @@ void MultirotorDynamics::getIMUMeasurement(Eigen::Vector3d & accOutput,
                                               Eigen::Vector3d & gyroOutput){
     return multicopterSim_->getIMUMeasurement(accOutput, gyroOutput);
 }
+
+bool MultirotorDynamics::getMotorsRpm(std::vector<double>& motorsRpm) {
+    const auto motorsSpeed = multicopterSim_->getMotorsSpeed();
+    for (auto motorSpeed : motorsSpeed) {
+        motorsRpm.push_back(motorSpeed * 9.54929658551);  // rad/sec to RPM
+    }
+
+    return true;
+}

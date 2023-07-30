@@ -329,6 +329,10 @@ Eigen::Vector3d MulticopterDynamicsSim::getVehicleAngularVelocity(void){
     return angularVelocity_;
 }
 
+const std::vector<double>& MulticopterDynamicsSim::getMotorsSpeed() const{
+    return motorSpeed_;
+}
+
 /**
  * @brief Get total specific force acting on vehicle, excluding gravity force
  * 

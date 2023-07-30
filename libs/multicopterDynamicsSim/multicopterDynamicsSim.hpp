@@ -61,6 +61,7 @@ class MulticopterDynamicsSim{
         Eigen::Quaterniond getVehicleAttitude(void);
         Eigen::Vector3d getVehicleVelocity(void);
         Eigen::Vector3d getVehicleAngularVelocity(void);
+        const std::vector<double>& getMotorsSpeed() const;
         
         void proceedState_ExplicitEuler(double dt_secs, const std::vector<double> & motorSpeedCommand, bool isCmdPercent = false);
         void proceedState_RK4(double dt_secs, const std::vector<double> & motorSpeedCommand, bool isCmdPercent = false);
