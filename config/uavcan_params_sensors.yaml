@@ -1,10 +1,8 @@
 uavcan_node_id:           46
-uavcan_node_name:         "inno.sensors"
+uavcan_node_name:         "hitl.sensors"
 bridges:                  ["DiffPressureRosToUavcan",           "/uav/raw_air_data",
-                           "ImuRosToUavcan",                    "/uav/imu",
 
                            "EscStatusRosToUavcan",              "/uav/esc_status",
                            "IceReciprocatingStatusRosToUavcan", "/uav/ice",
-                           "IceFuelTankStatusRosToUavcan",      "/uav/fuel_tank",
-                           "BatteryInfoRosToUavcan",            "/uav/battery"
+                           "IceFuelTankStatusRosToUavcan",      "/uav/fuel_tank"
 ]
