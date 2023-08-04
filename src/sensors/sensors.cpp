@@ -159,5 +159,5 @@ void Sensors::publishStateToCommunicator(uint8_t dynamicsNotation) {
     }
     fuelTankSensor.publish(fuelLevelPercentage);
 
-    batteryInfoSensor.publish(90.0f);
+    batteryInfoSensor.publish(1.00f);
 }

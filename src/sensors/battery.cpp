@@ -26,7 +26,7 @@ bool BatteryInfoSensor::publish(float percentage) {
     auto crntTimeSec = ros::Time::now().toSec();
     if(_isEnabled && (nextPubTimeSec_ < crntTimeSec)){
         sensor_msgs::BatteryState batteryInfoMsg;
-        batteryInfoMsg.voltage = 4.1f;
+        batteryInfoMsg.voltage = 15.1f;
         batteryInfoMsg.percentage = percentage;
         batteryInfoMsg.capacity = 6;
         publisher_.publish(batteryInfoMsg);
