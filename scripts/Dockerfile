@@ -19,7 +19,7 @@ COPY install_requirements.sh install_requirements.sh
 RUN ./install_requirements.sh
 
 # 3. Install dependencies
-RUN git clone https://github.com/InnopolisAero/geographiclib_conversions.git /catkin_ws/src/geographiclib_conversions
+RUN git clone https://github.com/RaccoonlabDev/geographiclib_conversions.git /catkin_ws/src/geographiclib_conversions
 RUN /catkin_ws/src/geographiclib_conversions/scripts/install.sh
 RUN source /opt/ros/$ROS_DISTRO/setup.bash && cd /catkin_ws && catkin build
 
