@@ -1,5 +1,4 @@
 <launch>
-    <!-- https://github.com/InnopolisAero/inno_sim_interface -->
     <node pkg="inno_sim_interface" type="innosim_vtol_bridge.py" name="innosim_vtol_bridge"/>
 
     <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher1" args="0 0 0 0 0 0 gimbal velodyne 10" />
