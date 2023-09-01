@@ -12,8 +12,11 @@ jobs:
 
       - name: Install cpplint
         run: |
-          sudo apt-get update && \
-          sudo apt-get -y install python3 python3-pip && \
+          sudo apt-get update
+          sudo apt-get -y install python3 python3-pip
           python3 -m pip install cpplint
 
-      - run: cd catkin_ws/src/repository && chmod +x scripts/cpplint.sh && ./scripts/cpplint.sh
+      - run: |
+          cd catkin_ws/src/repository
+          chmod +x scripts/cpplint.sh
+          ./scripts/cpplint.sh
