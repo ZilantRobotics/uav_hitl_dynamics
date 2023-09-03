@@ -14,7 +14,8 @@ jobs:
     steps:
       - name: Install requirements
         run: |
-          apt-get update && apt-get install -y git
+          apt-get update
+          apt-get install -y git
           apt-get install -y python-catkin-tools python-pip python3-pip
           apt-get install -y python-rosdep python-rosinstall python-rosinstall-generator python-wstool build-essential python-catkin-tools
 
