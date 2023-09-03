@@ -1,4 +1,4 @@
-name: tests
+name: SonarCloud
 
 on: [push]
 
@@ -24,24 +24,26 @@ jobs:
           path: catkin_ws/src/uav_hitl_dynamics
 
       - name: Install requirements
-        run: |
-          ./catkin_ws/src/uav_hitl_dynamics/install_requirements.sh
-          sudo apt-get install psmisc
+        run: ./catkin_ws/src/uav_hitl_dynamics/install_requirements.sh
 
       - name: Install dependencies
         run: |
           git clone https://github.com/RaccoonlabDev/geographiclib_conversions.git catkin_ws/src/geographiclib_conversions
           ./catkin_ws/src/geographiclib_conversions/scripts/install.sh
 
-      - name: Build
+      - run: apt install -y curl unzip
+      - name: Install sonar-scanner and build-wrapper
+        uses: SonarSource/sonarcloud-github-c-cpp@v1
+
+      - name: Run build-wrapper
         run: |
           source /opt/ros/$ROS_DISTRO/setup.bash
           cd catkin_ws
-          catkin build
+          build-wrapper-linux-x86-64 --out-dir src/uav_hitl_dynamics/bw-output catkin build
 
-      - name: Tests
+      - name: Run sonar-scanner
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          source /opt/ros/$ROS_DISTRO/setup.bash
-          source catkin_ws/devel/setup.bash
-          cd catkin_ws/src/uav_hitl_dynamics/
-          source catkin_test.sh
+          cd catkin_ws/src/uav_hitl_dynamics
+          sonar-scanner

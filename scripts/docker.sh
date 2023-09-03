@@ -3,7 +3,7 @@
 print_help() {
    echo "Wrapper under docker API for VTOL dynamics.
 It encapsulates all necessary docker flags and properly handles image versions.
-https://github.com/RaccoonlabDev/inno_vtol_dynamics
+https://github.com/RaccoonlabDev/uav_hitl_dynamics
 
 usage: docker.sh [command]
 
@@ -22,7 +22,7 @@ DOCKERFILE_PATH=$DOCKERFILE_DIR/Dockerfile
 
 setup_image_name_and_version() {
     TAG_NAME=v0.2.0
-    DOCKERHUB_REPOSITOTY=ponomarevda/inno_vtol_dynamics
+    DOCKERHUB_REPOSITOTY=ponomarevda/uav_hitl_dynamics
 
     if uname -m | grep -q 'aarch64'; then
         TAG_NAME="$TAG_NAME""arm64"
