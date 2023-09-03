@@ -21,10 +21,10 @@ jobs:
 
       - uses: actions/checkout@v2
         with:
-          path: catkin_ws/src/inno_vtol_dynamics
+          path: catkin_ws/src/uav_hitl_dynamics
 
       - name: Install requirements
-        run: ./catkin_ws/src/inno_vtol_dynamics/install_requirements.sh
+        run: ./catkin_ws/src/uav_hitl_dynamics/install_requirements.sh
 
       - name: Dependencies
         run: |
