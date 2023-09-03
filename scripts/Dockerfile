@@ -28,6 +28,7 @@ WORKDIR /catkin_ws/src/inno_vtol_dynamics
 COPY libs/              libs/
 COPY meshes/            meshes/
 COPY src/               src/
+COPY tests/             tests/
 COPY urdf/              urdf/
 COPY CMakeLists.txt     CMakeLists.txt
 COPY package.xml        package.xml
