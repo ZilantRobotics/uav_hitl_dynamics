@@ -98,7 +98,7 @@ int8_t Uav_Dynamics::initDynamicsSimulator(){
         info.dynamicsType = DynamicsType::OCTOCOPTER;
         uavDynamicsSim_ = std::make_shared<OctocopterDynamics>();
         info.notation = DynamicsNotation_t::ROS_ENU_FLU;
-    }else if(info.dynamicsName == "inno_vtol"){
+    }else if(info.dynamicsName == "vtol_dynamics"){
         uavDynamicsSim_ = std::make_shared<InnoVtolDynamicsSim>();
         info.dynamicsType = DynamicsType::VTOL;
         info.notation = DynamicsNotation_t::PX4_NED_FRD;

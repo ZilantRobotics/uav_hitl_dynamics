@@ -10,4 +10,4 @@ The package supports 3 types of the vehicles:
 
 The dynamics are based on 2 dynamics libraries:
 - FlightGoggles Mltirotor Dynamics. For details, please visit [mit-aera/FlightGoggles](https://github.com/mit-aera/FlightGoggles).
-- inno_vtol dynamics. Fir details, please check [vtol/README.md](vtol/README.md),
+- vtol_dynamics. For details, please check [vtol/README.md](vtol/README.md),

@@ -184,7 +184,7 @@ int main(int argc, char **argv){
     std::unique_ptr<BaseReverseMixer> reverseMixer;
     if (mixer == "babyshark_standard_vtol_mixer") {
         reverseMixer = std::make_unique<BabysharkReverseMixer>(node_handler);
-    } else if (mixer == "inno_vtol_mixer") {
+    } else if (mixer == "vtol_13070_mixer") {
         reverseMixer = std::make_unique<InnoVtolReverseMixer>(node_handler);
     } else if (mixer == "direct_mixer") {
         reverseMixer = std::make_unique<DirectMixer>(node_handler);
