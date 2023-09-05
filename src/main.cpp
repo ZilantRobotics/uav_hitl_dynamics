@@ -100,7 +100,7 @@ int8_t Uav_Dynamics::initDynamicsSimulator(){
         info.notation = DynamicsNotation_t::ROS_ENU_FLU;
     }else if(info.dynamicsName == "inno_vtol"){
         uavDynamicsSim_ = std::make_shared<InnoVtolDynamicsSim>();
-        info.dynamicsType = DynamicsType::INNO_VTOL;
+        info.dynamicsType = DynamicsType::VTOL;
         info.notation = DynamicsNotation_t::PX4_NED_FRD;
     }else{
         ROS_ERROR("Dynamics type with name \"%s\" is not exist.", info.dynamicsName.c_str());
@@ -261,7 +261,7 @@ void Uav_Dynamics::publishToRos(double period){
 
         static auto next_time = std::chrono::system_clock::now();
         if(crnt_time > next_time){
-            if (info.dynamicsType == DynamicsType::INNO_VTOL) {
+            if (info.dynamicsType == DynamicsType::VTOL) {
                 _rviz_visualizator.publish((uint8_t)info.notation);
             }
             next_time += std::chrono::milliseconds(int(50));

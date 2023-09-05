@@ -264,7 +264,7 @@ void InnoVtolDynamicsSim::process(double dtSecs,
     Eigen::Vector3d airSpeed = calculateAirSpeed(rotationMatrix, state_.linearVel, vel_w);
     double AoA = calculateAnglesOfAtack(airSpeed);
     double AoS = calculateAnglesOfSideslip(airSpeed);
-    auto actuators = isCmdPercent ? mapCmdToActuatorInnoVTOL(motorCmd) : motorCmd;
+    auto actuators = isCmdPercent ? mapGeneralCmdToInternal(motorCmd) : motorCmd;
     updateActuators(actuators, dtSecs);
     calculateAerodynamics(airSpeed, AoA, AoS, actuators[5], actuators[6], actuators[7],
                           state_.forces.aero, state_.moments.aero);
@@ -274,20 +274,20 @@ void InnoVtolDynamicsSim::process(double dtSecs,
 
 /**
  * @note Map motors indexes from InnoVTOL mixer into internal representation
- * @param cmd Input indexes should correspond InnoVTOL PX4 mixer
- * Few notes:
- * 4 - aileron default value is 0.5 and it can be [0, +1], where 0 wants to rotate to the right
- * 5 - elevator default value is 0 and it can be [-1, +1], where -1 wants ...
- * 6 - rudder default value is 0 and it can be [-1, +1], where -1 wants ...
- * 7 - throttle default value is 0 and it can be [0, +1]
+ * @param cmd General VTOL actuator command is:
+ * 0-3  Copter
+ * 4    Ailerons    [ 0.0, +1.0], where 0 wants to rotate to the right
+ * 5    Elevators   [-1.0, +1.0], where -1 wants ...
+ * 6    Rudders     [-1.0, +1.0], where -1 wants ...
+ * 7    Throttle    [0.0,  +1.0]
  * @return Output indexes will be:
- * 0 - 3 are the same copter indexes
- * 4 - throttle
- * 5 - aileron
- * 6 - elevator
- * 7 - rudder
+ * 0-3  Copter
+ * 4    Throttle    [0.0,  +1.0]
+ * 5    Ailerons    [-1.0, +1.0]
+ * 6    Elevators   [-1.0, +1.0]
+ * 7    Rudders     [-1.0, +1.0]
  */
-std::vector<double> InnoVtolDynamicsSim::mapCmdToActuatorInnoVTOL(const std::vector<double>& cmd) const{
+std::vector<double> InnoVtolDynamicsSim::mapGeneralCmdToInternal(const std::vector<double>& cmd) const{
     if(cmd.size() != 8){
         std::cerr << "ERROR: InnoVtolDynamicsSim wrong control size. It is " << cmd.size()
                   << ", but should be 8" << std::endl;
@@ -300,10 +300,10 @@ std::vector<double> InnoVtolDynamicsSim::mapCmdToActuatorInnoVTOL(const std::vec
     actuators[2] = cmd[2];
     actuators[3] = cmd[3];
 
-    actuators[4] = cmd[7];
-    actuators[5] = cmd[4];      // aileron
-    actuators[6] = cmd[5];      // elevator
-    actuators[7] = cmd[6];      // rudder
+    actuators[4] = cmd[7];      // ICE
+    actuators[5] = cmd[4];      // ailerons
+    actuators[6] = cmd[5];      // elevators
+    actuators[7] = cmd[6];      // rudders
 
     for(size_t idx = 0; idx < 5; idx++){
         actuators[idx] = boost::algorithm::clamp(actuators[idx], 0.0, +1.0);
