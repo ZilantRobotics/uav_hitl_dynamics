@@ -19,4 +19,4 @@ The typical workflow of setpint is the following:
 There are 3 types of mixers:
 1. Direct mixer is the most simplest. It just copy data raw date to the actual date
 2. babyshark_standard_vtol_mixer fix input with respect to the Babyshark airframe
-3. inno_vtol_mixer is similar to the previous one
+3. vtol_13070_mixer is similar to the previous one
