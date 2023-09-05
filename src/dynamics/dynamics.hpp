@@ -21,7 +21,7 @@
 
 enum class DynamicsType{
     QUADCOPTER = 0,
-    INNO_VTOL,
+    VTOL,
     OCTOCOPTER,
 };
 

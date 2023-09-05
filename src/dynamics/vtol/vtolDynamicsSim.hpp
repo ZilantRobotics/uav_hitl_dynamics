@@ -219,7 +219,7 @@ class InnoVtolDynamicsSim : public UavDynamicsSimBase{
     private:
         void loadTables(const std::string& path);
         void loadParams(const std::string& path);
-        std::vector<double> mapCmdToActuatorInnoVTOL(const std::vector<double>& cmd) const;
+        std::vector<double> mapGeneralCmdToInternal(const std::vector<double>& cmd) const;
         void updateActuators(std::vector<double>& cmd, double dtSecs);
         Eigen::Vector3d calculateAirSpeed(const Eigen::Matrix3d& rotationMatrix,
                                     const Eigen::Vector3d& estimatedVelocity,
