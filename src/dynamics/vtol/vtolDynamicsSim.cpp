@@ -273,45 +273,6 @@ void InnoVtolDynamicsSim::process(double dtSecs,
 
 
 /**
- * @note Map motors indexes from StandardVTOL mixer into internal representation
- * Output indexes will be:
- * 0-3 - copter indexes, where 0 - right forward, 1 - left backward, 2 - left forward, 3 - right backward
- * 4 - throttle
- * 5 - aileron
- * 6 - elevator
- * 7 - rudder (always equal to zero, because there is no control for it)
- */
-std::vector<double> InnoVtolDynamicsSim::mapCmdToActuatorStandardVTOL(const std::vector<double>& cmd) const{
-    if(cmd.size() != 8){
-        std::cerr << "ERROR: InnoVtolDynamicsSim wrong control size. It is " << cmd.size()
-                  << ", but should be 8" << std::endl;
-        return cmd;
-    }
-
-    std::vector<double> actuators(8);
-    actuators[0] = cmd[0];
-    actuators[1] = cmd[1];
-    actuators[2] = cmd[2];
-    actuators[3] = cmd[3];
-    actuators[4] = cmd[4];
-    actuators[5] = (cmd[5] - cmd[6]) / 2;   // aileron      roll
-    actuators[6] = -cmd[7];                 // elevator     pitch
-    actuators[7] = 0.0;                     // rudder       yaw
-
-    for(size_t idx = 0; idx < 5; idx++){
-        actuators[idx] = boost::algorithm::clamp(actuators[idx], 0.0, +1.0);
-        actuators[idx] *= params_.actuatorMax[idx];
-    }
-
-    for(size_t idx = 5; idx < 8; idx++){
-        actuators[idx] = boost::algorithm::clamp(actuators[idx], -1.0, +1.0);
-        actuators[idx] *= (actuators[idx] >= 0) ? params_.actuatorMax[idx] : -params_.actuatorMin[idx];
-    }
-
-    return actuators;
-}
-
-/**
  * @note Map motors indexes from InnoVTOL mixer into internal representation
  * @param cmd Input indexes should correspond InnoVTOL PX4 mixer
  * Few notes:
