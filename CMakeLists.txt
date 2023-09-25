@@ -1,12 +1,9 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(innopolis_vtol_dynamics)
 
-# Default to building in release mode when no options are set
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
-endif(NOT CMAKE_BUILD_TYPE)
-
-SET(CMAKE_BUILD_TYPE Debug)
+endif()
 
 find_package(catkin REQUIRED COMPONENTS
     roscpp
