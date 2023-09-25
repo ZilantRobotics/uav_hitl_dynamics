@@ -1,5 +1,6 @@
 uavcan_node_id:           41
-uavcan_node_name:         "inno.actuators"
-bridges:                  ["ActuatorsUavcanToRos",              "/uav/actuators_raw",
+uavcan_node_name:         "hitl.actuators"
+bridges:                  ["RawCommandUavcanToRos",             "/uav/actuators_raw",
+                           "ArrayCommandUavcanToRos",           "/uav/servo",
                            "ArmUavcanToRos",                    "/uav/arm"
 ]

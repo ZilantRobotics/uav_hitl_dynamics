@@ -310,7 +310,6 @@ std::vector<double> InnoVtolDynamicsSim::mapGeneralCmdToInternal(const std::vect
         actuators[idx] *= params_.actuatorMax[idx];
     }
 
-    actuators[5] = (actuators[5] - 0.5) * 2;
     for(size_t idx = 5; idx < 8; idx++){
         actuators[idx] = boost::algorithm::clamp(actuators[idx], -1.0, +1.0);
         actuators[idx] *= (actuators[idx] >= 0) ? params_.actuatorMax[idx] : -params_.actuatorMin[idx];
