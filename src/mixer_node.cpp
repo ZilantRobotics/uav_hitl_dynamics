@@ -169,7 +169,7 @@ constexpr uint8_t DirectMixer::MAX_CHANNELS;
 
 
 int main(int argc, char **argv){
-    ros::init(argc, argv, "inno_vtol_reverse_mixer_node");
+    ros::init(argc, argv, "mixer_node");
     if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) ) {
         ros::console::notifyLoggerLevelsChanged();
     }
