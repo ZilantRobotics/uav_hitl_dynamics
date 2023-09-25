@@ -44,15 +44,15 @@ enum BABY_SHARK_OUTPUTS {
     BABY_SHARK_MOTOR_3,
 };
 
-enum INNO_VTOL_OUTPUTS {
-    INNO_VTOL_MOTOR_0 = 0,
-    INNO_VTOL_MOTOR_1,
-    INNO_VTOL_MOTOR_2,
-    INNO_VTOL_MOTOR_3,
-    INNO_VTOL_AILERON,
-    INNO_VTOL_ELEVATOR,
-    INNO_VTOL_RUDDER,
-    INNO_VTOL_THROTLE,
+enum VTOL_OUTPUTS {
+    VTOL_MOTOR_0 = 0,
+    VTOL_MOTOR_1,
+    VTOL_MOTOR_2,
+    VTOL_MOTOR_3,
+    AILERONS,
+    ELEVATORS,
+    RUDDERS,
+    THROTLE,
 };
 
 class BaseReverseMixer {
@@ -60,17 +60,17 @@ class BaseReverseMixer {
         explicit BaseReverseMixer(const ros::NodeHandle& nh): _node(nh) {}
         virtual ~BaseReverseMixer() = default;
         int8_t init();
-        virtual void rawActuatorsCallback(sensor_msgs::Joy msg) = 0;
+        virtual void motorsCallback(sensor_msgs::Joy msg) = 0;
 
         ros::Publisher mappedActuatorPub_;
-        sensor_msgs::Joy mappedActuatorMsg_;
+        sensor_msgs::Joy actuatorMsg;
     private:
         ros::NodeHandle _node;
-        ros::Subscriber rawActuatorsSub_;
+        ros::Subscriber motorsSub;
 };
 
 int8_t BaseReverseMixer::init() {
-    rawActuatorsSub_ = _node.subscribe(RAW_ACTUATOR_TOPIC, 2, &BaseReverseMixer::rawActuatorsCallback, this);
+    motorsSub = _node.subscribe(RAW_ACTUATOR_TOPIC, 2, &BaseReverseMixer::motorsCallback, this);
     mappedActuatorPub_ = _node.advertise<sensor_msgs::Joy>(MAPPED_ACTUATOR_TOPIC, 5);
     return 0;
 }
@@ -80,36 +80,36 @@ class BabysharkReverseMixer : public BaseReverseMixer {
     public:
         explicit BabysharkReverseMixer(const ros::NodeHandle& nh) : BaseReverseMixer(nh) {
             for (size_t channel = 0; channel < 8; channel++) {
-                mappedActuatorMsg_.axes.push_back(0);
+                actuatorMsg.axes.push_back(0);
             }
         }
         ~BabysharkReverseMixer() final = default;
     protected:
-        void rawActuatorsCallback(sensor_msgs::Joy msg) override;
+        void motorsCallback(sensor_msgs::Joy msg) override;
 };
-void BabysharkReverseMixer::rawActuatorsCallback(sensor_msgs::Joy msg) {
+void BabysharkReverseMixer::motorsCallback(sensor_msgs::Joy msg) {
     if (msg.axes.size() == 8) {
-        mappedActuatorMsg_.header = msg.header;
+        actuatorMsg.header = msg.header;
 
-        mappedActuatorMsg_.axes[MC_MOTOR_0] = msg.axes[BABY_SHARK_MOTOR_0];
-        mappedActuatorMsg_.axes[MC_MOTOR_1] = msg.axes[BABY_SHARK_MOTOR_1];
-        mappedActuatorMsg_.axes[MC_MOTOR_2] = msg.axes[BABY_SHARK_MOTOR_2];
-        mappedActuatorMsg_.axes[MC_MOTOR_3] = msg.axes[BABY_SHARK_MOTOR_3];
+        actuatorMsg.axes[MC_MOTOR_0] = msg.axes[BABY_SHARK_MOTOR_0];
+        actuatorMsg.axes[MC_MOTOR_1] = msg.axes[BABY_SHARK_MOTOR_1];
+        actuatorMsg.axes[MC_MOTOR_2] = msg.axes[BABY_SHARK_MOTOR_2];
+        actuatorMsg.axes[MC_MOTOR_3] = msg.axes[BABY_SHARK_MOTOR_3];
 
         float roll = msg.axes[BABY_SHARK_AILERONS];
         roll = (roll < 0) ? 0.5 : 1 - roll;
-        mappedActuatorMsg_.axes[VTOL_ROLL] = roll;
+        actuatorMsg.axes[VTOL_ROLL] = roll;
 
         float pitch = -msg.axes[BABY_SHARK_A_TAIL_LEFT] + msg.axes[BABY_SHARK_A_TAIL_RIGHT];
         pitch = (pitch < 0) ? 0.0f : pitch / 0.8f;
-        mappedActuatorMsg_.axes[VTOL_PITCH] = pitch;
+        actuatorMsg.axes[VTOL_PITCH] = pitch;
 
         float yaw = msg.axes[BABY_SHARK_A_TAIL_LEFT] + msg.axes[BABY_SHARK_A_TAIL_RIGHT];
         yaw = (yaw < 0) ? 0.0f : (1.0f - yaw) / 0.7f;
-        mappedActuatorMsg_.axes[VTOL_YAW] = yaw;
+        actuatorMsg.axes[VTOL_YAW] = yaw;
 
-        mappedActuatorMsg_.axes[VTOL_THROTTLE] = msg.axes[BABY_SHARK_PUSHER_MOTOR];
-        mappedActuatorPub_.publish(mappedActuatorMsg_);
+        actuatorMsg.axes[VTOL_THROTTLE] = msg.axes[BABY_SHARK_PUSHER_MOTOR];
+        mappedActuatorPub_.publish(actuatorMsg);
     }
 }
 
@@ -119,9 +119,9 @@ class InnoVtolReverseMixer : public BaseReverseMixer {
         using BaseReverseMixer::BaseReverseMixer;
         ~InnoVtolReverseMixer() final = default;
     protected:
-        void rawActuatorsCallback(sensor_msgs::Joy msg) override;
+        void motorsCallback(sensor_msgs::Joy msg) override;
 };
-void InnoVtolReverseMixer::rawActuatorsCallback(sensor_msgs::Joy msg) {
+void InnoVtolReverseMixer::motorsCallback(sensor_msgs::Joy msg) {
     if (msg.axes.size() == 8) {
         if (msg.axes[4] < 0) {
             msg.axes[4] = 0.5;
@@ -144,26 +144,26 @@ class DirectMixer : public BaseReverseMixer {
     public:
         explicit DirectMixer(const ros::NodeHandle& nh) : BaseReverseMixer(nh) {
             for (size_t channel = 0; channel < MAX_CHANNELS; channel++) {
-                mappedActuatorMsg_.axes.push_back(0);
+                actuatorMsg.axes.push_back(0);
             }
         }
         ~DirectMixer() final = default;
     protected:
-        void rawActuatorsCallback(sensor_msgs::Joy msg) override;
+        void motorsCallback(sensor_msgs::Joy msg) override;
         static constexpr uint8_t MAX_CHANNELS = 8;
 };
-void DirectMixer::rawActuatorsCallback(sensor_msgs::Joy msg) {
+void DirectMixer::motorsCallback(sensor_msgs::Joy msg) {
     if (msg.axes.size() < 4) {
         return;
     }
 
     auto channels_amount = std::min(MAX_CHANNELS, (uint8_t)msg.axes.size());
     for (uint8_t idx = 0; idx < channels_amount; idx++) {
-        mappedActuatorMsg_.axes[idx] = msg.axes[idx];
+        actuatorMsg.axes[idx] = msg.axes[idx];
     }
 
-    mappedActuatorMsg_.header = msg.header;
-    mappedActuatorPub_.publish(mappedActuatorMsg_);
+    actuatorMsg.header = msg.header;
+    mappedActuatorPub_.publish(actuatorMsg);
 }
 constexpr uint8_t DirectMixer::MAX_CHANNELS;
 
