@@ -41,7 +41,7 @@ struct Actuators {
     uint8_t _scenarioType{0};
 
     ros::Subscriber armSub_;
-    bool armed_ = false;
+    bool armed_ = true;  // temp hack for vehicle without known ArmingStatus
     void armCallback(std_msgs::Bool msg);
 };
 
