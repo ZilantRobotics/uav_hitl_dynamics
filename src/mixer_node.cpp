@@ -185,7 +185,7 @@ void PX4_V_1_14_0_Airframe_13000_to_VTOL::motorsCallback(sensor_msgs::Joy msg) {
 }
 void PX4_V_1_14_0_Airframe_13000_to_VTOL::servosCallback(sensor_msgs::Joy msg) {
     ///< ignore left aileron msg.axes[0] here
-    actuatorsMsg.axes[VTOL_AILERONS] = clamp_float(msg.axes[1] * 0.75, -1.0, 1.0);
+    actuatorsMsg.axes[VTOL_AILERONS] = clamp_float(msg.axes[1], -1.0, 1.0);
     actuatorsMsg.axes[VTOL_ELEVATORS] = clamp_float(-msg.axes[2], -1.0, 1.0);
     actuatorsMsg.axes[VTOL_RUDDERS] = clamp_float(msg.axes[3], -1.0, 1.0);
 }

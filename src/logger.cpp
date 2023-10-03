@@ -25,6 +25,7 @@
 
 static const std::string COLOR_RED = "\033[1;31m";
 static const std::string COLOR_GREEN = "\033[1;32m";
+static const std::string COLOR_YELLOW = "\033[1;33m";
 static const std::string COLOR_BOLD = "\033[1;29m";
 static const std::string COLOR_TAIL = "\033[0m";
 
@@ -51,19 +52,27 @@ void StateLogger::createStringStream(std::stringstream& logStream,
     logStream << _info.dynamicsName.c_str() << ". ";
 
     double dynamicsCompleteness = (double)dynamicsCounter * _dt_secs / (_clockScale * periodSec);
-    std::string dyn_str = "dyn=" + std::to_string(dynamicsCompleteness);
-    colorize(logStream, dynamicsCompleteness >= 0.9, dyn_str);
+    uint8_t dynamicsPercent = 100 * dynamicsCompleteness;
+    std::string dyn_str = "dyn=" + std::to_string(dynamicsPercent) + "%";
+    addErrColor(logStream, dynamicsPercent >= 95, dyn_str);
     logStream << ", ";
 
     double rosPubCompleteness = (double)rosPubCounter * (double)ROS_PUB_PERIOD_SEC / (_clockScale * periodSec);
-    std::string ros_pub_str = "ros_pub=" + std::to_string(rosPubCompleteness);
-    colorize(logStream, rosPubCompleteness >= 0.9, ros_pub_str);
+    uint8_t rosPubPercent = 100 * rosPubCompleteness;
+    std::string ros_pub_str = "ros_pub=" + std::to_string(rosPubPercent) + "%";
+    addErrColor(logStream, rosPubPercent >= 99, ros_pub_str);
     logStream << ", ";
 
-    std::string actuator_str = "setpoint=" + std::to_string(actuatorsMsgCounter);
-    bool is_actuator_ok = actuatorsMsgCounter > 100 && maxDelayUsec < 20000 && maxDelayUsec != 0;
-    colorize(logStream, is_actuator_ok, actuator_str);
-    logStream << " msg/sec.\n";
+    std::string actuator_str = "setpoint=" + std::to_string(actuatorsMsgCounter) +\
+                               " hz (" + std::to_string(maxDelayUsec / 1000) + ")";
+    if (actuatorsMsgCounter < 150 || maxDelayUsec > 30000 || maxDelayUsec == 0) {
+        addErrColor(logStream, false, actuator_str);
+    } else if (actuatorsMsgCounter < 175 || maxDelayUsec > 15000) {
+        addWarnColor(logStream, actuator_str);
+    } else {
+        logStream << actuator_str;
+    }
+    logStream << ".\n";
     actuatorsMsgCounter = 0;
     maxDelayUsec = 0;
 
@@ -91,12 +100,16 @@ void StateLogger::createStringStream(std::stringstream& logStream,
                 << enuPosition[2] << "].";
 }
 
-void StateLogger::colorize(std::stringstream& logStream, bool is_ok, const std::string& newData) {
+void StateLogger::addErrColor(std::stringstream& logStream, bool is_ok, const std::string& newData) {
     if(!is_ok){
         logStream << COLOR_RED << newData << COLOR_TAIL;
     }else{
         logStream << newData;
     }
+}
+
+void StateLogger::addWarnColor(std::stringstream& logStream, const std::string& newData) {
+    logStream << COLOR_YELLOW << newData << COLOR_TAIL;
 }
 
 void StateLogger::addBold(std::stringstream& logStream, const char* newData) {

@@ -34,7 +34,8 @@ struct StateLogger {
                             double periodSec);
 
 private:
-    static void colorize(std::stringstream& logStream, bool is_ok, const std::string& newData);
+    static void addErrColor(std::stringstream& logStream, bool is_ok, const std::string& newData);
+    static void addWarnColor(std::stringstream& logStream, const std::string& newData);
     static void addBold(std::stringstream& logStream, const char* newData);
 
     Actuators& _actuators;
