@@ -18,31 +18,59 @@
 
 #include "actuators.hpp"
 
+void Actuators::init(ros::NodeHandle& node){
+    _actuatorsSub = node.subscribe("/uav/actuators", 1, &Actuators::_actuatorsCallback, this);
+    _armSub = node.subscribe("/uav/arm", 1, &Actuators::_armCallback, this);
+}
 
-void Actuators::actuatorsCallback(sensor_msgs::Joy::Ptr msg){
-    prevActuatorsTimestampUsec_ = lastActuatorsTimestampUsec_;
-    lastActuatorsTimestampUsec_ = msg->header.stamp.toNSec() / 1000;
-    auto crntDelayUsec = lastActuatorsTimestampUsec_ - prevActuatorsTimestampUsec_;
-    if(crntDelayUsec > maxDelayUsec_){
-        maxDelayUsec_ = crntDelayUsec;
+void Actuators::retriveStats(uint64_t* msg_counter, uint64_t* max_delay_us) {
+    *msg_counter = _msgCounter;
+    *max_delay_us = _maxDelayUsec < 1000000 ? _maxDelayUsec : 0;
+
+    _msgCounter = 0;
+    _maxDelayUsec = 0;
+}
+
+ArmingStatus Actuators::getArmingStatus() {
+    if (ros::Time::now().toSec() > _lastArmingStatusTimestampSec + 2.0) {
+        _armingStatus = ArmingStatus::UNKNOWN;
+        return ArmingStatus::UNKNOWN;
     }
-    actuatorsMsgCounter_++;
 
-    for(size_t idx = 0; idx < msg->axes.size(); idx++){
-        _actuators[idx] = msg->axes[idx];
+    return _armingStatus;
+}
+
+
+void Actuators::_actuatorsCallback(sensor_msgs::Joy::Ptr msg){
+    uint64_t crntTimeUs = ros::Time::now().toSec() * 1000000;
+
+    auto crntDelayUsec = crntTimeUs - _lastActuatorsTimestampUsec;
+    if(crntDelayUsec > _maxDelayUsec){
+        _maxDelayUsec = crntDelayUsec;
+    }
+    _lastActuatorsTimestampUsec = crntTimeUs;
+    _msgCounter++;
+
+    actuatorsSize = std::min(msg->axes.size(), actuators.size());
+    for(size_t idx = 0; idx < actuatorsSize; idx++){
+        actuators[idx] = msg->axes[idx];
     }
 
     if (_scenarioType == 1) {
-        _actuators[7] = 0.0;
+        actuators[7] = 0.0;
     }
 }
 
-void Actuators::armCallback(std_msgs::Bool msg){
-    if(armed_ != msg.data){
+void Actuators::_armCallback(std_msgs::Bool msg){
+    auto new_arming_status = msg.data ? ArmingStatus::ARMED : ArmingStatus::DISARMED;
+
+    if(new_arming_status != _armingStatus){
         /**
          * @note why it publish few times when sim starts? hack: use throttle
          */
-        ROS_INFO_STREAM_THROTTLE(1, "cmd: " << (msg.data ? "Arm" : "Disarm"));
+        ROS_INFO_STREAM_THROTTLE(1, "ArmingStatus: " << (msg.data ? "Arm" : "Disarm"));
+        _armingStatus = msg.data ? ArmingStatus::ARMED : ArmingStatus::DISARMED;
     }
-    armed_ = msg.data;
+
+    _lastArmingStatusTimestampSec = ros::Time::now().toSec();
 }

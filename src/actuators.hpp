@@ -23,26 +23,36 @@
 #include <sensor_msgs/Joy.h>
 #include <std_msgs/Bool.h>
 
+
+enum class ArmingStatus {
+    UNKNOWN,    // Vehicle without Arming status is assumed to be always armed
+    ARMED,
+    DISARMED,
+};
+
 struct Actuators {
-    Actuators() : _actuators(8, 0.0) {}
-    void init(ros::NodeHandle& node){
-        actuatorsSub_ = node.subscribe("/uav/actuators", 1, &Actuators::actuatorsCallback, this);
-        armSub_ = node.subscribe("/uav/arm", 1, &Actuators::armCallback, this);
-    }
+    Actuators() : actuators(16, 0.0) {}
+    void init(ros::NodeHandle& node);
+    void retriveStats(uint64_t* msg_counter, uint64_t* max_delay_us);
+    ArmingStatus getArmingStatus();
 
-    ros::Subscriber actuatorsSub_;
-    std::vector<double> _actuators;
-    uint64_t lastActuatorsTimestampUsec_;
-    uint64_t prevActuatorsTimestampUsec_;
-    uint64_t maxDelayUsec_;
-    uint64_t actuatorsMsgCounter_{0};
-    void actuatorsCallback(sensor_msgs::Joy::Ptr msg);
-
+    std::vector<double> actuators;
+    uint8_t actuatorsSize{0};
     uint8_t _scenarioType{0};
 
-    ros::Subscriber armSub_;
-    bool armed_ = true;  // temp hack for vehicle without known ArmingStatus
-    void armCallback(std_msgs::Bool msg);
+private:
+    void _actuatorsCallback(sensor_msgs::Joy::Ptr msg);
+    void _armCallback(std_msgs::Bool msg);
+
+    ros::Subscriber _actuatorsSub;
+    ros::Subscriber _armSub;
+    uint64_t _lastActuatorsTimestampUsec;
+
+    uint64_t _maxDelayUsec{0};
+    uint64_t _msgCounter{0};
+
+    ArmingStatus _armingStatus{ArmingStatus::UNKNOWN};
+    double _lastArmingStatusTimestampSec;
 };
 
 #endif  // SRC_ACTUATORS_HPP
