@@ -41,12 +41,21 @@ void StateLogger::createStringStream(std::stringstream& logStream,
                                      double dynamicsCounter,
                                      double rosPubCounter,
                                      double periodSec) {
-    auto& actuators = _actuators._actuators;
-    auto& maxDelayUsec = _actuators.maxDelayUsec_;
-    auto& actuatorsMsgCounter = _actuators.actuatorsMsgCounter_;
-    const auto& armed = _actuators.armed_;
+    uint64_t actuatorsMsgCounter;
+    uint64_t actuatorsMaxDelayUsec;
+    _actuators.retriveStats(&actuatorsMsgCounter, &actuatorsMaxDelayUsec);
+    const auto arming_status = _actuators.getArmingStatus();
+    const auto& actuators = _actuators.actuators;
+    auto actuatorsSize = _actuators.actuatorsSize;
 
-    std::string arm_str = armed ? COLOR_GREEN + "[Armed]" + COLOR_TAIL : "[Disarmed]";
+    std::string arm_str;
+    if (arming_status == ArmingStatus::ARMED) {
+        arm_str = COLOR_GREEN + "[Armed]" + COLOR_TAIL;
+    } else if (arming_status == ArmingStatus::DISARMED) {
+        arm_str = "[Disarmed]";
+    } else {
+        arm_str = COLOR_YELLOW + "[No ARM status]" + COLOR_TAIL;
+    }
     logStream << arm_str << ", ";
 
     logStream << _info.dynamicsName.c_str() << ". ";
@@ -63,18 +72,24 @@ void StateLogger::createStringStream(std::stringstream& logStream,
     addErrColor(logStream, rosPubPercent >= 99, ros_pub_str);
     logStream << ", ";
 
-    std::string actuator_str = "setpoint=" + std::to_string(actuatorsMsgCounter) +\
-                               " hz (" + std::to_string(maxDelayUsec / 1000) + ")";
-    if (actuatorsMsgCounter < 150 || maxDelayUsec > 30000 || maxDelayUsec == 0) {
+    std::string setpoint_name;
+    if (actuatorsSize > 1) {
+        setpoint_name = "Vector" + std::to_string(actuatorsSize);
+    } else if (actuatorsSize == 1) {
+        setpoint_name = "Scalar";
+    } else {
+        setpoint_name = "Setpoint";
+    }
+    std::string actuator_str = setpoint_name + "=" + std::to_string(actuatorsMsgCounter) +\
+                               " hz (" + std::to_string(actuatorsMaxDelayUsec / 1000) + " ms)";
+    if (actuatorsMsgCounter < 150 || actuatorsMaxDelayUsec > 30000 || actuatorsMaxDelayUsec == 0) {
         addErrColor(logStream, false, actuator_str);
-    } else if (actuatorsMsgCounter < 175 || maxDelayUsec > 15000) {
+    } else if (actuatorsMsgCounter < 175 || actuatorsMaxDelayUsec > 15000) {
         addWarnColor(logStream, actuator_str);
     } else {
         logStream << actuator_str;
     }
     logStream << ".\n";
-    actuatorsMsgCounter = 0;
-    maxDelayUsec = 0;
 
     addBold(logStream, "mc");
     logStream << std::setprecision(2) << std::fixed << " ["

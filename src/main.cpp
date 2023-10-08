@@ -226,7 +226,7 @@ void Uav_Dynamics::proceedDynamics(double periodSec){
 
         if(calibrationType_ != UavDynamicsSimBase::SimMode_t::NORMAL){
             uavDynamicsSim_->calibrate(calibrationType_);
-        }else if(_actuators.armed_){
+        }else if(_actuators.getArmingStatus() != ArmingStatus::DISARMED){
             static auto crnt_time = std::chrono::system_clock::now();
             auto prev_time = crnt_time;
             crnt_time = std::chrono::system_clock::now();
@@ -239,7 +239,7 @@ void Uav_Dynamics::proceedDynamics(double periodSec){
                 time_dif_sec = MAX_TIME_DIFF_SEC;
             }
 
-            uavDynamicsSim_->process(time_dif_sec, _actuators._actuators, true);
+            uavDynamicsSim_->process(time_dif_sec, _actuators.actuators, true);
         }else{
             uavDynamicsSim_->land();
         }
