@@ -288,7 +288,7 @@ void InnoVtolDynamicsSim::process(double dtSecs,
  * 7    Rudders     [-1.0, +1.0]
  */
 std::vector<double> InnoVtolDynamicsSim::mapGeneralCmdToInternal(const std::vector<double>& cmd) const{
-    if(cmd.size() != 8){
+    if(cmd.size() < 8){
         std::cerr << "ERROR: InnoVtolDynamicsSim wrong control size. It is " << cmd.size()
                   << ", but should be 8" << std::endl;
         return cmd;
