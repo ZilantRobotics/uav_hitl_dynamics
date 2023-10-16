@@ -10,14 +10,10 @@ jobs:
     runs-on: ubuntu-20.04
     timeout-minutes: 8
     container:
-      image: ros:melodic
+      image: ros:noetic
     steps:
-      - name: Install requirements
-        run: |
-          apt-get update
-          apt-get install -y git
-          apt-get install -y python-catkin-tools python-pip python3-pip
-          apt-get install -y python-rosdep python-rosinstall python-rosinstall-generator python-wstool build-essential python-catkin-tools
+      - run: apt-get update && apt-get install -y git
+      - run: if [[ "$ROS_DISTRO" = "noetic" ]] ;  then apt-get install -y python3-pip ros-noetic-catkin python3-catkin-tools ; fi
 
       - uses: actions/checkout@v2
         with:
@@ -32,4 +28,4 @@ jobs:
           ./catkin_ws/src/geographiclib_conversions/scripts/install.sh
 
       - name: Catkin build
-        run: source /opt/ros/melodic/setup.bash && cd catkin_ws && catkin build
+        run: source /opt/ros/noetic/setup.bash && cd catkin_ws && catkin build
