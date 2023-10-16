@@ -25,10 +25,15 @@ BatteryInfoSensor::BatteryInfoSensor(ros::NodeHandle* nh, const char* topic, dou
 bool BatteryInfoSensor::publish(float percentage) {
     auto crntTimeSec = ros::Time::now().toSec();
     if(_isEnabled && (nextPubTimeSec_ < crntTimeSec)){
+        // lipo 4s, 5 Ah
         sensor_msgs::BatteryState batteryInfoMsg;
-        batteryInfoMsg.voltage = 15.1f;
-        batteryInfoMsg.percentage = percentage;
-        batteryInfoMsg.capacity = 6;
+        batteryInfoMsg.voltage = 14.8f;             // Volts
+        batteryInfoMsg.current = 0.01f;             // Ampers
+        batteryInfoMsg.temperature = 300.0f;        // Kelvin
+        batteryInfoMsg.percentage = percentage;     // 0 to 1 range
+        batteryInfoMsg.capacity = 5.0f;             // Ah
+        batteryInfoMsg.design_capacity = batteryInfoMsg.capacity;
+        batteryInfoMsg.charge = percentage * batteryInfoMsg.capacity;
         publisher_.publish(batteryInfoMsg);
         nextPubTimeSec_ = crntTimeSec + PERIOD;
     }
