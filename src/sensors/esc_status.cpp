@@ -33,7 +33,7 @@ bool EscStatusSensor::publish(const std::vector<double>& rpm) {
         }
         escStatusMsg.count = nextEscIdx_;
         escStatusMsg.temperature = 300;
-        escStatusMsg.voltage = 50.0 - rpm[nextEscIdx_] * 0.001;
+        escStatusMsg.voltage = 14.8 - rpm[nextEscIdx_] * 0.001;
         escStatusMsg.current = 0.1 + rpm[nextEscIdx_] * 0.001;
         escStatusMsg.rpm = static_cast<int>(rpm[nextEscIdx_]);
         publisher_.publish(escStatusMsg);
