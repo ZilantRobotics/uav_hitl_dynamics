@@ -171,19 +171,26 @@ int8_t PX4_V_1_14_0_Airframe_13000_to_VTOL::init() {
     return 0;
 }
 void PX4_V_1_14_0_Airframe_13000_to_VTOL::motorsCallback(sensor_msgs::Joy msg) {
+    auto& axes = actuatorsMsg.axes;
     if (msg.axes.size() >= 4) {
-        actuatorsMsg.axes[VTOL_MOTOR_0_FRONT_RIGHT] = clamp_float(msg.axes[0], 0.0, 1.0);
-        actuatorsMsg.axes[VTOL_MOTOR_1_REAR_LEFT] = clamp_float(msg.axes[1], 0.0, 1.0);
-        actuatorsMsg.axes[VTOL_MOTOR_2_FRONT_LEFT] = clamp_float(msg.axes[2], 0.0, 1.0);
-        actuatorsMsg.axes[VTOL_MOTOR_3_REAR_RIGHT] = clamp_float(msg.axes[3], 0.0, 1.0);
+        axes[VTOL_MOTOR_0_FRONT_RIGHT] = clamp_float(msg.axes[0], 0.0, 1.0);
+        axes[VTOL_MOTOR_1_REAR_LEFT] = clamp_float(msg.axes[1], 0.0, 1.0);
+        axes[VTOL_MOTOR_2_FRONT_LEFT] = clamp_float(msg.axes[2], 0.0, 1.0);
+        axes[VTOL_MOTOR_3_REAR_RIGHT] = clamp_float(msg.axes[3], 0.0, 1.0);
     }
     if (msg.axes.size() >= 5) {
-        actuatorsMsg.axes[VTOL_THROTLE] = clamp_float(msg.axes[4], 0.0, 1.0);
+        axes[VTOL_THROTLE] = clamp_float(msg.axes[4], 0.0, 1.0);
     }
     if (msg.axes.size() >= 9) {
-        actuatorsMsg.axes[VTOL_AILERONS] = 2.0 * clamp_float(msg.axes[6], 0.0, 1.0) - 1.0;
-        actuatorsMsg.axes[VTOL_ELEVATORS] = -2.0 * clamp_float(msg.axes[7], 0.0, 1.0) + 1.0;
-        actuatorsMsg.axes[VTOL_RUDDERS] = 2.0 * clamp_float(msg.axes[8], 0.0, 1.0)- 1.0;
+        if (abs(msg.axes[6]) < 0.001 && abs(msg.axes[7]) < 0.001 && abs(msg.axes[8]) < 0.001) {
+            axes[VTOL_AILERONS] = 0.0;
+            axes[VTOL_ELEVATORS] = 0.0;
+            axes[VTOL_RUDDERS] = 0.0;
+        } else {
+            axes[VTOL_AILERONS] = 2.0 * clamp_float(msg.axes[6], 0.0, 1.0) - 1.0;
+            axes[VTOL_ELEVATORS] = -2.0 * clamp_float(msg.axes[7], 0.0, 1.0) + 1.0;
+            axes[VTOL_RUDDERS] = 2.0 * clamp_float(msg.axes[8], 0.0, 1.0) - 1.0;
+        }
     }
 
     actuatorsPub.publish(actuatorsMsg);
