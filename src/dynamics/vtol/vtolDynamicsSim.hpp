@@ -142,7 +142,7 @@ class InnoVtolDynamicsSim : public UavDynamicsSimBase{
 
         int8_t init() override;
         void setInitialPosition(const Eigen::Vector3d & position,
-                                const Eigen::Quaterniond& attitude) override;
+                                const Eigen::Quaterniond& attitudeXYZW) override;
         void land() override;
         int8_t calibrate(SimMode_t calibrationType) override;
         void process(double dt_secs,

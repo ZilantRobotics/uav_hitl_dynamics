@@ -112,11 +112,11 @@ void InnoVtolDynamicsSim::loadParams(const std::string& path){
 }
 
 void InnoVtolDynamicsSim::setInitialPosition(const Eigen::Vector3d & position,
-                                             const Eigen::Quaterniond& attitude){
+                                             const Eigen::Quaterniond& attitudeXYZW){
     state_.position = position;
-    state_.attitude = attitude;
+    state_.attitude = attitudeXYZW;
     state_.initialPose = position;
-    state_.initialAttitude = attitude;
+    state_.initialAttitude = attitudeXYZW;
 }
 void InnoVtolDynamicsSim::setInitialVelocity(const Eigen::Vector3d & linearVelocity,
                                          const Eigen::Vector3d& angularVelocity){
@@ -129,7 +129,11 @@ void InnoVtolDynamicsSim::land(){
     state_.linearVel.setZero();
     state_.position[2] = 0.00;
 
-    state_.attitude = state_.initialAttitude;
+    // Keep previous yaw, but set roll and pitch to 0.0
+    state_.attitude.coeffs()[0] = 0;
+    state_.attitude.coeffs()[1] = 0;
+    state_.attitude.normalize();
+
     state_.angularVel.setZero();
 
     std::fill(std::begin(state_.motorsRpm), std::end(state_.motorsRpm), 0.0);
