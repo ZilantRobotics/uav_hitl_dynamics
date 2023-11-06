@@ -10,6 +10,7 @@ alt_ref : -6.5
 
 # 3. Vehicle initial local position
 # X, Y, Z, roll, pitch, yaw, weight
+# N - [0,0,0,1], E - [0,0,0.7,0.7], S - [0,0,1,0], W - [0,0,0.7,-0.7]
 init_pose: [0.00, 0.00, 0.0,
             0.00, 0.00, +0.00, +1.00]
 

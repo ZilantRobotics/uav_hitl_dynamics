@@ -122,9 +122,9 @@ int8_t Uav_Dynamics::initDynamicsSimulator(){
     }
 
     Eigen::Vector3d initPosition(initPose_.at(0), initPose_.at(1), initPose_.at(2));
-    Eigen::Quaterniond initAttitude(initPose_.at(6), initPose_.at(3), initPose_.at(4), initPose_.at(5));
-    initAttitude.normalize();
-    uavDynamicsSim_->setInitialPosition(initPosition, initAttitude);
+    Eigen::Quaterniond initAttitudeWXYZ(initPose_.at(6), initPose_.at(3), initPose_.at(4), initPose_.at(5));
+    initAttitudeWXYZ.normalize();
+    uavDynamicsSim_->setInitialPosition(initPosition, initAttitudeWXYZ);
 
     return 0;
 }
