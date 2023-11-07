@@ -133,6 +133,9 @@ Eigen::Quaterniond MultirotorDynamics::getVehicleAttitude() const{
 Eigen::Vector3d MultirotorDynamics::getVehicleVelocity(void) const{
     return multicopterSim_->getVehicleVelocity();
 }
+Eigen::Vector3d MultirotorDynamics::getVehicleAirspeed() const{
+    return multicopterSim_->getVehicleVelocity();
+}
 Eigen::Vector3d MultirotorDynamics::getVehicleAngularVelocity(void) const{
     return multicopterSim_->getVehicleAngularVelocity();
 }

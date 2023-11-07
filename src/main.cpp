@@ -82,6 +82,7 @@ int8_t Uav_Dynamics::getParamsFromRos(){
     if(!ros::param::get(SIM_PARAMS_PATH + "use_sim_time",       useSimTime_ )           ||
        !_node.getParam("vehicle",                               info.vehicleName)       ||
        !_node.getParam("dynamics",                              info.dynamicsName)      ||
+       !ros::param::get(SIM_PARAMS_PATH + "wind_ned",           _wind_ned)              ||
        !ros::param::get(SIM_PARAMS_PATH + "init_pose",          initPose_)){
         ROS_ERROR("Dynamics: There is no at least one of required simulator parameters.");
         return -1;
@@ -125,7 +126,8 @@ int8_t Uav_Dynamics::initDynamicsSimulator(){
     Eigen::Quaterniond initAttitudeWXYZ(initPose_.at(6), initPose_.at(3), initPose_.at(4), initPose_.at(5));
     initAttitudeWXYZ.normalize();
     uavDynamicsSim_->setInitialPosition(initPosition, initAttitudeWXYZ);
-
+    Eigen::Vector3d wind_ned(_wind_ned[0], _wind_ned[1], _wind_ned[2]);
+    uavDynamicsSim_->setWindParameter(wind_ned, 0.0);
     return 0;
 }
 

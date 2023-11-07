@@ -19,3 +19,9 @@ esc_status: true
 ice_status: true
 fuel_tank_status: true
 battery_status: true
+
+# Environment parameters
+wind_ned: [5.0, 0.0, 0.0]
+wind_variance: 0.0
+gust_ned: [0.0, 0.0, 0.0]
+gust_variance: 0.0

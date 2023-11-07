@@ -39,6 +39,7 @@ public:
     virtual int8_t init() = 0;
     virtual void setInitialPosition(const Eigen::Vector3d & position,
                                     const Eigen::Quaterniond& attitude) = 0;
+    virtual void setWindParameter(Eigen::Vector3d windMeanVelocityNED, double wind_velocityVariance) {}
 
     virtual void land() {
         // do nothing by default
@@ -50,6 +51,7 @@ public:
     virtual Eigen::Vector3d getVehiclePosition() const = 0;
     virtual Eigen::Quaterniond getVehicleAttitude() const = 0;
     virtual Eigen::Vector3d getVehicleVelocity(void) const = 0;
+    virtual Eigen::Vector3d getVehicleAirspeed() const = 0;
     virtual Eigen::Vector3d getVehicleAngularVelocity(void) const = 0;
     virtual void getIMUMeasurement(Eigen::Vector3d & accOutput, Eigen::Vector3d & gyroOutput) = 0;
     virtual bool getMotorsRpm(std::vector<double>& motorsRpm);
