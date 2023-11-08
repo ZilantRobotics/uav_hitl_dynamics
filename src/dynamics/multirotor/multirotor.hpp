@@ -36,6 +36,7 @@ public:
     Eigen::Vector3d getVehiclePosition() const override;
     Eigen::Quaterniond getVehicleAttitude() const override;
     Eigen::Vector3d getVehicleVelocity(void) const override;
+    Eigen::Vector3d getVehicleAirspeed() const override;
     Eigen::Vector3d getVehicleAngularVelocity(void) const override;
     void getIMUMeasurement(Eigen::Vector3d & accOutput, Eigen::Vector3d & gyroOutput) override;
     bool getMotorsRpm(std::vector<double>& motorsRpm) override;

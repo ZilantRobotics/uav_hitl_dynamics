@@ -29,8 +29,9 @@
 
 InnoVtolDynamicsSim::InnoVtolDynamicsSim(){
     state_.angularVel.setZero();
-    state_.linearVel.setZero();
-    environment_.windVelocity.setZero();
+    state_.linearVelNed.setZero();
+    state_.airspeedFrd.setZero();
+    environment_.windNED.setZero();
     environment_.windVariance = 0;
     params_.accelBias.setZero();
     params_.gyroBias.setZero();
@@ -120,13 +121,13 @@ void InnoVtolDynamicsSim::setInitialPosition(const Eigen::Vector3d & position,
 }
 void InnoVtolDynamicsSim::setInitialVelocity(const Eigen::Vector3d & linearVelocity,
                                          const Eigen::Vector3d& angularVelocity){
-    state_.linearVel = linearVelocity;
+    state_.linearVelNed = linearVelocity;
     state_.angularVel = angularVelocity;
 }
 
 void InnoVtolDynamicsSim::land(){
     state_.forces.specific << 0, 0, -params_.gravity;
-    state_.linearVel.setZero();
+    state_.linearVelNed.setZero();
     state_.position[2] = 0.00;
 
     // Keep previous yaw, but set roll and pitch to 0.0
@@ -142,7 +143,7 @@ void InnoVtolDynamicsSim::land(){
 int8_t InnoVtolDynamicsSim::calibrate(SimMode_t calType){
     constexpr double MAG_ROTATION_SPEED = 2 * 3.1415 / 10;
     static SimMode_t prevCalibrationType = SimMode_t::NORMAL;
-    state_.linearVel.setZero();
+    state_.linearVelNed.setZero();
     state_.position[2] = 0.00;
 
     switch(calType) {
@@ -235,8 +236,8 @@ int8_t InnoVtolDynamicsSim::calibrate(SimMode_t calType){
         case SimMode_t::AIRSPEED:
             state_.attitude = Eigen::Quaterniond(1, 0, 0, 0);
             state_.angularVel.setZero();
-            state_.linearVel[0] = 10.0;
-            state_.linearVel[1] = 10.0;
+            state_.linearVelNed[0] = 10.0;
+            state_.linearVelNed[1] = 10.0;
             break;
         default:
             break;
@@ -263,14 +264,14 @@ int8_t InnoVtolDynamicsSim::calibrate(SimMode_t calType){
 void InnoVtolDynamicsSim::process(double dtSecs,
                               const std::vector<double>& motorCmd,
                               bool isCmdPercent){
-    Eigen::Vector3d vel_w = calculateWind();
+    Eigen::Vector3d windNed = calculateWind();
     Eigen::Matrix3d rotationMatrix = calculateRotationMatrix();
-    Eigen::Vector3d airSpeed = calculateAirSpeed(rotationMatrix, state_.linearVel, vel_w);
-    double AoA = calculateAnglesOfAtack(airSpeed);
-    double AoS = calculateAnglesOfSideslip(airSpeed);
+    state_.airspeedFrd = calculateAirSpeed(rotationMatrix, state_.linearVelNed, windNed);
+    double AoA = calculateAnglesOfAtack(state_.airspeedFrd);
+    double AoS = calculateAnglesOfSideslip(state_.airspeedFrd);
     auto actuators = isCmdPercent ? mapGeneralCmdToInternal(motorCmd) : motorCmd;
     updateActuators(actuators, dtSecs);
-    calculateAerodynamics(airSpeed, AoA, AoS, actuators[5], actuators[6], actuators[7],
+    calculateAerodynamics(state_.airspeedFrd, AoA, AoS, actuators[5], actuators[6], actuators[7],
                           state_.forces.aero, state_.moments.aero);
     calculateNewState(state_.moments.aero, state_.forces.aero, actuators, dtSecs);
 }
@@ -333,9 +334,9 @@ void InnoVtolDynamicsSim::updateActuators(std::vector<double>& cmd, double dtSec
 
 Eigen::Vector3d InnoVtolDynamicsSim::calculateWind(){
     Eigen::Vector3d wind;
-    wind[0] = sqrt(environment_.windVariance) * distribution_(generator_) + environment_.windVelocity[0];
-    wind[1] = sqrt(environment_.windVariance) * distribution_(generator_) + environment_.windVelocity[1];
-    wind[2] = sqrt(environment_.windVariance) * distribution_(generator_) + environment_.windVelocity[2];
+    wind[0] = sqrt(environment_.windVariance) * distribution_(generator_) + environment_.windNED[0];
+    wind[1] = sqrt(environment_.windVariance) * distribution_(generator_) + environment_.windNED[1];
+    wind[2] = sqrt(environment_.windVariance) * distribution_(generator_) + environment_.windNED[2];
 
     /**
      * @note Implement own gust logic
@@ -352,20 +353,21 @@ Eigen::Matrix3d InnoVtolDynamicsSim::calculateRotationMatrix() const{
 }
 
 Eigen::Vector3d InnoVtolDynamicsSim::calculateAirSpeed(const Eigen::Matrix3d& rotationMatrix,
-                                                   const Eigen::Vector3d& velocity,
-                                                   const Eigen::Vector3d& windSpeed) const{
-    Eigen::Vector3d airspeed = rotationMatrix * (velocity - windSpeed);
-    if(abs(airspeed[0]) > 40 || abs(airspeed[1]) > 40 || abs(airspeed[2]) > 40){
-        airspeed[0] = boost::algorithm::clamp(airspeed[0], -40, +40);
-        airspeed[1] = boost::algorithm::clamp(airspeed[1], -40, +40);
-        airspeed[2] = boost::algorithm::clamp(airspeed[2], -40, +40);
+                                                       const Eigen::Vector3d& velocityNED,
+                                                       const Eigen::Vector3d& windSpeedNED) const{
+    Eigen::Vector3d airspeedFrd = rotationMatrix * (velocityNED + windSpeedNED);
+    if(abs(airspeedFrd[0]) > 40 || abs(airspeedFrd[1]) > 40 || abs(airspeedFrd[2]) > 40){
+        airspeedFrd[0] = boost::algorithm::clamp(airspeedFrd[0], -40, +40);
+        airspeedFrd[1] = boost::algorithm::clamp(airspeedFrd[1], -40, +40);
+        airspeedFrd[2] = boost::algorithm::clamp(airspeedFrd[2], -40, +40);
         std::cout << "Warning: airspeed is out of limit." << std::endl;
     }
-    return airspeed;
+
+    return airspeedFrd;
 }
 
-double InnoVtolDynamicsSim::calculateDynamicPressure(double airSpeedMod) const{
-    return params_.atmoRho * airSpeedMod * airSpeedMod * params_.wingArea;
+double InnoVtolDynamicsSim::calculateDynamicPressure(double airspeed_mod) const{
+    return params_.atmoRho * airspeed_mod * airspeed_mod * params_.wingArea;
 }
 
 /**
@@ -373,23 +375,23 @@ double InnoVtolDynamicsSim::calculateDynamicPressure(double airSpeedMod) const{
  * it must be [0, 3.14] if angle is [0, +180]
  * it must be [0, -3.14] if angle is [0, -180]
  */
-double InnoVtolDynamicsSim::calculateAnglesOfAtack(const Eigen::Vector3d& airSpeed) const{
-    double A = sqrt(airSpeed[0] * airSpeed[0] + airSpeed[2] * airSpeed[2]);
+double InnoVtolDynamicsSim::calculateAnglesOfAtack(const Eigen::Vector3d& airspeed_frd) const{
+    double A = sqrt(airspeed_frd[0] * airspeed_frd[0] + airspeed_frd[2] * airspeed_frd[2]);
     if(A < 0.001){
         return 0;
     }
-    A = airSpeed[2] / A;
+    A = airspeed_frd[2] / A;
     A = boost::algorithm::clamp(A, -1.0, +1.0);
-    A = (airSpeed[0] > 0) ? asin(A) : 3.1415 - asin(A);
+    A = (airspeed_frd[0] > 0) ? asin(A) : 3.1415 - asin(A);
     return (A > 3.1415) ? A - 2 * 3.1415 : A;
 }
 
-double InnoVtolDynamicsSim::calculateAnglesOfSideslip(const Eigen::Vector3d& airSpeed) const{
-    double B = airSpeed.norm();
+double InnoVtolDynamicsSim::calculateAnglesOfSideslip(const Eigen::Vector3d& airspeed_frd) const{
+    double B = airspeed_frd.norm();
     if(B < 0.001){
         return 0;
     }
-    B = airSpeed[1] / B;
+    B = airspeed_frd[1] / B;
     B = boost::algorithm::clamp(B, -1.0, +1.0);
     return asin(B);
 }
@@ -536,8 +538,8 @@ void InnoVtolDynamicsSim::calculateNewState(const Eigen::Vector3d& Maero,
     state_.moments.total = MtotalInBodyCS;
 
     state_.linearAccel = rotationMatrix.inverse() * Ftotal / params_.mass;
-    state_.linearVel += state_.linearAccel * dt_sec;
-    state_.position += state_.linearVel * dt_sec;
+    state_.linearVelNed += state_.linearAccel * dt_sec;
+    state_.position += state_.linearVelNed * dt_sec;
 
     if(state_.position[2] >= 0){
         land();
@@ -545,7 +547,7 @@ void InnoVtolDynamicsSim::calculateNewState(const Eigen::Vector3d& Maero,
         state_.forces.specific = Fspecific;
     }
 
-    state_.bodylinearVel = rotationMatrix * state_.linearVel;
+    state_.bodylinearVel = rotationMatrix * state_.linearVelNed;
 }
 
 Eigen::Vector3d InnoVtolDynamicsSim::calculateNormalForceWithoutMass() const{
@@ -607,7 +609,10 @@ Eigen::Vector3d InnoVtolDynamicsSim::getVehiclePosition() const{
     return state_.position;
 }
 Eigen::Vector3d InnoVtolDynamicsSim::getVehicleVelocity() const{
-    return state_.linearVel;
+    return state_.linearVelNed;
+}
+Eigen::Vector3d InnoVtolDynamicsSim::getVehicleAirspeed() const{
+    return state_.airspeedFrd;
 }
 
 /**
@@ -642,9 +647,9 @@ void InnoVtolDynamicsSim::getIMUMeasurement(Eigen::Vector3d& accOutFrd,
 /**
  * @note These methods should be private
  */
-void InnoVtolDynamicsSim::setWindParameter(Eigen::Vector3d windMeanVelocity,
+void InnoVtolDynamicsSim::setWindParameter(Eigen::Vector3d windMeanVelocityNED,
                                        double windVariance){
-    environment_.windVelocity = windMeanVelocity;
+    environment_.windNED = windMeanVelocityNED;
     environment_.windVariance = windVariance;
 }
 Eigen::Vector3d InnoVtolDynamicsSim::getAngularAcceleration() const{

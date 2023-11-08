@@ -79,7 +79,7 @@ struct State{
      */
     Eigen::Vector3d initialPose;                    // meters
     Eigen::Vector3d position;                       // meters
-    Eigen::Vector3d linearVel;                      // m/sec
+    Eigen::Vector3d linearVelNed;                   // m/sec
     Eigen::Vector3d linearAccel;                    // m/sec^2
 
     /**
@@ -89,6 +89,7 @@ struct State{
     Eigen::Quaterniond attitude;                    // quaternion
     Eigen::Vector3d angularVel;                     // rad/sec
     Eigen::Vector3d angularAccel;                   // rad/sec^2
+    Eigen::Vector3d airspeedFrd;                    // m/sec
 
     Forces forces;
     Moments moments;
@@ -101,8 +102,8 @@ struct State{
 
 struct Environment{
     double windVariance;
-    Eigen::Vector3d windVelocity;                   // m/sec^2
-    Eigen::Vector3d gustVelocity;                   // m/sec^2
+    Eigen::Vector3d windNED;                        // m/sec^2
+    Eigen::Vector3d gustVelocityNED;                // m/sec^2
     double gustVariance;
 };
 
@@ -155,6 +156,7 @@ class InnoVtolDynamicsSim : public UavDynamicsSimBase{
         Eigen::Vector3d getVehiclePosition() const override;
         Eigen::Quaterniond getVehicleAttitude() const override;
         Eigen::Vector3d getVehicleVelocity() const override;
+        Eigen::Vector3d getVehicleAirspeed() const override;
         Eigen::Vector3d getVehicleAngularVelocity() const override;
         void getIMUMeasurement(Eigen::Vector3d& accOut, Eigen::Vector3d& gyroOut) override;
         bool getMotorsRpm(std::vector<double>& motorsRpm) override;
@@ -212,7 +214,7 @@ class InnoVtolDynamicsSim : public UavDynamicsSimBase{
                                               const Eigen::Vector3d& moment,
                                               const Eigen::Vector3d& prevAngVel) const;
 
-        void setWindParameter(Eigen::Vector3d windMeanVelocity, double wind_velocityVariance);
+        void setWindParameter(Eigen::Vector3d windMeanVelocityNED, double wind_velocityVariance) override;
         void setInitialVelocity(const Eigen::Vector3d& linearVelocity,
                                 const Eigen::Vector3d& angularVelocity);
 

@@ -64,6 +64,7 @@ class Uav_Dynamics {
         bool useSimTime_;
 
         std::vector<double> initPose_{7};
+        std::vector<double> _wind_ned{3};
 
         DynamicsInfo info;
 

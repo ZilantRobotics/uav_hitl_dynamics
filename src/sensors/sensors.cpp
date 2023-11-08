@@ -96,6 +96,7 @@ void Sensors::publishStateToCommunicator(uint8_t dynamicsNotation) {
     _uavDynamicsSim->getIMUMeasurement(acc, gyro);
     Eigen::Vector3d position = _uavDynamicsSim->getVehiclePosition();
     Eigen::Vector3d linVel = _uavDynamicsSim->getVehicleVelocity();
+    auto airspeed = _uavDynamicsSim->getVehicleAirspeed();
     Eigen::Vector3d angVel = _uavDynamicsSim->getVehicleAngularVelocity();
     Eigen::Quaterniond attitude = _uavDynamicsSim->getVehicleAttitude();
 
@@ -103,6 +104,7 @@ void Sensors::publishStateToCommunicator(uint8_t dynamicsNotation) {
     Eigen::Vector3d gpsPosition;
     Eigen::Vector3d enuPosition;
     Eigen::Vector3d linVelNed;
+    Eigen::Vector3d airspeedFrd;
     Eigen::Vector3d accFrd;
     Eigen::Vector3d gyroFrd;
     Eigen::Vector3d angVelFrd;
@@ -114,6 +116,7 @@ void Sensors::publishStateToCommunicator(uint8_t dynamicsNotation) {
         gyroFrd = gyro;
         angVelFrd = angVel;
         attitudeFrdToNed = attitude;
+        airspeedFrd = airspeed;
     }else{
         enuPosition = position;
         linVelNed =  Converter::enuToNed(linVel);
@@ -121,6 +124,7 @@ void Sensors::publishStateToCommunicator(uint8_t dynamicsNotation) {
         gyroFrd = Converter::fluToFrd(gyro);
         angVelFrd = Converter::fluToFrd(angVel);
         attitudeFrdToNed = Converter::fluEnuToFrdNed(attitude);
+        airspeedFrd = Converter::fluToFrd(airspeed);
     }
     geodeticConverter.enu2Geodetic(enuPosition[0], enuPosition[1], enuPosition[2],
                                    &gpsPosition[0], &gpsPosition[1], &gpsPosition[2]);
@@ -129,7 +133,7 @@ void Sensors::publishStateToCommunicator(uint8_t dynamicsNotation) {
     float temperatureKelvin;
     float absPressureHpa;
     float diffPressureHpa;
-    SensorModelISA::EstimateAtmosphere(gpsPosition, linVelNed,
+    SensorModelISA::EstimateAtmosphere(gpsPosition, airspeedFrd,
                                        temperatureKelvin, absPressureHpa, diffPressureHpa);
 
     // Publish state to communicator
