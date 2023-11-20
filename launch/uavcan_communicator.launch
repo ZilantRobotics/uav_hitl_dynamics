@@ -2,29 +2,29 @@
     <arg name="partial_cyphal" default="false" doc="[true, false]"/>
 
     <group unless="$(arg partial_cyphal)">
-        <rosparam file="$(find innopolis_vtol_dynamics)/config/uavcan_params_actuators.yaml" command="load" ns="uavcan/actuators" />
+        <rosparam file="$(find innopolis_vtol_dynamics)/config/dronecan/actuators.yaml" command="load" ns="uavcan/actuators" />
         <node pkg="uavcan_communicator" type="uavcan_communicator" name="px4_uavcan_communicator_actuators" output="screen" required="true" ns="uavcan/actuators"/>
 
-        <rosparam file="$(find innopolis_vtol_dynamics)/config/uavcan_params_redundant_airspeed.yaml" command="load" ns="uavcan/airspeed_redundant/" />
+        <rosparam file="$(find innopolis_vtol_dynamics)/config/dronecan/redundant_airspeed.yaml" command="load" ns="uavcan/airspeed_redundant/" />
         <node pkg="uavcan_communicator" type="uavcan_communicator" name="px4_uavcan_communicator_redundant_airspeed" output="screen" ns="uavcan/airspeed_redundant"/>
 
-        <rosparam file="$(find innopolis_vtol_dynamics)/config/uavcan_params_sensors.yaml" command="load" ns="uavcan/sensors" />
+        <rosparam file="$(find innopolis_vtol_dynamics)/config/dronecan/sensors.yaml" command="load" ns="uavcan/sensors" />
         <node pkg="uavcan_communicator" type="uavcan_communicator" name="px4_uavcan_communicator_sensors" output="screen" required="true" ns="uavcan/sensors"/>
     </group>
 
-    <rosparam file="$(find innopolis_vtol_dynamics)/config/uavcan_params_battery.yaml" command="load" ns="uavcan/battery" />
+    <rosparam file="$(find innopolis_vtol_dynamics)/config/dronecan/battery.yaml" command="load" ns="uavcan/battery" />
     <node pkg="uavcan_communicator" type="uavcan_communicator" name="px4_uavcan_communicator_sensors" output="screen" required="true" ns="uavcan/battery"/>
 
-    <rosparam file="$(find innopolis_vtol_dynamics)/config/uavcan_params_mag.yaml" command="load" ns="uavcan/mag/" />
+    <rosparam file="$(find innopolis_vtol_dynamics)/config/dronecan/mag.yaml" command="load" ns="uavcan/mag/" />
     <node pkg="uavcan_communicator" type="uavcan_communicator" name="px4_uavcan_communicator_mag" output="screen" ns="uavcan/mag"/>
 
-    <rosparam file="$(find innopolis_vtol_dynamics)/config/uavcan_params_baro.yaml" command="load" ns="uavcan/baro/" />
+    <rosparam file="$(find innopolis_vtol_dynamics)/config/dronecan/baro.yaml" command="load" ns="uavcan/baro/" />
     <node pkg="uavcan_communicator" type="uavcan_communicator" name="px4_uavcan_communicator_baro" output="screen" ns="uavcan/baro"/>
 
-    <rosparam file="$(find innopolis_vtol_dynamics)/config/uavcan_params_imu.yaml" command="load" ns="uavcan/imu" />
+    <rosparam file="$(find innopolis_vtol_dynamics)/config/dronecan/imu.yaml" command="load" ns="uavcan/imu" />
     <node pkg="uavcan_communicator" type="uavcan_communicator" name="px4_uavcan_communicator_imu" output="screen" required="true" ns="uavcan/imu"/>
 
-    <rosparam file="$(find innopolis_vtol_dynamics)/config/uavcan_params_gps.yaml" command="load" ns="uavcan/gps/" />
+    <rosparam file="$(find innopolis_vtol_dynamics)/config/dronecan/gps.yaml" command="load" ns="uavcan/gps/" />
     <node pkg="uavcan_communicator" type="uavcan_communicator" name="px4_uavcan_communicator_gps" output="screen" ns="uavcan/gps"/>
 
 </launch>
