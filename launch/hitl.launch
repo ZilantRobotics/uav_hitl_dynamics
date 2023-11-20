@@ -1,6 +1,6 @@
 <launch>
     <arg name="vehicle"                     default="innopolis_vtol"    doc="[innopolis_vtol, iris]"/>
-    <arg name="vehicle_params"              default="quadrotor_params"  doc="[quadrotor_params, octorotor_params, vtol_params]"/>
+    <arg name="vehicle_params"              doc="[quadrotor, octorotor, vtol_7kg]"/>
     <arg name="mixer"                       default="vtol_13070_mixer"  doc="[vtol_13070_mixer, babyshark_standard_vtol_mixer, direct_mixer]"/>
     <arg name="dynamics"                    default="vtol_dynamics"     doc="[vtol_dynamics, quadcopter]"/>
     <arg name="run_rviz"                    default="false"             doc="[true, false]"/>

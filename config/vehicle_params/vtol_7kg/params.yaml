@@ -21,4 +21,3 @@ actuatorMax:            [1000,  1000, 1000, 1000, 1000, 20,  20,  20]
 
 accVariance:            0.0005
 gyroVariance:           0.0005
-
