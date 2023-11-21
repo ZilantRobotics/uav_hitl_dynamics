@@ -7,7 +7,8 @@
         Prerequirements for HITL, for example for cuav v5:
         make px4_fmu-v5_default upload
      -->
-    <arg name="vehicle"                     default="innopolis_vtol"    doc="[innopolis_vtol, iris]"/>
+    <arg name="logging_type"                doc="[standard_vtol, quadcopter]"/>
+    <arg name="sitl_vehicle"                default="iris"              doc="[innopolis_vtol, iris]"/>
     <arg name="mixer"                       default="vtol_13070_mixer"  doc="[vtol_13070_mixer, babyshark_standard_vtol_mixer, direct_mixer]"/>
     <arg name="dynamics"                    default="vtol_dynamics"     doc="[vtol_dynamics, quadcopter]"/>
     <arg name="vehicle_params"              doc="[quadrotor, octorotor, vtol_7kg]"/>
@@ -27,19 +28,18 @@
             <arg name="pkg"         value="px4" />
             <arg name="node_name"   value="px4" />
             <arg name="file"        value="px4.launch" />
-            <arg name="value"       value="vehicle:=$(arg vehicle)" />
+            <arg name="value"       value="vehicle:=$(arg sitl_vehicle)" />
         </include>
     </group>
 
     <!-- 2. Run communicator on simulation mode -->
     <group if="$(arg run_sitl_communicator)">
         <node pkg="mavlink_communicator" type="mavlink_communicator_node" name="mavlink_communicator" output="screen" required="true">
-            <param name="vehicle"   value="$(arg vehicle)"  />
+            <param name="vehicle"   value="$(arg sitl_vehicle)"  />
         </node>
     </group>
     <group if="$(arg run_hitl_communicator)">
         <node pkg="innopolis_vtol_dynamics" type="mixer_node" name="inno_vtol_reverse_mixer" output="screen">
-            <param name="vehicle"   value="$(arg vehicle)"  />
             <param name="mixer"     value="$(arg mixer)" />
         </node>
         <group if="$(arg run_dronecan_communicator)">
@@ -57,7 +57,7 @@
         <arg name="vehicle_params" value="$(arg vehicle_params)" />
     </include>
     <node pkg="innopolis_vtol_dynamics" type="node" name="inno_dynamics_sim" output="screen" required="true">
-        <param name="vehicle"   value="$(arg vehicle)"  />
+        <param name="logging_type"   value="$(arg logging_type)"  />
         <param name="dynamics"  value="$(arg dynamics)" />
     </node>
 

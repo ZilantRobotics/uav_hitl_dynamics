@@ -98,7 +98,7 @@ void StateLogger::createStringStream(std::stringstream& logStream,
                 << actuators[2] << ", "
                 << actuators[3] << "] ";
 
-    if(_info.vehicleType == VehicleType::INNOPOLIS_VTOL){
+    if(_info.loggingType == LoggingType::STANDARD_VTOL){
         addBold(logStream, "fw rpy");
         logStream << " [" << actuators[4] << ", "
                             << actuators[5] << ", "

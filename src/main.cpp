@@ -80,7 +80,7 @@ int8_t Uav_Dynamics::init(){
 int8_t Uav_Dynamics::getParamsFromRos(){
     const std::string SIM_PARAMS_PATH = "/uav/sim_params/";
     if(!ros::param::get(SIM_PARAMS_PATH + "use_sim_time",       useSimTime_ )           ||
-       !_node.getParam("vehicle",                               info.vehicleName)       ||
+       !_node.getParam("logging_type",                          info.loggingTypeName)   ||
        !_node.getParam("dynamics",                              info.dynamicsName)      ||
        !ros::param::get(SIM_PARAMS_PATH + "wind_ned",           _wind_ned)              ||
        !ros::param::get(SIM_PARAMS_PATH + "init_pose",          initPose_)){
@@ -108,12 +108,12 @@ int8_t Uav_Dynamics::initDynamicsSimulator(){
         return -1;
     }
 
-    if(info.vehicleName == "innopolis_vtol"){
-        info.vehicleType = VehicleType::INNOPOLIS_VTOL;
-    }else if(info.vehicleName == "iris"){
-        info.vehicleType = VehicleType::IRIS;
+    if(info.loggingTypeName == "standard_vtol"){
+        info.loggingType = LoggingType::STANDARD_VTOL;
+    }else if(info.loggingTypeName == "quadcopter"){
+        info.loggingType = LoggingType::QUADCOPTER;
     }else{
-        ROS_ERROR("Wrong vehicle. It should be 'innopolis_vtol' or 'iris'");
+        ROS_ERROR("Wrong logging type. It should be either 'standard_vtol' or 'quadcopter'");
         return -1;
     }
 
