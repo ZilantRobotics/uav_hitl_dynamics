@@ -1,5 +1,5 @@
 <launch>
-    <arg name="vehicle"                     default="innopolis_vtol"    doc="[innopolis_vtol, iris]"/>
+    <arg name="logging_type"                doc="[standard_vtol, quadcopter]"/>
     <arg name="vehicle_params"              doc="[quadrotor, octorotor, vtol_7kg]"/>
     <arg name="mixer"                       default="vtol_13070_mixer"  doc="[vtol_13070_mixer, babyshark_standard_vtol_mixer, direct_mixer]"/>
     <arg name="dynamics"                    default="vtol_dynamics"     doc="[vtol_dynamics, quadcopter]"/>
@@ -9,7 +9,7 @@
     <arg name="run_dronecan_communicator"   default="false"             doc="[true, false]"/>
 
     <include file="$(find innopolis_vtol_dynamics)/launch/dynamics.launch">
-        <arg name="vehicle"                 value="$(arg vehicle)"/>
+        <arg name="logging_type"            value="$(arg logging_type)"/>
         <arg name="vehicle_params"          value="$(arg vehicle_params)"/>
         <arg name="mixer"                   value="$(arg mixer)"/>
         <arg name="dynamics"                value="$(arg dynamics)"/>

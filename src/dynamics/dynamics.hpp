@@ -25,9 +25,9 @@ enum class DynamicsType{
     OCTOCOPTER,
 };
 
-enum class VehicleType{
-    IRIS = 0,
-    INNOPOLIS_VTOL,
+enum class LoggingType{
+    QUADCOPTER = 0,
+    STANDARD_VTOL,
 };
 
 enum class DynamicsNotation_t{
@@ -39,8 +39,8 @@ struct DynamicsInfo {
     std::string dynamicsName;
     DynamicsType dynamicsType;
 
-    VehicleType vehicleType;
-    std::string vehicleName;
+    LoggingType loggingType;
+    std::string loggingTypeName;
 
     DynamicsNotation_t notation;
 };
