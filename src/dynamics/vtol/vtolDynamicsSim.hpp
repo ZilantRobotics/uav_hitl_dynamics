@@ -227,13 +227,13 @@ class VtolDynamics : public UavDynamicsSimBase{
                                     const Eigen::Vector3d& estimatedVelocity,
                                     const Eigen::Vector3d& windSpeed) const;
 
-        VtolParameters params_;
-        State state_;
-        TablesWithCoeffs tables_;
-        Environment environment_;
+        VtolParameters _params;
+        State _state;
+        TablesWithCoeffs _tables;
+        Environment _environment;
 
-        std::default_random_engine generator_;
-        std::normal_distribution<double> distribution_{0.0, 1.0};
+        std::default_random_engine _generator;
+        std::normal_distribution<double> _distribution{0.0, 1.0};
 };
 
 #endif  // VTOL_DYNAMICS_SIM_H

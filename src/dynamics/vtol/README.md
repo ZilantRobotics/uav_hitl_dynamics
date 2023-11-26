@@ -168,14 +168,14 @@ $$cmd_{upd} = cmd_{old} + (cmd_{new} - cmd_{old}) \cdot (1 - e^{-\frac{dt}{\tau}
 where:
 
 - $cmd_{new}$ is the new command input,
-- $cmd_{old}$ is the previous state of the actuator (saved in `state_.prevActuators`),
+- $cmd_{old}$ is the previous state of the actuator (saved in `_state.prevActuators`),
 - $dt$ is the time step since the last update,
-- $\tau$ is the time constant associated with each actuator (found in `tables_.actuatorTimeConstants`),
+- $\tau$ is the time constant associated with each actuator (found in `_tables.actuatorTimeConstants`),
 - $e$ is the base of natural logarithms.
 
 This formula applies an exponential decay factor to the change in actuator command, effectively creating a low-pass filter that smooths out changes in the actuator command over time. The time constant $\tau$ determines the rate of this smoothing: a smaller $\tau$ results in faster decay (more smoothing), while a larger $\tau$ results in slower decay (less smoothing).
 
- `thruster()` function function takes an actuator command and outputs the corresponding thrust, torque, and rotational speed (RPM) of the motor. It uses lookup tables (tables_.prop) defined in the parameters to map between actuator commands and the corresponding outputs. The function uses linear interpolation between the two nearest lookup table entries to provide a smooth transition between different actuator commands.
+ `thruster()` function function takes an actuator command and outputs the corresponding thrust, torque, and rotational speed (RPM) of the motor. It uses lookup tables (_tables.prop) defined in the parameters to map between actuator commands and the corresponding outputs. The function uses linear interpolation between the two nearest lookup table entries to provide a smooth transition between different actuator commands.
 
 
 # 2 Software Structure
