@@ -126,7 +126,7 @@ For a detailed understanding of the aerodynamics, you can refer to the complete 
 
 ## 1.4 Environment Model
 
-The environment model in the `InnoVtolDynamicsSim` class consists of the following components:
+The environment model in the `VtolDynamics` class consists of the following components:
 
 ### 1.4.1 Wind Model
 
@@ -196,7 +196,7 @@ The class includes the following key methods:
 
 
 
-The `InnoVtolDynamicsSim` class is derived from the `UavDynamicsSimBase` class, inheriting all the base features and adding additional functionality specific to the VTOL model. It contains mechanisms to handle the dynamics simulation of the VTOL system, including forces and moments calculation, state updating.
+The `VtolDynamics` class is derived from the `UavDynamicsSimBase` class, inheriting all the base features and adding additional functionality specific to the VTOL model. It contains mechanisms to handle the dynamics simulation of the VTOL system, including forces and moments calculation, state updating.
 
 The class comprises the following key methods:
 
@@ -241,4 +241,4 @@ The VTOL dynamics simulation is highly configurable, allowing users to specify a
 
 More details about the structure and meaning of the aerodynamics tables can be found in the [aerodynamics.md](./aerodynamics.md) file.
 
-To configure the simulator, users should create an instance of `VtolParameters` and `TablesWithCoeffs`, populate them with the desired parameters and coefficients, and pass them to the `InnoVtolDynamicsSim` class during initialization.
+To configure the simulator, users should create an instance of `VtolParameters` and `TablesWithCoeffs`, populate them with the desired parameters and coefficients, and pass them to the `VtolDynamics` class during initialization.

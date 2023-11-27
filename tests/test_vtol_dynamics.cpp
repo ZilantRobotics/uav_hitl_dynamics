@@ -26,8 +26,8 @@
 #include "common_math.hpp"
 
 
-TEST(InnoVtolDynamicsSim, calculateWind){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+TEST(VtolDynamics, calculateWind){
+    VtolDynamics vtolDynamicsSim;
     auto wind_mean_velocity = Eigen::Vector3d(0, 10, 0);
     double wind_variance = 0.0;
     vtolDynamicsSim.setWindParameter(wind_mean_velocity, wind_variance);
@@ -37,8 +37,8 @@ TEST(InnoVtolDynamicsSim, calculateWind){
     ASSERT_EQ(actual_wind, expected_wind);
 }
 
-TEST(InnoVtolDynamicsSim, calculateAnglesOfAtack){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+TEST(VtolDynamics, calculateAnglesOfAtack){
+    VtolDynamics vtolDynamicsSim;
     Eigen::Vector3d airSpeed;
     double result, expected;
 
@@ -66,8 +66,8 @@ TEST(InnoVtolDynamicsSim, calculateAnglesOfAtack){
     }
 }
 
-TEST(InnoVtolDynamicsSim, calculateAnglesOfSideslip){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+TEST(VtolDynamics, calculateAnglesOfSideslip){
+    VtolDynamics vtolDynamicsSim;
     Eigen::Vector3d airSpeed;
     double result, expected;
 
@@ -96,7 +96,7 @@ TEST(InnoVtolDynamicsSim, calculateAnglesOfSideslip){
 }
 
 TEST(CommonMath, findPrevRowIdxInIncreasingSequence){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+    VtolDynamics vtolDynamicsSim;
     Eigen::MatrixXd table(8, 1);
     table << 5, 10, 15, 20, 25, 30, 35, 40;
     ASSERT_EQ(Math::findPrevRowIdxInIncreasingSequence(table, -1),   0);
@@ -111,7 +111,7 @@ TEST(CommonMath, findPrevRowIdxInIncreasingSequence){
 }
 
 TEST(CommonMath, findPrevRowIdxInMonotonicSequenceIncreasing){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+    VtolDynamics vtolDynamicsSim;
     Eigen::MatrixXd table(8, 1);
     table << 5, 10, 15, 20, 25, 30, 35, 40;
     ASSERT_EQ(Math::findPrevRowIdxInMonotonicSequence(table, -1),   0);
@@ -126,7 +126,7 @@ TEST(CommonMath, findPrevRowIdxInMonotonicSequenceIncreasing){
 }
 
 TEST(CommonMath, findPrevRowIdxInMonotonicSequenceDecreasing){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+    VtolDynamics vtolDynamicsSim;
     Eigen::MatrixXd table(8, 1);
     table << 40, 35, 30, 25, 20, 15, 10, 5;
     ASSERT_EQ(Math::findPrevRowIdxInMonotonicSequence(table, -1),   6);
@@ -141,7 +141,7 @@ TEST(CommonMath, findPrevRowIdxInMonotonicSequenceDecreasing){
 }
 
 TEST(calculateCLPolynomial, test_normal_scalar){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+    VtolDynamics vtolDynamicsSim;
 
     Eigen::MatrixXd table(2, 2);
     table << 0, 0,
@@ -154,7 +154,7 @@ TEST(calculateCLPolynomial, test_normal_scalar){
 }
 
 TEST(calculateCLPolynomial, test_normal_vector){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+    VtolDynamics vtolDynamicsSim;
     Eigen::VectorXd polynomialCoeffs(2);
 
     Eigen::MatrixXd table(2, 3);
@@ -171,7 +171,7 @@ TEST(calculateCLPolynomial, test_normal_vector){
 }
 
 TEST(calculateCLPolynomial, test_wrong_input_size){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+    VtolDynamics vtolDynamicsSim;
 
     Eigen::MatrixXd table(1, 2);
     table << 0, 0;
@@ -182,7 +182,7 @@ TEST(calculateCLPolynomial, test_wrong_input_size){
 }
 
 TEST(calculateCLPolynomial, test_wrong_table){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+    VtolDynamics vtolDynamicsSim;
 
     Eigen::MatrixXd table(2, 2);
     table << 0, 0,
@@ -193,8 +193,8 @@ TEST(calculateCLPolynomial, test_wrong_table){
     ASSERT_FALSE(Math::calculatePolynomial(table, airSpeedMod, polynomialCoeffs));
 }
 
-TEST(InnoVtolDynamicsSim, calculateCLPolynomial){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+TEST(VtolDynamics, calculateCLPolynomial){
+    VtolDynamics vtolDynamicsSim;
     ASSERT_EQ(vtolDynamicsSim.init(), 0);
     Eigen::VectorXd calculatedpolynomialCoeffs(7);
     Eigen::VectorXd expectedPolynomialCoeffs(7);
@@ -234,8 +234,8 @@ TEST(InnoVtolDynamicsSim, calculateCLPolynomial){
     }
 }
 
-TEST(InnoVtolDynamicsSim, calculateCSPolynomial){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+TEST(VtolDynamics, calculateCSPolynomial){
+    VtolDynamics vtolDynamicsSim;
 
     Eigen::VectorXd calculatedpolynomialCoeffs(7);
     double airSpeedMod = 5;
@@ -243,8 +243,8 @@ TEST(InnoVtolDynamicsSim, calculateCSPolynomial){
     vtolDynamicsSim.calculateCSPolynomial(airSpeedMod, calculatedpolynomialCoeffs);
 }
 
-TEST(InnoVtolDynamicsSim, calculateCDPolynomial){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+TEST(VtolDynamics, calculateCDPolynomial){
+    VtolDynamics vtolDynamicsSim;
 
     Eigen::VectorXd calculatedpolynomialCoeffs(7);
     double airSpeedMod = 5;
@@ -254,7 +254,7 @@ TEST(InnoVtolDynamicsSim, calculateCDPolynomial){
 }
 
 TEST(CommonMath, polyval){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+    VtolDynamics vtolDynamicsSim;
     Eigen::VectorXd poly(7);
     poly << 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7;
     double value = 0.5;
@@ -264,8 +264,8 @@ TEST(CommonMath, polyval){
     EXPECT_NEAR(actual_output, expected_output, 0.001);
 }
 
-TEST(InnoVtolDynamicsSim, griddata){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+TEST(VtolDynamics, griddata){
+    VtolDynamics vtolDynamicsSim;
     ASSERT_EQ(vtolDynamicsSim.init(), 0);
     Eigen::MatrixXd x(1, 3);
     Eigen::MatrixXd y(1, 4);
@@ -295,8 +295,8 @@ TEST(InnoVtolDynamicsSim, griddata){
     EXPECT_NEAR(actual_result, expected_result, 0.001);
 }
 
-TEST(InnoVtolDynamicsSim, calculateCSRudder){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+TEST(VtolDynamics, calculateCSRudder){
+    VtolDynamics vtolDynamicsSim;
     ASSERT_EQ(vtolDynamicsSim.init(), 0);
 
     struct DataSet{
@@ -324,8 +324,8 @@ TEST(InnoVtolDynamicsSim, calculateCSRudder){
     }
 }
 
-TEST(InnoVtolDynamicsSim, calculateCSBeta){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+TEST(VtolDynamics, calculateCSBeta){
+    VtolDynamics vtolDynamicsSim;
     ASSERT_EQ(vtolDynamicsSim.init(), 0);
 
     struct DataSet{
@@ -348,8 +348,8 @@ TEST(InnoVtolDynamicsSim, calculateCSBeta){
     }
 }
 
-TEST(InnoVtolDynamicsSim, DISABLED_calculateCmxAileron){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+TEST(VtolDynamics, DISABLED_calculateCmxAileron){
+    VtolDynamics vtolDynamicsSim;
     ASSERT_EQ(vtolDynamicsSim.init(), 0);
     double Cmx_aileron, airspeedNorm, aileron_pos, dynamicPressure;
     double characteristicLength = 1.5;
@@ -363,8 +363,8 @@ TEST(InnoVtolDynamicsSim, DISABLED_calculateCmxAileron){
     }
 }
 
-TEST(InnoVtolDynamicsSim, calculateAerodynamics){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+TEST(VtolDynamics, calculateAerodynamics){
+    VtolDynamics vtolDynamicsSim;
     ASSERT_EQ(vtolDynamicsSim.init(), 0);
     Eigen::Vector3d Faero, Maero;
 
@@ -387,8 +387,8 @@ TEST(InnoVtolDynamicsSim, calculateAerodynamics){
     }
 }
 
-TEST(InnoVtolDynamicsSim, calculateAerodynamicsCaseAileron){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+TEST(VtolDynamics, calculateAerodynamicsCaseAileron){
+    VtolDynamics vtolDynamicsSim;
     ASSERT_EQ(vtolDynamicsSim.init(), 0);
     Eigen::Vector3d expectedResult, Faero, Maero;
 
@@ -411,8 +411,8 @@ TEST(InnoVtolDynamicsSim, calculateAerodynamicsCaseAileron){
     }
 }
 
-TEST(InnoVtolDynamicsSim, calculateAerodynamicsCaseElevator){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+TEST(VtolDynamics, calculateAerodynamicsCaseElevator){
+    VtolDynamics vtolDynamicsSim;
     ASSERT_EQ(vtolDynamicsSim.init(), 0);
     Eigen::Vector3d expectedResult, Faero, Maero;
 
@@ -435,8 +435,8 @@ TEST(InnoVtolDynamicsSim, calculateAerodynamicsCaseElevator){
     }
 }
 
-TEST(InnoVtolDynamicsSim, calculateAerodynamicsAoA){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+TEST(VtolDynamics, calculateAerodynamicsAoA){
+    VtolDynamics vtolDynamicsSim;
     ASSERT_EQ(vtolDynamicsSim.init(), 0);
     Eigen::Vector3d diff, expectedResult, Faero, Maero;
 
@@ -459,8 +459,8 @@ TEST(InnoVtolDynamicsSim, calculateAerodynamicsAoA){
     }
 }
 
-TEST(InnoVtolDynamicsSim, calculateAerodynamicsRealCase){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+TEST(VtolDynamics, calculateAerodynamicsRealCase){
+    VtolDynamics vtolDynamicsSim;
     ASSERT_EQ(vtolDynamicsSim.init(), 0);
     Eigen::Vector3d expectedResult, Faero, Maero;
 
@@ -484,7 +484,7 @@ TEST(InnoVtolDynamicsSim, calculateAerodynamicsRealCase){
 }
 
 TEST(thruster, thrusterFirstZeroCmd){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+    VtolDynamics vtolDynamicsSim;
     ASSERT_EQ(vtolDynamicsSim.init(), 0);
     double control,
            actualThrust, actualTorque, actualRpm,
@@ -500,7 +500,7 @@ TEST(thruster, thrusterFirstZeroCmd){
     EXPECT_NEAR(actualRpm, expectedRpm, 0.00001);
 }
 TEST(thruster, thrusterSecond){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+    VtolDynamics vtolDynamicsSim;
     ASSERT_EQ(vtolDynamicsSim.init(), 0);
     double control,
            actualThrust, actualTorque, actualRpm,
@@ -516,7 +516,7 @@ TEST(thruster, thrusterSecond){
     EXPECT_NEAR(actualRpm, expectedRpm, 0.001);
 }
 TEST(thruster, thrusterThird){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+    VtolDynamics vtolDynamicsSim;
     ASSERT_EQ(vtolDynamicsSim.init(), 0);
     double control,
            actualThrust, actualTorque, actualRpm,
@@ -548,7 +548,7 @@ void calculateNewState(double dt,
                     Eigen::Vector3d& expectedLinAccel,
                     Eigen::Vector3d& angularAcceleration,
                     Eigen::Vector3d& linearAcceleration){
-    InnoVtolDynamicsSim vtolDynamicsSim;
+    VtolDynamics vtolDynamicsSim;
     ASSERT_EQ(vtolDynamicsSim.init(), 0);
     vtolDynamicsSim.setInitialVelocity(initialLinearVelocity, initialAngularVelocity);
     vtolDynamicsSim.setInitialPosition(initialPosition, initialAttitude);
@@ -558,7 +558,7 @@ void calculateNewState(double dt,
     linearAcceleration = vtolDynamicsSim.getLinearAcceleration();
 }
 
-TEST(InnoVtolDynamicsSim, calculateNewStateFirstCaseOnlyAttitude){
+TEST(VtolDynamics, calculateNewStateFirstCaseOnlyAttitude){
     double dt = 0.002500;
     std::vector<double> actuators{0, 0, 0, 0, 0, 0, 0, 0};
     Eigen::Quaterniond initAttitude(1, 0.2, 0.10, 0.05);
@@ -582,7 +582,7 @@ TEST(InnoVtolDynamicsSim, calculateNewStateFirstCaseOnlyAttitude){
     }
 }
 
-TEST(InnoVtolDynamicsSim, calculateNewStateSecondCaseOnlyAngularVelocity){
+TEST(VtolDynamics, calculateNewStateSecondCaseOnlyAngularVelocity){
     double dt = 0.002500;
     std::vector<double> actuators{0, 0, 0, 0, 0, 0, 0, 0};
     Eigen::Quaterniond initAttitude(1, 0.00, 0.00, 0.00);
@@ -606,7 +606,7 @@ TEST(InnoVtolDynamicsSim, calculateNewStateSecondCaseOnlyAngularVelocity){
     }
 }
 
-TEST(InnoVtolDynamicsSim, calculateNewStateThirdCaseOnlyFaero){
+TEST(VtolDynamics, calculateNewStateThirdCaseOnlyFaero){
     double dt = 0.002500;
     std::vector<double> actuators{0, 0, 0, 0, 0, 0, 0, 0};
     Eigen::Quaterniond initAttitude(1, 0.00, 0.00, 0.00);
@@ -630,7 +630,7 @@ TEST(InnoVtolDynamicsSim, calculateNewStateThirdCaseOnlyFaero){
     }
 }
 
-TEST(InnoVtolDynamicsSim, calculateNewStateFourthCaseOnlyMaero){
+TEST(VtolDynamics, calculateNewStateFourthCaseOnlyMaero){
     double dt = 0.002500;
     std::vector<double> actuators{0, 0, 0, 0, 0, 0, 0, 0};
     Eigen::Quaterniond initAttitude(1, 0.00, 0.00, 0.00);
@@ -654,7 +654,7 @@ TEST(InnoVtolDynamicsSim, calculateNewStateFourthCaseOnlyMaero){
     }
 }
 
-TEST(InnoVtolDynamicsSim, calculateNewStateFifthCaseOnlyCopterMotorsWithEqualPower){
+TEST(VtolDynamics, calculateNewStateFifthCaseOnlyCopterMotorsWithEqualPower){
     double dt = 0.002500;
     std::vector<double> actuators{700, 700, 700, 700, 0, 0, 0, 0};
     Eigen::Quaterniond initAttitude(1, 0.00, 0.00, 0.00);
@@ -678,7 +678,7 @@ TEST(InnoVtolDynamicsSim, calculateNewStateFifthCaseOnlyCopterMotorsWithEqualPow
     }
 }
 
-TEST(InnoVtolDynamicsSim, calculateNewStateSixthCaseOnlyCopterMotorsWithNotEqualPower){
+TEST(VtolDynamics, calculateNewStateSixthCaseOnlyCopterMotorsWithNotEqualPower){
     double dt = 0.002500;
     std::vector<double> actuators{700, 680, 660, 640, 0, 0, 0, 0};
     Eigen::Quaterniond initAttitude(1, 0.00, 0.00, 0.00);
@@ -702,7 +702,7 @@ TEST(InnoVtolDynamicsSim, calculateNewStateSixthCaseOnlyCopterMotorsWithNotEqual
     }
 }
 
-TEST(InnoVtolDynamicsSim, calculateNewStateSeventhCaseOnlyICE){
+TEST(VtolDynamics, calculateNewStateSeventhCaseOnlyICE){
     double dt = 0.002500;
     std::vector<double> actuators{0, 0, 0, 0, 500, 0, 0, 0};
     Eigen::Quaterniond initAttitude(1, 0.00, 0.00, 0.00);
@@ -726,7 +726,7 @@ TEST(InnoVtolDynamicsSim, calculateNewStateSeventhCaseOnlyICE){
     }
 }
 
-TEST(InnoVtolDynamicsSim, calculateNewStateEightComplexWithoutInitialAttitude){
+TEST(VtolDynamics, calculateNewStateEightComplexWithoutInitialAttitude){
     double dt = 0.002500;
     std::vector<double> actuators{600, 550, 450, 500, 650, 0, 0, 0};
     Eigen::Quaterniond initAttitude(1, 0, 0, 0);
@@ -751,7 +751,7 @@ TEST(InnoVtolDynamicsSim, calculateNewStateEightComplexWithoutInitialAttitude){
     }
 }
 
-TEST(InnoVtolDynamicsSim, calculateNewStateEightComplexFull){
+TEST(VtolDynamics, calculateNewStateEightComplexFull){
     double dt = 0.002500;
     std::vector<double> actuators{600, 550, 450, 500, 650, 4, 7, 11};
     Eigen::Quaterniond initAttitude(0.9833, 0.1436, 0.106, 0.03427);
