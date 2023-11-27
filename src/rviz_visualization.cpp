@@ -75,8 +75,8 @@ void RvizVisualizator::publish(uint8_t) {
     const Eigen::Vector3d DRAG_FORCE(0.2, 0.8, 0.3);
     const Eigen::Vector3d SIDE_FORCE(0.2, 0.3, 0.8);
 
-    auto moments = dynamic_cast<InnoVtolDynamicsSim*>(uavDynamicsSim.get())->getMoments();
-    auto forces = dynamic_cast<InnoVtolDynamicsSim*>(uavDynamicsSim.get())->getForces();
+    auto moments = dynamic_cast<VtolDynamics*>(uavDynamicsSim.get())->getMoments();
+    auto forces = dynamic_cast<VtolDynamics*>(uavDynamicsSim.get())->getForces();
 
     // publish moments
     aeroMomentPub.publish(makeArrow(moments.aero, MOMENT_COLOR, UAV_FRAME_ID));
@@ -106,7 +106,7 @@ void RvizVisualizator::publish(uint8_t) {
 
     totalForcePub.publish(makeArrow(forces.total, Eigen::Vector3d(0.0, 1.0, 1.0), UAV_FRAME_ID));
 
-    auto velocity = dynamic_cast<InnoVtolDynamicsSim*>(uavDynamicsSim.get())->getBodyLinearVelocity();
+    auto velocity = dynamic_cast<VtolDynamics*>(uavDynamicsSim.get())->getBodyLinearVelocity();
     velocityPub.publish(makeArrow(velocity, SPEED_COLOR, UAV_FRAME_ID));
 
     liftForcePub.publish(makeArrow(forces.lift / 10, LIFT_FORCE, UAV_FRAME_ID));

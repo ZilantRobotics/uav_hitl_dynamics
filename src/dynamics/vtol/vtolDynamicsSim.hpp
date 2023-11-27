@@ -136,10 +136,10 @@ struct TablesWithCoeffs{
 /**
  * @brief Vtol dynamics simulator class
  */
-class InnoVtolDynamicsSim : public UavDynamicsSimBase{
+class VtolDynamics : public UavDynamicsSimBase{
     public:
-        InnoVtolDynamicsSim();
-        ~InnoVtolDynamicsSim() final = default;
+        VtolDynamics();
+        ~VtolDynamics() final = default;
 
         int8_t init() override;
         void setInitialPosition(const Eigen::Vector3d & position,
