@@ -26,6 +26,9 @@
 #include "cs_converter.hpp"
 #include "common_math.hpp"
 
+static constexpr const size_t MOTORS_AMOUNT = 5;
+static constexpr const size_t CONTROL_SURFACES_AMOUNT = 3;
+static constexpr const size_t ACTUATORS_AMOUNT = 8;
 
 VtolDynamics::VtolDynamics(){
     state_.angularVel.setZero();
@@ -36,7 +39,7 @@ VtolDynamics::VtolDynamics(){
     params_.accelBias.setZero();
     params_.gyroBias.setZero();
     state_.forces.specific << 0, 0, -params_.gravity;
-    for(size_t idx = 0; idx < 8; idx++){
+    for(size_t idx = 0; idx < ACTUATORS_AMOUNT; idx++){
         state_.prevActuators.push_back(0);
         state_.crntActuators.push_back(0);
     }
@@ -293,13 +296,13 @@ void VtolDynamics::process(double dtSecs,
  * 7    Rudders     [-1.0, +1.0]
  */
 std::vector<double> VtolDynamics::mapGeneralCmdToInternal(const std::vector<double>& cmd) const{
-    if(cmd.size() < 8){
+    if(cmd.size() < ACTUATORS_AMOUNT){
         std::cerr << "ERROR: VtolDynamics wrong control size. It is " << cmd.size()
                   << ", but should be 8" << std::endl;
         return cmd;
     }
 
-    std::vector<double> actuators(8);
+    std::vector<double> actuators(ACTUATORS_AMOUNT);
     actuators[0] = cmd[0];
     actuators[1] = cmd[1];
     actuators[2] = cmd[2];
@@ -310,12 +313,12 @@ std::vector<double> VtolDynamics::mapGeneralCmdToInternal(const std::vector<doub
     actuators[6] = cmd[5];      // elevators
     actuators[7] = cmd[6];      // rudders
 
-    for(size_t idx = 0; idx < 5; idx++){
+    for(size_t idx = 0; idx < MOTORS_AMOUNT; idx++){
         actuators[idx] = boost::algorithm::clamp(actuators[idx], 0.0, +1.0);
         actuators[idx] *= params_.actuatorMax[idx];
     }
 
-    for(size_t idx = 5; idx < 8; idx++){
+    for(size_t idx = MOTORS_AMOUNT; idx < ACTUATORS_AMOUNT; idx++){
         actuators[idx] = boost::algorithm::clamp(actuators[idx], -1.0, +1.0);
         actuators[idx] *= (actuators[idx] >= 0) ? params_.actuatorMax[idx] : -params_.actuatorMin[idx];
     }
@@ -325,7 +328,7 @@ std::vector<double> VtolDynamics::mapGeneralCmdToInternal(const std::vector<doub
 
 void VtolDynamics::updateActuators(std::vector<double>& cmd, double dtSecs){
     state_.prevActuators = state_.crntActuators;
-    for(size_t idx = 0; idx < 8; idx++){
+    for(size_t idx = 0; idx < ACTUATORS_AMOUNT; idx++){
         auto cmd_delta = state_.prevActuators[idx] - cmd[idx];
         cmd[idx] += cmd_delta * (1 - pow(2.71, -dtSecs/tables_.actuatorTimeConstants[idx]));
         state_.crntActuators[idx] = cmd[idx];
@@ -498,9 +501,9 @@ void VtolDynamics::calculateNewState(const Eigen::Vector3d& Maero,
                                         const Eigen::Vector3d& Faero,
                                         const std::vector<double>& actuator,
                                         double dt_sec){
-    Eigen::VectorXd thrust(5);
-    Eigen::VectorXd torque(5);
-    for(size_t idx = 0; idx < 5; idx++){
+    Eigen::VectorXd thrust(MOTORS_AMOUNT);
+    Eigen::VectorXd torque(MOTORS_AMOUNT);
+    for(size_t idx = 0; idx < MOTORS_AMOUNT; idx++){
         thruster(actuator[idx], thrust[idx], torque[idx], state_.motorsRpm[idx]);
     }
 
@@ -509,19 +512,24 @@ void VtolDynamics::calculateNewState(const Eigen::Vector3d& Maero,
     }
     state_.forces.motors[4] << thrust[4], 0, 0;
 
-    std::array<Eigen::Vector3d, 5> motorTorquesInBodyCS;
+    std::array<Eigen::Vector3d, MOTORS_AMOUNT> motorTorquesInBodyCS;
+
+    // Cunterclockwise rotation means positive torque
     motorTorquesInBodyCS[0] << 0, 0, torque[0];
     motorTorquesInBodyCS[1] << 0, 0, torque[1];
+
+    // Clockwise rotation is caused by negative torques;
     motorTorquesInBodyCS[2] << 0, 0, -torque[2];
     motorTorquesInBodyCS[3] << 0, 0, -torque[3];
     motorTorquesInBodyCS[4] << -torque[4], 0, 0;
-    std::array<Eigen::Vector3d, 5> MdueToArmOfForceInBodyCS;
-    for(size_t idx = 0; idx < 5; idx++){
+
+    std::array<Eigen::Vector3d, MOTORS_AMOUNT> MdueToArmOfForceInBodyCS;
+    for(size_t idx = 0; idx < MOTORS_AMOUNT; idx++){
         MdueToArmOfForceInBodyCS[idx] = params_.propellersLocation[idx].cross(state_.forces.motors[idx]);
         state_.moments.motors[idx] = motorTorquesInBodyCS[idx] + MdueToArmOfForceInBodyCS[idx];
     }
 
-    auto MtotalInBodyCS = std::accumulate(&state_.moments.motors[0], &state_.moments.motors[5], Maero);
+    auto MtotalInBodyCS = std::accumulate(&state_.moments.motors[0], &state_.moments.motors[MOTORS_AMOUNT], Maero);
     state_.angularAccel = calculateAngularAccel(params_.inertia, MtotalInBodyCS, state_.angularVel);
     state_.angularVel += state_.angularAccel * dt_sec;
     Eigen::Quaterniond quaternion(0, state_.angularVel(0), state_.angularVel(1), state_.angularVel(2));
@@ -531,7 +539,7 @@ void VtolDynamics::calculateNewState(const Eigen::Vector3d& Maero,
 
     Eigen::Matrix3d rotationMatrix = calculateRotationMatrix();
     auto& Fmotors = state_.forces.motors;
-    Eigen::Vector3d Fspecific = std::accumulate(&Fmotors[0], &Fmotors[5], Faero) / params_.mass;
+    Eigen::Vector3d Fspecific = std::accumulate(&Fmotors[0], &Fmotors[MOTORS_AMOUNT], Faero) / params_.mass;
     Eigen::Vector3d Ftotal = (Fspecific + rotationMatrix * Eigen::Vector3d(0, 0, params_.gravity)) * params_.mass;
 
     state_.forces.total = Ftotal;
