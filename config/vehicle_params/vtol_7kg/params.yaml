@@ -16,6 +16,9 @@ mainEngineLocationX:    0.445       # meters
 # double massUncertainty;                         // mass multiplier
 # double inertiaUncertainty;                      // mass multiplier
 
+# 0-3   Copter motors     Rad/sec
+# 4     ICE               Rad/sec
+# 5-7   Control surfaces  Position
 actuatorMin:            [0,     0,    0,    0,    0,    -20, -20, -20]
 actuatorMax:            [1000,  1000, 1000, 1000, 1000, 20,  20,  20]
 
