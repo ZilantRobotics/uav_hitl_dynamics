@@ -1,5 +1,3 @@
 # Octorotor Coaxial
 
-|||
-|-|-|
-| <img src="https://dev.px4.io/master/assets/airframes/types/OctoRotorXCoaxial.svg" alt="drawing" height="120"/> | Octorotor Coaxial
+<img src="https://raw.githubusercontent.com/RaccoonlabDev/innopolis_vtol_dynamics/docs/assets/vehicles/octocopter_coaxial/actuators.png" width="512" alt="drawing"/>
