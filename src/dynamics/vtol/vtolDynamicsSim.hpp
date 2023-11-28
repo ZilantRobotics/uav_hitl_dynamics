@@ -26,6 +26,14 @@
 #include <random>
 #include "uavDynamicsSimBase.hpp"
 
+struct Geometry {
+    double positionX;
+    double positionY;
+    double positionZ;
+    double axisX;
+    double axisZ;
+    bool directionCCW;
+};
 
 struct VtolParameters{
     double mass;                                    // kg
@@ -41,6 +49,10 @@ struct VtolParameters{
     std::vector<double> actuatorMax;                // rad/sec
     std::array<double, 8> deltaControlMax;          // rad/sec^2
     std::array<double, 8> timeConstant;             // sec
+
+    std::vector<double> motorMaxRadPerSec;          // rad/sec
+    std::vector<double> servoHalfRange;
+    std::vector<Geometry> geometry;
 
     double accVariance;
     double gyroVariance;
@@ -221,6 +233,7 @@ class VtolDynamics : public UavDynamicsSimBase{
     private:
         void loadTables(const std::string& path);
         void loadParams(const std::string& path);
+        void loadMotorsGeometry(const std::string& path);
         std::vector<double> mapGeneralCmdToInternal(const std::vector<double>& cmd) const;
         void updateActuators(std::vector<double>& cmd, double dtSecs);
         Eigen::Vector3d calculateAirSpeed(const Eigen::Matrix3d& rotationMatrix,
