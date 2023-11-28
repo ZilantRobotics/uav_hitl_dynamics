@@ -142,7 +142,7 @@ void VtolDynamics::loadMotorsGeometry(const std::string& path) {
     assert(motorAxisX.size() >= MOTORS_AMOUNT);
     assert(motorAxisZ.size() >= MOTORS_AMOUNT);
 
-    for (size_t motor_idx = 0; motor_idx < MOTORS_AMOUNT; motor_idx++) {
+    for (size_t motor_idx = 0; motor_idx < motorPositionX.size(); motor_idx++) {
         Geometry geometry;
         geometry.positionX = motorPositionX[motor_idx];
         geometry.positionY = motorPositionY[motor_idx];
@@ -553,14 +553,13 @@ void VtolDynamics::calculateNewState(const Eigen::Vector3d& Maero,
 
     std::array<Eigen::Vector3d, MOTORS_AMOUNT> motorTorquesInBodyCS;
 
-    // Cunterclockwise rotation means positive torque
-    motorTorquesInBodyCS[0] << 0, 0, torque[0];
-    motorTorquesInBodyCS[1] << 0, 0, torque[1];
-
-    // Clockwise rotation is caused by negative torques;
-    motorTorquesInBodyCS[2] << 0, 0, -torque[2];
-    motorTorquesInBodyCS[3] << 0, 0, -torque[3];
-    motorTorquesInBodyCS[4] << -torque[4], 0, 0;
+    for (size_t idx = 0; idx < MOTORS_AMOUNT; idx++) {
+        // Cunterclockwise rotation means positive torque, clockwise - negative
+        double ccw = _params.geometry[idx].directionCCW ? 1.0 : -1.0;
+        motorTorquesInBodyCS[idx](0) = -1.0 * _params.geometry[idx].axisX * ccw * torque[idx];
+        motorTorquesInBodyCS[idx](1) = 0.0;
+        motorTorquesInBodyCS[idx](2) = -1.0 * _params.geometry[idx].axisZ * ccw * torque[idx];
+    }
 
     std::array<Eigen::Vector3d, MOTORS_AMOUNT> MdueToArmOfForceInBodyCS;
     for(size_t idx = 0; idx < MOTORS_AMOUNT; idx++){
