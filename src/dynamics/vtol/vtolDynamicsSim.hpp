@@ -27,23 +27,16 @@
 #include "uavDynamicsSimBase.hpp"
 
 struct Geometry {
-    double positionX;
-    double positionY;
-    double positionZ;
-    double axisX;
-    double axisZ;
-    bool directionCCW;
+    Eigen::Vector3d position;                       // Meters
+    Eigen::Vector3d axis;                           // Unitless
+    bool directionCCW;                              // True for CCW, False for CW
 };
 
 struct VtolParameters{
     double mass;                                    // kg
-    double gravity;                                 // n/sec^2
-    double atmoRho;                                 // air density (kg/m^3)
     double wingArea;                                // m^2
     double characteristicLength;                    // m
     Eigen::Matrix<double, 3, 3, Eigen::RowMajor> inertia;   // kg*m^2
-
-    std::array<Eigen::Vector3d, 5> propellersLocation;
 
     std::vector<double> actuatorMin;                // rad/sec
     std::vector<double> actuatorMax;                // rad/sec
@@ -117,6 +110,8 @@ struct Environment{
     Eigen::Vector3d windNED;                        // m/sec^2
     Eigen::Vector3d gustVelocityNED;                // m/sec^2
     double gustVariance;
+    double gravity;                                 // n/sec^2
+    double atmoRho;                                 // air density (kg/m^3)
 };
 
 struct TablesWithCoeffs{

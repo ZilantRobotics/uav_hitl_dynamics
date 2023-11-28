@@ -38,7 +38,7 @@ VtolDynamics::VtolDynamics(){
     _environment.windVariance = 0;
     _params.accelBias.setZero();
     _params.gyroBias.setZero();
-    _state.forces.specific << 0, 0, -_params.gravity;
+    _state.forces.specific << 0, 0, -_environment.gravity;
     for(size_t idx = 0; idx < ACTUATORS_AMOUNT; idx++){
         _state.prevActuators.push_back(0);
         _state.crntActuators.push_back(0);
@@ -86,20 +86,11 @@ void VtolDynamics::loadTables(const std::string& path){
 }
 
 void VtolDynamics::loadParams(const std::string& path){
-    double propLocX;
-    double propLocY;
-    double propLocZ;
-    double mainEngineLocX;
-
     if(!ros::param::get(path + "mass", _params.mass) ||
-        !ros::param::get(path + "gravity", _params.gravity) ||
-        !ros::param::get(path + "atmoRho", _params.atmoRho) ||
+        !ros::param::get(path + "gravity", _environment.gravity) ||
+        !ros::param::get(path + "atmoRho", _environment.atmoRho) ||
         !ros::param::get(path + "wingArea", _params.wingArea) ||
         !ros::param::get(path + "characteristicLength", _params.characteristicLength) ||
-        !ros::param::get(path + "propellersLocationX", propLocX) ||
-        !ros::param::get(path + "propellersLocationY", propLocY) ||
-        !ros::param::get(path + "propellersLocationZ", propLocZ) ||
-        !ros::param::get(path + "mainEngineLocationX", mainEngineLocX) ||
 
         !ros::param::get(path + "motorMaxRadPerSec", _params.motorMaxRadPerSec) ||
         !ros::param::get(path + "servoHalfRange", _params.servoHalfRange) ||
@@ -113,11 +104,6 @@ void VtolDynamics::loadParams(const std::string& path){
 
     loadMotorsGeometry(path);
 
-    _params.propellersLocation[0] <<  propLocX,  propLocY, propLocZ;
-    _params.propellersLocation[1] << -propLocX, -propLocY, propLocZ;
-    _params.propellersLocation[2] <<  propLocX, -propLocY, propLocZ;
-    _params.propellersLocation[3] << -propLocX,  propLocY, propLocZ;
-    _params.propellersLocation[4] << mainEngineLocX, 0, 0;
     _params.inertia = getTableNew<3, 3, Eigen::RowMajor>(path, "inertia");
 }
 
@@ -144,12 +130,9 @@ void VtolDynamics::loadMotorsGeometry(const std::string& path) {
 
     for (size_t motor_idx = 0; motor_idx < motorPositionX.size(); motor_idx++) {
         Geometry geometry;
-        geometry.positionX = motorPositionX[motor_idx];
-        geometry.positionY = motorPositionY[motor_idx];
-        geometry.positionZ = motorPositionZ[motor_idx];
+        geometry.position << motorPositionX[motor_idx], motorPositionY[motor_idx], motorPositionZ[motor_idx];
+        geometry.axis << motorAxisX[motor_idx], 0.0, motorAxisZ[motor_idx];
         geometry.directionCCW = motorDirectionCCW[motor_idx];
-        geometry.axisX = motorAxisX[motor_idx];
-        geometry.axisZ = motorAxisZ[motor_idx];
         _params.geometry.push_back(geometry);
     }
 }
@@ -168,7 +151,7 @@ void VtolDynamics::setInitialVelocity(const Eigen::Vector3d & linearVelocity,
 }
 
 void VtolDynamics::land(){
-    _state.forces.specific << 0, 0, -_params.gravity;
+    _state.forces.specific << 0, 0, -_environment.gravity;
     _state.linearVelNed.setZero();
     _state.position[2] = 0.00;
 
@@ -409,7 +392,7 @@ Eigen::Vector3d VtolDynamics::calculateAirSpeed(const Eigen::Matrix3d& rotationM
 }
 
 double VtolDynamics::calculateDynamicPressure(double airspeed_mod) const{
-    return _params.atmoRho * airspeed_mod * airspeed_mod * _params.wingArea;
+    return _environment.atmoRho * airspeed_mod * airspeed_mod * _params.wingArea;
 }
 
 /**
@@ -518,7 +501,7 @@ void VtolDynamics::calculateAerodynamics(const Eigen::Vector3d& airspeed,
 }
 
 void VtolDynamics::thruster(double actuator,
-                                   double& thrust, double& torque, double& rpm) const{
+                            double& thrust, double& torque, double& rpm) const{
     constexpr size_t CONTROL_IDX = 0;
     constexpr size_t THRUST_IDX = 1;
     constexpr size_t TORQUE_IDX = 2;
@@ -537,34 +520,21 @@ void VtolDynamics::thruster(double actuator,
 }
 
 void VtolDynamics::calculateNewState(const Eigen::Vector3d& Maero,
-                                        const Eigen::Vector3d& Faero,
-                                        const std::vector<double>& actuator,
-                                        double dt_sec){
-    Eigen::VectorXd thrust(MOTORS_AMOUNT);
-    Eigen::VectorXd torque(MOTORS_AMOUNT);
+                                     const Eigen::Vector3d& Faero,
+                                     const std::vector<double>& actuator,
+                                     double dt_sec){
     for(size_t idx = 0; idx < MOTORS_AMOUNT; idx++){
-        thruster(actuator[idx], thrust[idx], torque[idx], _state.motorsRpm[idx]);
-    }
+        double thrust;
+        double torque;
+        thruster(actuator[idx], thrust, torque, _state.motorsRpm[idx]);
+        _state.forces.motors[idx] = _params.geometry[idx].axis * thrust;
 
-    for(size_t idx = 0; idx < 4; idx++){
-        _state.forces.motors[idx] << 0, 0, -thrust[idx];
-    }
-    _state.forces.motors[4] << thrust[4], 0, 0;
-
-    std::array<Eigen::Vector3d, MOTORS_AMOUNT> motorTorquesInBodyCS;
-
-    for (size_t idx = 0; idx < MOTORS_AMOUNT; idx++) {
         // Cunterclockwise rotation means positive torque, clockwise - negative
         double ccw = _params.geometry[idx].directionCCW ? 1.0 : -1.0;
-        motorTorquesInBodyCS[idx](0) = -1.0 * _params.geometry[idx].axisX * ccw * torque[idx];
-        motorTorquesInBodyCS[idx](1) = 0.0;
-        motorTorquesInBodyCS[idx](2) = -1.0 * _params.geometry[idx].axisZ * ccw * torque[idx];
-    }
+        Eigen::Vector3d motorTorquesInBodyCS = _params.geometry[idx].axis * (-1.0) * ccw * torque;
 
-    std::array<Eigen::Vector3d, MOTORS_AMOUNT> MdueToArmOfForceInBodyCS;
-    for(size_t idx = 0; idx < MOTORS_AMOUNT; idx++){
-        MdueToArmOfForceInBodyCS[idx] = _params.propellersLocation[idx].cross(_state.forces.motors[idx]);
-        _state.moments.motors[idx] = motorTorquesInBodyCS[idx] + MdueToArmOfForceInBodyCS[idx];
+        Eigen::Vector3d MdueToArmOfForceInBodyCS = _params.geometry[idx].position.cross(_state.forces.motors[idx]);
+        _state.moments.motors[idx] = motorTorquesInBodyCS + MdueToArmOfForceInBodyCS;
     }
 
     auto MtotalInBodyCS = std::accumulate(&_state.moments.motors[0], &_state.moments.motors[MOTORS_AMOUNT], Maero);
@@ -578,7 +548,7 @@ void VtolDynamics::calculateNewState(const Eigen::Vector3d& Maero,
     Eigen::Matrix3d rotationMatrix = calculateRotationMatrix();
     auto& Fmotors = _state.forces.motors;
     Eigen::Vector3d Fspecific = std::accumulate(&Fmotors[0], &Fmotors[MOTORS_AMOUNT], Faero) / _params.mass;
-    Eigen::Vector3d Ftotal = (Fspecific + rotationMatrix * Eigen::Vector3d(0, 0, _params.gravity)) * _params.mass;
+    Eigen::Vector3d Ftotal = (Fspecific + rotationMatrix * Eigen::Vector3d(0, 0, _environment.gravity)) * _params.mass;
 
     _state.forces.total = Ftotal;
     _state.moments.total = MtotalInBodyCS;
@@ -598,7 +568,7 @@ void VtolDynamics::calculateNewState(const Eigen::Vector3d& Maero,
 
 Eigen::Vector3d VtolDynamics::calculateNormalForceWithoutMass() const{
     Eigen::Matrix3d rotationMatrix = calculateRotationMatrix();
-    return rotationMatrix * Eigen::Vector3d(0, 0, -_params.gravity);
+    return rotationMatrix * Eigen::Vector3d(0, 0, -_environment.gravity);
 }
 
 void VtolDynamics::calculateCLPolynomial(double airSpeedMod,
@@ -716,10 +686,9 @@ Eigen::Vector3d VtolDynamics::getBodyLinearVelocity() const{
 }
 
 bool VtolDynamics::getMotorsRpm(std::vector<double>& motorsRpm) {
-    motorsRpm.push_back(_state.motorsRpm[0]);
-    motorsRpm.push_back(_state.motorsRpm[1]);
-    motorsRpm.push_back(_state.motorsRpm[2]);
-    motorsRpm.push_back(_state.motorsRpm[3]);
-    motorsRpm.push_back(_state.motorsRpm[4]);
+    for (auto motor_rpm : _state.motorsRpm) {
+        motorsRpm.push_back(motor_rpm);
+    }
+
     return true;
 }
