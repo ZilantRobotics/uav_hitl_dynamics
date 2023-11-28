@@ -117,11 +117,9 @@ void MultirotorDynamics::setInitialPosition(const Eigen::Vector3d & position,
     multicopterSim_->setVehiclePosition(position, attitude);
 }
 
-void MultirotorDynamics::process(double dt_secs,
-                                    const std::vector<double> & motorSpeedCommandIn,
-                                    bool isCmdPercent){
-    auto actuators = mapCmdActuator(motorSpeedCommandIn);
-    multicopterSim_->proceedState_ExplicitEuler(dt_secs, actuators, isCmdPercent);
+void MultirotorDynamics::process(double dt_secs, const std::vector<double>& setpoint){
+    auto actuators = mapCmdActuator(setpoint);
+    multicopterSim_->proceedState_ExplicitEuler(dt_secs, actuators, true);
 }
 
 Eigen::Vector3d MultirotorDynamics::getVehiclePosition() const{

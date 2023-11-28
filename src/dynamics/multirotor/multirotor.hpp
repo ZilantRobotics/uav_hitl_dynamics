@@ -31,7 +31,7 @@ public:
     void setInitialPosition(const Eigen::Vector3d & position,
                             const Eigen::Quaterniond& attitude) override;
 
-    void process(double dt_secs, const std::vector<double> & motorSpeedCommandIn, bool isCmdPercent) override;
+    void process(double dt_secs, const std::vector<double> & setpoint) override;
 
     Eigen::Vector3d getVehiclePosition() const override;
     Eigen::Quaterniond getVehicleAttitude() const override;

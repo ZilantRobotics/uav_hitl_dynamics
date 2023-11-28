@@ -241,7 +241,7 @@ void Uav_Dynamics::proceedDynamics(double periodSec){
                 time_dif_sec = MAX_TIME_DIFF_SEC;
             }
 
-            uavDynamicsSim_->process(time_dif_sec, _actuators.actuators, true);
+            uavDynamicsSim_->process(time_dif_sec, _actuators.actuators);
         }else{
             uavDynamicsSim_->land();
         }

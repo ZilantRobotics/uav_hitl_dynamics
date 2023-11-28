@@ -44,9 +44,7 @@ public:
     virtual void land() {
         // do nothing by default
     }
-    virtual void process(double dt_secs,
-                         const std::vector<double> & motorSpeedCommandIn,
-                         bool isCmdPercent) = 0;
+    virtual void process(double dt_secs, const std::vector<double>& setpoint) = 0;
 
     virtual Eigen::Vector3d getVehiclePosition() const = 0;
     virtual Eigen::Quaterniond getVehicleAttitude() const = 0;
