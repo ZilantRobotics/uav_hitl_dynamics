@@ -225,7 +225,7 @@ The VTOL dynamics simulation is highly configurable, allowing users to specify a
 - `characteristicLength`: Characteristic length in meters (m).
 - `inertia`: 3x3 inertia matrix in kilogram meter squared (kg*m^2).
 - `propellersLocation`: An array of 3D vectors describing the location of the propellers.
-- `motorMaxRadPerSec` and `servoHalfRange`: Vectors describing the minimum and maximum possible radian values per second for each actuator (motors and servos).
+- `motorMaxRadPerSec` and `servoRange`: Vectors describing the minimum and maximum possible radian values per second for each actuator (motors and servos).
 - `deltaControlMax`: An array describing the maximum control change per second (rad/sec^2).
 - `timeConstant`: An array describing the time constants (in seconds) for the actuators.
 - `accVariance` and `gyroVariance`: Variances for accelerometer and gyroscope readings respectively.

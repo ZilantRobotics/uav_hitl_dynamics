@@ -44,7 +44,7 @@ struct VtolParameters{
     std::array<double, 8> timeConstant;             // sec
 
     std::vector<double> motorMaxRadPerSec;          // rad/sec
-    std::vector<double> servoHalfRange;
+    std::vector<double> servoRange;
     std::vector<Geometry> geometry;
 
     double accVariance;
@@ -229,11 +229,14 @@ class VtolDynamics : public UavDynamicsSimBase{
         void loadTables(const std::string& path);
         void loadParams(const std::string& path);
         void loadMotorsGeometry(const std::string& path);
-        std::vector<double> mapGeneralCmdToInternal(const std::vector<double>& cmd) const;
-        void updateActuators(std::vector<double>& cmd, double dtSecs);
+        void _mapUnitlessSetpointToInternal(const std::vector<double>& cmd);
+        void updateActuators(double dtSecs);
         Eigen::Vector3d calculateAirSpeed(const Eigen::Matrix3d& rotationMatrix,
                                     const Eigen::Vector3d& estimatedVelocity,
                                     const Eigen::Vector3d& windSpeed) const;
+
+        std::vector<double> _motorsRadPerSec{0.0, 0.0, 0.0, 0.0, 0.0};
+        std::vector<double> _servosValues{0.0, 0.0, 0.0};
 
         VtolParameters _params;
         State _state;
