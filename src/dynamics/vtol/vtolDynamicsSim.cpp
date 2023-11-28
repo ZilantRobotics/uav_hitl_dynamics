@@ -27,7 +27,7 @@
 #include "common_math.hpp"
 
 static constexpr const size_t MOTORS_AMOUNT = 5;
-static constexpr const size_t CONTROL_SURFACES_AMOUNT = 3;
+static constexpr const size_t SERVOS_AMOUNT = 3;
 static constexpr const size_t ACTUATORS_AMOUNT = 8;
 
 VtolDynamics::VtolDynamics(){
@@ -93,10 +93,8 @@ void VtolDynamics::loadParams(const std::string& path){
         !ros::param::get(path + "characteristicLength", _params.characteristicLength) ||
 
         !ros::param::get(path + "motorMaxRadPerSec", _params.motorMaxRadPerSec) ||
-        !ros::param::get(path + "servoHalfRange", _params.servoHalfRange) ||
+        !ros::param::get(path + "servoRange", _params.servoRange) ||
 
-        !ros::param::get(path + "actuatorMin", _params.actuatorMin) ||
-        !ros::param::get(path + "actuatorMax", _params.actuatorMax) ||
         !ros::param::get(path + "accVariance", _params.accVariance) ||
         !ros::param::get(path + "gyroVariance", _params.gyroVariance)) {
         // error
@@ -287,73 +285,69 @@ int8_t VtolDynamics::calibrate(SimMode_t calType){
 }
 
 void VtolDynamics::process(double dtSecs,
-                              const std::vector<double>& motorCmd,
-                              bool isCmdPercent){
+                           const std::vector<double>& unitless_setpoint,
+                           bool isCmdPercent){
+    (void)isCmdPercent;
+
     Eigen::Vector3d windNed = calculateWind();
     Eigen::Matrix3d rotationMatrix = calculateRotationMatrix();
     _state.airspeedFrd = calculateAirSpeed(rotationMatrix, _state.linearVelNed, windNed);
     double AoA = calculateAnglesOfAtack(_state.airspeedFrd);
     double AoS = calculateAnglesOfSideslip(_state.airspeedFrd);
-    auto actuators = isCmdPercent ? mapGeneralCmdToInternal(motorCmd) : motorCmd;
-    updateActuators(actuators, dtSecs);
-    calculateAerodynamics(_state.airspeedFrd, AoA, AoS, actuators[5], actuators[6], actuators[7],
+    _mapUnitlessSetpointToInternal(unitless_setpoint);
+    updateActuators(dtSecs);
+    calculateAerodynamics(_state.airspeedFrd, AoA, AoS, _servosValues[0], _servosValues[1], _servosValues[2],
                           _state.forces.aero, _state.moments.aero);
-    calculateNewState(_state.moments.aero, _state.forces.aero, actuators, dtSecs);
+    calculateNewState(_state.moments.aero, _state.forces.aero, _motorsRadPerSec, dtSecs);
 }
 
 
 /**
  * @note Map motors indexes from InnoVTOL mixer into internal representation
  * @param cmd General VTOL actuator command is:
- * 0-3  Copter
- * 4    Ailerons    [ 0.0, +1.0], where 0 wants to rotate to the right
- * 5    Elevators   [-1.0, +1.0], where -1 wants ...
- * 6    Rudders     [-1.0, +1.0], where -1 wants ...
+ * 0-3  Copter      [ 0.0, +1.0]
+ * 4    Ailerons    [-1.0, +1.0]
+ * 5    Elevators   [-1.0, +1.0]
+ * 6    Rudders     [-1.0, +1.0]
  * 7    Throttle    [0.0,  +1.0]
  * @return Output indexes will be:
  * 0-3  Copter      [0.0,  RAD_PER_SEC_MAX]
  * 4    Throttle    [0.0,  RAD_PER_SEC_MAX]
- * 5    Ailerons    [-1.0, +1.0]
- * 6    Elevators   [-1.0, +1.0]
- * 7    Rudders     [-1.0, +1.0]
+ * 5    Ailerons    [-MAX_RANGE, +MAX_RANGE]
+ * 6    Elevators   [-MAX_RANGE, +MAX_RANGE]
+ * 7    Rudders     [-MAX_RANGE, +MAX_RANGE]
  */
-std::vector<double> VtolDynamics::mapGeneralCmdToInternal(const std::vector<double>& cmd) const{
-    if(cmd.size() < ACTUATORS_AMOUNT){
-        std::cerr << "ERROR: VtolDynamics wrong control size. It is " << cmd.size()
-                  << ", but should be 8" << std::endl;
-        return cmd;
-    }
+void VtolDynamics::_mapUnitlessSetpointToInternal(const std::vector<double>& cmd) {
+    assert((cmd.size() >= ACTUATORS_AMOUNT) && "ERROR: VtolDynamics wrong setpoint size.");
 
-    std::vector<double> actuators(ACTUATORS_AMOUNT);
-    actuators[0] = cmd[0];
-    actuators[1] = cmd[1];
-    actuators[2] = cmd[2];
-    actuators[3] = cmd[3];
+    _motorsRadPerSec[0] = cmd[0];
+    _motorsRadPerSec[1] = cmd[1];
+    _motorsRadPerSec[2] = cmd[2];
+    _motorsRadPerSec[3] = cmd[3];
+    _motorsRadPerSec[4] = cmd[7];       // ICE
 
-    actuators[4] = cmd[7];      // ICE
-    actuators[5] = cmd[4];      // ailerons
-    actuators[6] = cmd[5];      // elevators
-    actuators[7] = cmd[6];      // rudders
+    _servosValues[0] = cmd[4];          // ailerons
+    _servosValues[1] = cmd[5];          // elevators
+    _servosValues[2] = cmd[6];          // rudders
 
     for(size_t idx = 0; idx < MOTORS_AMOUNT; idx++){
-        actuators[idx] = boost::algorithm::clamp(actuators[idx], 0.0, +1.0);
-        actuators[idx] *= _params.actuatorMax[idx];
+        _motorsRadPerSec[idx] = boost::algorithm::clamp(_motorsRadPerSec[idx], 0.0, +1.0);
+        _motorsRadPerSec[idx] *= _params.motorMaxRadPerSec[idx];
     }
 
-    for(size_t idx = MOTORS_AMOUNT; idx < ACTUATORS_AMOUNT; idx++){
-        actuators[idx] = boost::algorithm::clamp(actuators[idx], -1.0, +1.0);
-        actuators[idx] *= (actuators[idx] >= 0) ? _params.actuatorMax[idx] : -_params.actuatorMin[idx];
+    for(size_t servo_idx = 0; servo_idx < SERVOS_AMOUNT; servo_idx++){
+        size_t idx = servo_idx + MOTORS_AMOUNT;
+        _servosValues[servo_idx] = boost::algorithm::clamp(_servosValues[servo_idx], -1.0, +1.0);
+        _servosValues[servo_idx] *= _params.servoRange[servo_idx];
     }
-
-    return actuators;
 }
 
-void VtolDynamics::updateActuators(std::vector<double>& cmd, double dtSecs){
+void VtolDynamics::updateActuators(double dtSecs){
     _state.prevActuators = _state.crntActuators;
-    for(size_t idx = 0; idx < ACTUATORS_AMOUNT; idx++){
-        auto cmd_delta = _state.prevActuators[idx] - cmd[idx];
-        cmd[idx] += cmd_delta * (1 - pow(2.71, -dtSecs/_tables.actuatorTimeConstants[idx]));
-        _state.crntActuators[idx] = cmd[idx];
+    for(size_t idx = 0; idx < MOTORS_AMOUNT; idx++){
+        auto cmd_delta = _state.prevActuators[idx] - _motorsRadPerSec[idx];
+        _motorsRadPerSec[idx] += cmd_delta * (1 - pow(2.71, -dtSecs/_tables.actuatorTimeConstants[idx]));
+        _state.crntActuators[idx] = _motorsRadPerSec[idx];
     }
 }
 
@@ -523,6 +517,7 @@ void VtolDynamics::calculateNewState(const Eigen::Vector3d& Maero,
                                      const Eigen::Vector3d& Faero,
                                      const std::vector<double>& actuator,
                                      double dt_sec){
+    assert((actuator.size() >= MOTORS_AMOUNT) && "ERROR: VtolDynamics wrong motors number.");
     for(size_t idx = 0; idx < MOTORS_AMOUNT; idx++){
         double thrust;
         double torque;
