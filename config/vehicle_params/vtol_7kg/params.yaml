@@ -13,14 +13,22 @@ propellersLocationY:    0.290       # meters
 propellersLocationZ:    -0.031      # meters
 mainEngineLocationX:    0.445       # meters
 
-# double massUncertainty;                         // mass multiplier
-# double inertiaUncertainty;                      // mass multiplier
-
 # 0-3   Copter motors     Rad/sec
 # 4     ICE               Rad/sec
 # 5-7   Control surfaces  Position
 actuatorMin:            [0,     0,    0,    0,    0,    -20, -20, -20]
 actuatorMax:            [1000,  1000, 1000, 1000, 1000, 20,  20,  20]
+
+# Actuator Geometry is similar to PX4:
+motorAxisX:             [0.00,    0.00,     0.00,     0.00,     1.00]
+motorAxisZ:             [-1.00,   -1.00,    -1.00,    -1.00,    0.000]
+motorDirectionCCW:      [True,    True,     False,    False,    True]
+motorPositionX:         [+0.275,  -0.275,   +0.275,   -0.275,   0.445]
+motorPositionY:         [+0.290,  -0.290,   -0.290,   +0.290,   0.000]
+motorPositionZ:         [-0.031,  -0.031,   -0.031,   -0.031,   0.000]
+
+motorMaxRadPerSec:      [1000,    1000,     1000,     1000,     1000]
+servoHalfRange:         [20,      20,       20]
 
 accVariance:            0.0005
 gyroVariance:           0.0005

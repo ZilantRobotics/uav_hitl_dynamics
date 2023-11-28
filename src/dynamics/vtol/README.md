@@ -161,7 +161,7 @@ Note that this is a simplified model, and in more complex models, factors like a
 
 The motors model module of the software handles the calculations that link motor actuator commands to physical forces and torques.
 
-The `updateActuators` function is effectively performing a first-order exponential decay operation on the change in the actuator commands. Given an actuator command $cmd_{new}$, previous actuator state $cmd_{old}$, and a time constant $\tau$, the updated actuator command $cmd_{upd}$ is calculated as:
+The `_updateActuators` function is effectively performing a first-order exponential decay operation on the change in the actuator commands. Given an actuator command $cmd_{new}$, previous actuator state $cmd_{old}$, and a time constant $\tau$, the updated actuator command $cmd_{upd}$ is calculated as:
 
 $$cmd_{upd} = cmd_{old} + (cmd_{new} - cmd_{old}) \cdot (1 - e^{-\frac{dt}{\tau}})$$
 
@@ -203,7 +203,7 @@ The class comprises the following key methods:
 - `process()`: This method, inherited from the base class, accepts the actuator input, updates the state of the VTOL using the dynamics equations, and incorporates aerodynamic properties and environmental effects like wind into the simulation.
 - `calculateNewState()`: This is the core function that updates the state of the VTOL based on the provided aerodynamic forces, aerodynamic moments, actuator outputs, and time step.
 - calibrate(): This method is used to simulate the mag sensor calibration process
-- 'updateActuators()' function simulates motors dynamics;
+- '_updateActuators()' function simulates motors dynamics;
 - `calculateAerodynamics()` and others like `calculateDynamicPressure()`, `calculateAnglesOfAttack()`, `calculateAnglesOfSideslip()`, `calculate**Polynomial()`, etc are used to compute the aerodynamic forces and moments acting on the VTOL
 - `thruster()` function calculates the thrust, torque, and RPM for each motor based on the actuator command.
 
@@ -225,7 +225,7 @@ The VTOL dynamics simulation is highly configurable, allowing users to specify a
 - `characteristicLength`: Characteristic length in meters (m).
 - `inertia`: 3x3 inertia matrix in kilogram meter squared (kg*m^2).
 - `propellersLocation`: An array of 3D vectors describing the location of the propellers.
-- `actuatorMin` and `actuatorMax`: Vectors describing the minimum and maximum possible radian values per second for each actuator respectively.
+- `motorMaxRadPerSec` and `servoHalfRange`: Vectors describing the minimum and maximum possible radian values per second for each actuator (motors and servos).
 - `deltaControlMax`: An array describing the maximum control change per second (rad/sec^2).
 - `timeConstant`: An array describing the time constants (in seconds) for the actuators.
 - `accVariance` and `gyroVariance`: Variances for accelerometer and gyroscope readings respectively.

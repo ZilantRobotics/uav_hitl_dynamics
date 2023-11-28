@@ -100,6 +100,10 @@ void VtolDynamics::loadParams(const std::string& path){
         !ros::param::get(path + "propellersLocationY", propLocY) ||
         !ros::param::get(path + "propellersLocationZ", propLocZ) ||
         !ros::param::get(path + "mainEngineLocationX", mainEngineLocX) ||
+
+        !ros::param::get(path + "motorMaxRadPerSec", _params.motorMaxRadPerSec) ||
+        !ros::param::get(path + "servoHalfRange", _params.servoHalfRange) ||
+
         !ros::param::get(path + "actuatorMin", _params.actuatorMin) ||
         !ros::param::get(path + "actuatorMax", _params.actuatorMax) ||
         !ros::param::get(path + "accVariance", _params.accVariance) ||
@@ -107,12 +111,47 @@ void VtolDynamics::loadParams(const std::string& path){
         // error
     }
 
+    loadMotorsGeometry(path);
+
     _params.propellersLocation[0] <<  propLocX,  propLocY, propLocZ;
     _params.propellersLocation[1] << -propLocX, -propLocY, propLocZ;
     _params.propellersLocation[2] <<  propLocX, -propLocY, propLocZ;
     _params.propellersLocation[3] << -propLocX,  propLocY, propLocZ;
     _params.propellersLocation[4] << mainEngineLocX, 0, 0;
     _params.inertia = getTableNew<3, 3, Eigen::RowMajor>(path, "inertia");
+}
+
+void VtolDynamics::loadMotorsGeometry(const std::string& path) {
+    std::vector<double> motorPositionX;
+    std::vector<double> motorPositionY;
+    std::vector<double> motorPositionZ;
+    std::vector<bool> motorDirectionCCW;
+    std::vector<double> motorAxisX;
+    std::vector<double> motorAxisZ;
+    ros::param::get(path + "motorPositionX", motorPositionX);
+    ros::param::get(path + "motorPositionY", motorPositionY);
+    ros::param::get(path + "motorPositionZ", motorPositionZ);
+    ros::param::get(path + "motorDirectionCCW", motorDirectionCCW);
+    ros::param::get(path + "motorAxisX", motorAxisX);
+    ros::param::get(path + "motorAxisZ", motorAxisZ);
+
+    assert(motorPositionX.size() >= MOTORS_AMOUNT);
+    assert(motorPositionY.size() >= MOTORS_AMOUNT);
+    assert(motorPositionZ.size() >= MOTORS_AMOUNT);
+    assert(motorDirectionCCW.size() >= MOTORS_AMOUNT);
+    assert(motorAxisX.size() >= MOTORS_AMOUNT);
+    assert(motorAxisZ.size() >= MOTORS_AMOUNT);
+
+    for (size_t motor_idx = 0; motor_idx < MOTORS_AMOUNT; motor_idx++) {
+        Geometry geometry;
+        geometry.positionX = motorPositionX[motor_idx];
+        geometry.positionY = motorPositionY[motor_idx];
+        geometry.positionZ = motorPositionZ[motor_idx];
+        geometry.directionCCW = motorDirectionCCW[motor_idx];
+        geometry.axisX = motorAxisX[motor_idx];
+        geometry.axisZ = motorAxisZ[motor_idx];
+        _params.geometry.push_back(geometry);
+    }
 }
 
 void VtolDynamics::setInitialPosition(const Eigen::Vector3d & position,
