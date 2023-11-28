@@ -153,9 +153,7 @@ class VtolDynamics : public UavDynamicsSimBase{
                                 const Eigen::Quaterniond& attitudeXYZW) override;
         void land() override;
         int8_t calibrate(SimMode_t calibrationType) override;
-        void process(double dt_secs,
-                     const std::vector<double>& motorSpeedCommandIn,
-                     bool isCmdPercent) override;
+        void process(double dt_secs, const std::vector<double>& setpoint) override;
 
         /**
          * @note These methods should return in NED format
@@ -232,11 +230,11 @@ class VtolDynamics : public UavDynamicsSimBase{
         void _mapUnitlessSetpointToInternal(const std::vector<double>& cmd);
         void updateActuators(double dtSecs);
         Eigen::Vector3d calculateAirSpeed(const Eigen::Matrix3d& rotationMatrix,
-                                    const Eigen::Vector3d& estimatedVelocity,
-                                    const Eigen::Vector3d& windSpeed) const;
+                                          const Eigen::Vector3d& estimatedVelocity,
+                                          const Eigen::Vector3d& windSpeed) const;
 
-        std::vector<double> _motorsRadPerSec{0.0, 0.0, 0.0, 0.0, 0.0};
-        std::vector<double> _servosValues{0.0, 0.0, 0.0};
+        std::vector<double> _motorsRadPerSec{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+        std::array<double, 3> _servosValues{0.0, 0.0, 0.0};
 
         VtolParameters _params;
         State _state;

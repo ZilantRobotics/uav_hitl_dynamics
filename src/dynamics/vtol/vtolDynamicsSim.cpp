@@ -284,18 +284,15 @@ int8_t VtolDynamics::calibrate(SimMode_t calType){
     return 1;
 }
 
-void VtolDynamics::process(double dtSecs,
-                           const std::vector<double>& unitless_setpoint,
-                           bool isCmdPercent){
-    (void)isCmdPercent;
+void VtolDynamics::process(double dtSecs, const std::vector<double>& unitless_setpoint){
+    _mapUnitlessSetpointToInternal(unitless_setpoint);
+    updateActuators(dtSecs);
 
     Eigen::Vector3d windNed = calculateWind();
     Eigen::Matrix3d rotationMatrix = calculateRotationMatrix();
     _state.airspeedFrd = calculateAirSpeed(rotationMatrix, _state.linearVelNed, windNed);
     double AoA = calculateAnglesOfAtack(_state.airspeedFrd);
     double AoS = calculateAnglesOfSideslip(_state.airspeedFrd);
-    _mapUnitlessSetpointToInternal(unitless_setpoint);
-    updateActuators(dtSecs);
     calculateAerodynamics(_state.airspeedFrd, AoA, AoS, _servosValues[0], _servosValues[1], _servosValues[2],
                           _state.forces.aero, _state.moments.aero);
     calculateNewState(_state.moments.aero, _state.forces.aero, _motorsRadPerSec, dtSecs);
