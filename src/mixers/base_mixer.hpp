@@ -35,10 +35,10 @@ enum VtolDynamicsMapping {
     VTOL_MOTOR_1_REAR_LEFT,         ///< [ 0.0; +1.0]
     VTOL_MOTOR_2_FRONT_LEFT,        ///< [ 0.0; +1.0]
     VTOL_MOTOR_3_REAR_RIGHT,        ///< [ 0.0; +1.0]
+    VTOL_THROTLE,                   ///< [ 0.0; +1.0]
     VTOL_AILERONS,                  ///< [-1.0; +1.0]
     VTOL_ELEVATORS,                 ///< [-1.0; +1.0]
     VTOL_RUDDERS,                   ///< [-1.0; +1.0]
-    VTOL_THROTLE,                   ///< [ 0.0; +1.0]
 };
 
 class BaseReverseMixer {

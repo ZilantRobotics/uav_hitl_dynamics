@@ -26,11 +26,13 @@
 #include "cs_converter.hpp"
 #include "common_math.hpp"
 
+static constexpr const size_t MOTORS_AMOUNT = 5;
+
 static constexpr const size_t AILERONS_INDEX = 0;
 static constexpr const size_t ELEVATORS_INDEX = 1;
 static constexpr const size_t RUDDERS_INDEX = 2;
-static constexpr const size_t MOTORS_AMOUNT = 5;
 static constexpr const size_t SERVOS_AMOUNT = 3;
+
 static constexpr const size_t ACTUATORS_AMOUNT = 8;
 
 VtolDynamics::VtolDynamics(){
@@ -324,11 +326,11 @@ void VtolDynamics::_mapUnitlessSetpointToInternal(const std::vector<double>& cmd
     _motorsRadPerSec[1] = cmd[1];
     _motorsRadPerSec[2] = cmd[2];
     _motorsRadPerSec[3] = cmd[3];
-    _motorsRadPerSec[4] = cmd[7];       // ICE
+    _motorsRadPerSec[4] = cmd[4];       // ICE
 
-    _servosValues[0] = cmd[4];          // ailerons
-    _servosValues[1] = cmd[5];          // elevators
-    _servosValues[2] = cmd[6];          // rudders
+    _servosValues[0] = cmd[5];          // ailerons
+    _servosValues[1] = cmd[6];          // elevators
+    _servosValues[2] = cmd[7];          // rudders
 
     for(size_t idx = 0; idx < MOTORS_AMOUNT; idx++){
         _motorsRadPerSec[idx] = boost::algorithm::clamp(_motorsRadPerSec[idx], 0.0, +1.0);
