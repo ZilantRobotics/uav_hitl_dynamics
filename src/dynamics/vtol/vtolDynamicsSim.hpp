@@ -43,7 +43,7 @@ struct VtolParameters{
     std::array<double, 8> deltaControlMax;          // rad/sec^2
     std::array<double, 8> timeConstant;             // sec
 
-    std::vector<double> motorMaxRadPerSec;          // rad/sec
+    std::vector<double> motorMaxSpeed;              // rad/sec
     std::vector<double> servoRange;
     std::vector<Geometry> geometry;
 

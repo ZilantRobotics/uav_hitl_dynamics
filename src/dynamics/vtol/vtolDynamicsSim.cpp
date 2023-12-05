@@ -92,7 +92,7 @@ void VtolDynamics::loadParams(const std::string& path){
         !ros::param::get(path + "wingArea", _params.wingArea) ||
         !ros::param::get(path + "characteristicLength", _params.characteristicLength) ||
 
-        !ros::param::get(path + "motorMaxRadPerSec", _params.motorMaxRadPerSec) ||
+        !ros::param::get(path + "motorMaxSpeed", _params.motorMaxSpeed) ||
         !ros::param::get(path + "servoRange", _params.servoRange) ||
 
         !ros::param::get(path + "accVariance", _params.accVariance) ||
@@ -329,7 +329,7 @@ void VtolDynamics::_mapUnitlessSetpointToInternal(const std::vector<double>& cmd
 
     for(size_t idx = 0; idx < MOTORS_AMOUNT; idx++){
         _motorsRadPerSec[idx] = boost::algorithm::clamp(_motorsRadPerSec[idx], 0.0, +1.0);
-        _motorsRadPerSec[idx] *= _params.motorMaxRadPerSec[idx];
+        _motorsRadPerSec[idx] *= _params.motorMaxSpeed[idx];
     }
 
     for(size_t servo_idx = 0; servo_idx < SERVOS_AMOUNT; servo_idx++){
