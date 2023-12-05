@@ -340,6 +340,8 @@ void VtolDynamics::_mapUnitlessSetpointToInternal(const std::vector<double>& cmd
         _servosValues[servo_idx] = boost::algorithm::clamp(_servosValues[servo_idx], -1.0, +1.0);
         _servosValues[servo_idx] *= _params.servoRange[servo_idx];
     }
+
+    _servosValues[ELEVATORS_INDEX] *= -1;  // elevator is inverted
 }
 
 void VtolDynamics::updateActuators(double dtSecs){
