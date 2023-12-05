@@ -26,6 +26,9 @@
 #include "cs_converter.hpp"
 #include "common_math.hpp"
 
+static constexpr const size_t AILERONS_INDEX = 0;
+static constexpr const size_t ELEVATORS_INDEX = 1;
+static constexpr const size_t RUDDERS_INDEX = 2;
 static constexpr const size_t MOTORS_AMOUNT = 5;
 static constexpr const size_t SERVOS_AMOUNT = 3;
 static constexpr const size_t ACTUATORS_AMOUNT = 8;
@@ -293,7 +296,7 @@ void VtolDynamics::process(double dtSecs, const std::vector<double>& unitless_se
     _state.airspeedFrd = calculateAirSpeed(rotationMatrix, _state.linearVelNed, windNed);
     double AoA = calculateAnglesOfAtack(_state.airspeedFrd);
     double AoS = calculateAnglesOfSideslip(_state.airspeedFrd);
-    calculateAerodynamics(_state.airspeedFrd, AoA, AoS, _servosValues[0], _servosValues[1], _servosValues[2],
+    calculateAerodynamics(_state.airspeedFrd, AoA, AoS, _servosValues,
                           _state.forces.aero, _state.moments.aero);
     calculateNewState(_state.moments.aero, _state.forces.aero, _motorsRadPerSec, dtSecs);
 }
@@ -419,13 +422,11 @@ double VtolDynamics::calculateAnglesOfSideslip(const Eigen::Vector3d& airspeed_f
  * FS - side force and side coeeficient respectively
  */
 void VtolDynamics::calculateAerodynamics(const Eigen::Vector3d& airspeed,
-                                            double AoA,
-                                            double AoS,
-                                            double aileron_pos,
-                                            double elevator_pos,
-                                            double rudder_pos,
-                                            Eigen::Vector3d& Faero,
-                                            Eigen::Vector3d& Maero){
+                                         double AoA,
+                                         double AoS,
+                                         const std::array<double, 3>& servos,
+                                         Eigen::Vector3d& Faero,
+                                         Eigen::Vector3d& Maero){
     // 0. Common computation
     double AoA_deg = boost::algorithm::clamp(AoA * 180 / 3.1415, -45.0, +45.0);
     double AoS_deg = boost::algorithm::clamp(AoS * 180 / 3.1415, -90.0, +90.0);
@@ -445,7 +446,7 @@ void VtolDynamics::calculateAerodynamics(const Eigen::Vector3d& airspeed,
 
     calculateCSPolynomial(airspeedModClamped, polynomialCoeffs);
     double CS = Math::polyval(polynomialCoeffs, AoA_deg);
-    double CS_rudder = calculateCSRudder(rudder_pos, airspeedModClamped);
+    double CS_rudder = calculateCSRudder(servos[RUDDERS_INDEX], airspeedModClamped);
     double CS_beta = calculateCSBeta(AoS_deg, airspeedModClamped);
     FS = airspeed.cross(Eigen::Vector3d(0, 1, 0).cross(airspeed.normalized())) * (CS + CS_rudder + CS_beta);
 
@@ -465,19 +466,19 @@ void VtolDynamics::calculateAerodynamics(const Eigen::Vector3d& airspeed,
     calculateCmzPolynomial(airspeedModClamped, polynomialCoeffs);
     auto Cmz = -Math::polyval(polynomialCoeffs, AoA_deg);
 
-    double Cmx_aileron = calculateCmxAileron(aileron_pos, airspeedModClamped);
+    double Cmx_aileron = calculateCmxAileron(servos[AILERONS_INDEX], airspeedModClamped);
     /**
      * @note InnoDynamics from octave has some mistake in elevator logic
      * It always generate non positive moment in both positive and negative position
      * Temporary decision is to create positive moment in positive position and
      * negative moment in negative position
      */
-    double Cmy_elevator = calculateCmyElevator(abs(elevator_pos), airspeedModClamped);
-    double Cmz_rudder = calculateCmzRudder(rudder_pos, airspeedModClamped);
+    double Cmy_elevator = calculateCmyElevator(abs(servos[ELEVATORS_INDEX]), airspeedModClamped);
+    double Cmz_rudder = calculateCmzRudder(servos[RUDDERS_INDEX], airspeedModClamped);
 
-    auto Mx = Cmx + Cmx_aileron * aileron_pos;
-    auto My = Cmy + Cmy_elevator * elevator_pos;
-    auto Mz = Cmz + Cmz_rudder * rudder_pos;
+    auto Mx = Cmx + Cmx_aileron * servos[AILERONS_INDEX];
+    auto My = Cmy + Cmy_elevator * servos[ELEVATORS_INDEX];
+    auto Mz = Cmz + Cmz_rudder * servos[RUDDERS_INDEX];
 
     Maero = 0.5 * dynamicPressure * _params.characteristicLength * Eigen::Vector3d(Mx, My, Mz);
 
@@ -485,7 +486,9 @@ void VtolDynamics::calculateAerodynamics(const Eigen::Vector3d& airspeed,
     _state.forces.lift << 0.5 * dynamicPressure * _params.characteristicLength * FL;
     _state.forces.drug << 0.5 * dynamicPressure * _params.characteristicLength * FD;
     _state.forces.side << 0.5 * dynamicPressure * _params.characteristicLength * FS;
-    _state.moments.steer << Cmx_aileron * aileron_pos, Cmy_elevator * elevator_pos, Cmz_rudder * rudder_pos;
+    _state.moments.steer << Cmx_aileron * servos[AILERONS_INDEX],
+                            Cmy_elevator * servos[ELEVATORS_INDEX],
+                            Cmz_rudder * servos[RUDDERS_INDEX];
     _state.moments.steer *= 0.5 * dynamicPressure * _params.characteristicLength;
     _state.moments.airspeed << Cmx, Cmy, Cmz;
     _state.moments.airspeed *= 0.5 * dynamicPressure * _params.characteristicLength;

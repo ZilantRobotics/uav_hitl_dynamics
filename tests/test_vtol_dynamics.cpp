@@ -371,15 +371,12 @@ TEST(VtolDynamics, calculateAerodynamics){
     Eigen::Vector3d airspeed(0.000001, -9.999999, 0.000001);
     double AoA = 0.958191;
     double AoS = -1.570796;
-    double aileron_pos = 0.000000;
-    double elevator_pos = 0.000000;
-    double rudder_pos = 0.000000;
+    std::array<double, 3> servos{0.0, 0.0, 0.0};
 
     Eigen::Vector3d extectedFaero(-4.8133e-07, 2.9513e+01, -6.0493e-06);
     Eigen::Vector3d extectedMaero(0.21470, 0.69480, -0.31633);
 
-    vtolDynamicsSim.calculateAerodynamics(airspeed, AoA, AoS, aileron_pos, elevator_pos, rudder_pos,
-                                          Faero, Maero);
+    vtolDynamicsSim.calculateAerodynamics(airspeed, AoA, AoS, servos, Faero, Maero);
 
     for(size_t idx = 0; idx < 3; idx++){
         EXPECT_NEAR(Faero[idx], extectedFaero[idx], 0.001);
@@ -395,15 +392,12 @@ TEST(VtolDynamics, calculateAerodynamicsCaseAileron){
     Eigen::Vector3d airspeed(5, 5, 5);
     double AoA = 0.1;
     double AoS = 0.1;
-    double aileron_pos = 0.5;
-    double elevator_pos = 0.0;
-    double rudder_pos = 0.0;
+    std::array<double, 3> servos{0.5, 0.0, 0.0};
 
     Eigen::Vector3d extectedFaero(7.4133, -4.3077, -6.6924);
     Eigen::Vector3d extectedMaero(0.333818, 1.754507, -0.037038);
 
-    vtolDynamicsSim.calculateAerodynamics(airspeed, AoA, AoS, aileron_pos, elevator_pos, rudder_pos,
-                                          Faero, Maero);
+    vtolDynamicsSim.calculateAerodynamics(airspeed, AoA, AoS, servos, Faero, Maero);
 
     for(size_t idx = 0; idx < 3; idx++){
         EXPECT_NEAR(Faero[idx], extectedFaero[idx], 0.02);
@@ -419,15 +413,12 @@ TEST(VtolDynamics, calculateAerodynamicsCaseElevator){
     Eigen::Vector3d airspeed(5, 5, 5);
     double AoA = 0.1;
     double AoS = 0.1;
-    double aileron_pos = 0.0;
-    double elevator_pos = 5;
-    double rudder_pos = 0.0;
+    std::array<double, 3> servos{0.0, 5.0, 0.0};
 
     Eigen::Vector3d extectedFaero(7.4133, -4.3077, -6.6924);
     Eigen::Vector3d extectedMaero(0.190243, 1.220935, -0.037038);
 
-    vtolDynamicsSim.calculateAerodynamics(airspeed, AoA, AoS, aileron_pos, elevator_pos, rudder_pos,
-                                          Faero, Maero);
+    vtolDynamicsSim.calculateAerodynamics(airspeed, AoA, AoS, servos, Faero, Maero);
 
     for(size_t idx = 0; idx < 3; idx++){
         EXPECT_NEAR(Faero[idx], extectedFaero[idx], 0.02);
@@ -443,15 +434,12 @@ TEST(VtolDynamics, calculateAerodynamicsAoA){
     Eigen::Vector3d airspeed(5, 5, 5);
     double AoA = 27.0 * 3.1415 / 180.0;
     double AoS = 0;
-    double aileron_pos = 0.0;
-    double elevator_pos = 0.0;
-    double rudder_pos = 0.0;
+    std::array<double, 3> servos{0.0, 0.0, 0.0};
 
     Eigen::Vector3d extectedFaero(6.0625, -7.7260, -17.5536);
     Eigen::Vector3d extectedMaero(0.16512, 1.26568, -0.11093);
 
-    vtolDynamicsSim.calculateAerodynamics(airspeed, AoA, AoS, aileron_pos, elevator_pos, rudder_pos,
-                                          Faero, Maero);
+    vtolDynamicsSim.calculateAerodynamics(airspeed, AoA, AoS, servos, Faero, Maero);
 
     for(size_t idx = 0; idx < 3; idx++){
         EXPECT_NEAR(Faero[idx], extectedFaero[idx], 0.04);
@@ -467,15 +455,12 @@ TEST(VtolDynamics, calculateAerodynamicsRealCase){
     Eigen::Vector3d airspeed(2.93128, 0.619653, 0.266774);
     double AoA = 45 * 3.1415 / 180.0;
     double AoS = 11.8888 * 3.1415 / 180.0;
-    double aileron_pos = 0.0;
-    double elevator_pos = 0.0;
-    double rudder_pos = 0.0;
+    std::array<double, 3> servos{0.0, 0.0, 0.0};
 
     Eigen::Vector3d extectedFaero(-2.28665, -0.92928, -2.66499);
     Eigen::Vector3d extectedMaero(0.017652, 0.074924, -0.024468);
 
-    vtolDynamicsSim.calculateAerodynamics(airspeed, AoA, AoS, aileron_pos, elevator_pos, rudder_pos,
-                                          Faero, Maero);
+    vtolDynamicsSim.calculateAerodynamics(airspeed, AoA, AoS, servos, Faero, Maero);
 
     for(size_t idx = 0; idx < 3; idx++){
         EXPECT_NEAR(Faero[idx], extectedFaero[idx], 0.04);
