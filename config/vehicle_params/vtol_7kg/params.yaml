@@ -15,9 +15,10 @@ motorDirectionCCW:      [True,    True,     False,    False,    True]
 motorPositionX:         [+0.275,  -0.275,   +0.275,   -0.275,   0.445]
 motorPositionY:         [+0.290,  -0.290,   -0.290,   +0.290,   0.000]
 motorPositionZ:         [-0.031,  -0.031,   -0.031,   -0.031,   0.000]
+motorMaxSpeed:          [1000,    1000,     1000,     1000,     1000]
 
-# Motors and control surfaces models
-motorMaxRadPerSec:      [1000,    1000,     1000,     1000,     1000]
+
+# Servo models
 servoRange:             [20,      20,       20]
 
 accVariance:            0.0005
