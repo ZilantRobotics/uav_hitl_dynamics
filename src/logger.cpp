@@ -100,11 +100,11 @@ void StateLogger::createStringStream(std::stringstream& logStream,
 
     if(_info.loggingType == LoggingType::STANDARD_VTOL){
         addBold(logStream, "fw rpy");
-        logStream << " [" << actuators[4] << ", "
-                            << actuators[5] << ", "
-                            << actuators[6] << "]";
+        logStream << " [" << actuators[5] << ", "
+                            << actuators[6] << ", "
+                            << actuators[7] << "]";
         addBold(logStream, " throttle");
-        logStream << " [" << actuators[7] << "] ";
+        logStream << " [" << actuators[4] << "] ";
     }
 
     auto enuPosition = (_info.notation == DynamicsNotation_t::PX4_NED_FRD) ? Converter::nedToEnu(pose) : pose;
