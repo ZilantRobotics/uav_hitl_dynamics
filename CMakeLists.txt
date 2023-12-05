@@ -87,16 +87,7 @@ target_link_libraries(${PROJECT_NAME}_node
 )
 
 ## 2. Declare a C++ mixer_node executable
-add_executable(${PROJECT_NAME}_mixer_node src/mixer_node.cpp)
-target_include_directories(${PROJECT_NAME}_mixer_node
-                BEFORE
-                PUBLIC ${MAVLINK_INCLUDE_DIRS})
-set_target_properties(${PROJECT_NAME}_mixer_node PROPERTIES OUTPUT_NAME mixer_node PREFIX "")
-add_dependencies(${PROJECT_NAME}_mixer_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME}_mixer_node
-    ${PROJECT_NAME}
-    ${catkin_LIBRARIES}
-)
+include(src/mixers/CMakeLists.txt)
 
 #############
 ## Testing ##
