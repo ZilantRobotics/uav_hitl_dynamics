@@ -196,9 +196,7 @@ class VtolDynamics : public UavDynamicsSimBase{
         void calculateAerodynamics(const Eigen::Vector3d& airspeed,
                                    double AoA,
                                    double AoS,
-                                   double aileron_pos,
-                                   double elevator_pos,
-                                   double rudder_pos,
+                                   const std::array<double, 3>& servos,
                                    Eigen::Vector3d& Faero,
                                    Eigen::Vector3d& Maero);
 
