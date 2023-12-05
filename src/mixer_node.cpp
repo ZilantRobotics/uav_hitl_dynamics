@@ -52,11 +52,11 @@ enum VTOL_OUTPUTS {
     VTOL_MOTOR_3_REAR_RIGHT,        ///< [ 0.0; +1.0]
     VTOL_AILERONS,                  ///< [-1.0; +1.0]
     VTOL_ELEVATORS,                 ///< [-1.0; +1.0]
-    VTOL_RUDDERS,                   ///< [ 0.0; +1.0]
+    VTOL_RUDDERS,                   ///< [-1.0; +1.0]
     VTOL_THROTLE,                   ///< [ 0.0; +1.0]
 };
 
-float clamp_float(float value, float min, float max) {
+static float clamp_float(float value, float min, float max) {
     if (value < min) {
         value = min;
     } else if (value > max) {
@@ -73,7 +73,7 @@ class BaseReverseMixer {
         virtual void motorsCallback(sensor_msgs::Joy msg) = 0;
 
         ros::Publisher actuatorsPub;
-        sensor_msgs::Joy actuatorMsg;
+        sensor_msgs::Joy sp_to_dynamics;
         ros::NodeHandle _node;
         ros::Subscriber motorsSub;
 };
@@ -89,7 +89,7 @@ class BabysharkReverseMixer : public BaseReverseMixer {
     public:
         explicit BabysharkReverseMixer(const ros::NodeHandle& nh) : BaseReverseMixer(nh) {
             for (size_t channel = 0; channel < 8; channel++) {
-                actuatorMsg.axes.push_back(0);
+                sp_to_dynamics.axes.push_back(0);
             }
         }
         ~BabysharkReverseMixer() final = default;
@@ -98,27 +98,27 @@ class BabysharkReverseMixer : public BaseReverseMixer {
 };
 void BabysharkReverseMixer::motorsCallback(sensor_msgs::Joy msg) {
     if (msg.axes.size() == 8) {
-        actuatorMsg.header = msg.header;
+        sp_to_dynamics.header = msg.header;
 
-        actuatorMsg.axes[MC_MOTOR_0] = msg.axes[BABY_SHARK_MOTOR_0];
-        actuatorMsg.axes[MC_MOTOR_1] = msg.axes[BABY_SHARK_MOTOR_1];
-        actuatorMsg.axes[MC_MOTOR_2] = msg.axes[BABY_SHARK_MOTOR_2];
-        actuatorMsg.axes[MC_MOTOR_3] = msg.axes[BABY_SHARK_MOTOR_3];
+        sp_to_dynamics.axes[MC_MOTOR_0] = msg.axes[BABY_SHARK_MOTOR_0];
+        sp_to_dynamics.axes[MC_MOTOR_1] = msg.axes[BABY_SHARK_MOTOR_1];
+        sp_to_dynamics.axes[MC_MOTOR_2] = msg.axes[BABY_SHARK_MOTOR_2];
+        sp_to_dynamics.axes[MC_MOTOR_3] = msg.axes[BABY_SHARK_MOTOR_3];
 
         float roll = msg.axes[BABY_SHARK_AILERONS];
         roll = (roll < 0) ? 0.5 : 1 - roll;
-        actuatorMsg.axes[VTOL_ROLL] = roll;
+        sp_to_dynamics.axes[VTOL_ROLL] = roll;
 
         float pitch = -msg.axes[BABY_SHARK_A_TAIL_LEFT] + msg.axes[BABY_SHARK_A_TAIL_RIGHT];
         pitch = (pitch < 0) ? 0.0f : pitch / 0.8f;
-        actuatorMsg.axes[VTOL_PITCH] = pitch;
+        sp_to_dynamics.axes[VTOL_PITCH] = pitch;
 
         float yaw = msg.axes[BABY_SHARK_A_TAIL_LEFT] + msg.axes[BABY_SHARK_A_TAIL_RIGHT];
         yaw = (yaw < 0) ? 0.0f : (1.0f - yaw) / 0.7f;
-        actuatorMsg.axes[VTOL_YAW] = yaw;
+        sp_to_dynamics.axes[VTOL_YAW] = yaw;
 
-        actuatorMsg.axes[VTOL_THROTTLE] = msg.axes[BABY_SHARK_PUSHER_MOTOR];
-        actuatorsPub.publish(actuatorMsg);
+        sp_to_dynamics.axes[VTOL_THROTTLE] = msg.axes[BABY_SHARK_PUSHER_MOTOR];
+        actuatorsPub.publish(sp_to_dynamics);
     }
 }
 
@@ -126,25 +126,51 @@ class PX4_V_1_12_1_Airframe_13070_to_VTOL : public BaseReverseMixer {
     public:
         using BaseReverseMixer::BaseReverseMixer;
         ~PX4_V_1_12_1_Airframe_13070_to_VTOL() final = default;
+        int8_t init() override;
     protected:
-        void motorsCallback(sensor_msgs::Joy msg) override;
+        enum InputAirframe {
+            INPUT_AILERONS  = 4,    ///< [1.0; +1.0]
+            INPUT_ELEVATORS = 5,    ///< [1.0; +1.0]
+            INPUT_RUDDERS   = 6,    ///< [1.0; +1.0]
+            INPUT_THROTLE   = 7,    ///< [0.0; +1.0]
+        };
+        void motorsCallback(sensor_msgs::Joy sp_from_px4) override;
 };
-void PX4_V_1_12_1_Airframe_13070_to_VTOL::motorsCallback(sensor_msgs::Joy msg) {
-    if (msg.axes.size() == 8) {
-        // control surfaces [0.0, 1.0] -> [-1.0, +1.0], default is 0.0
-        msg.axes[VTOL_AILERONS] = (msg.axes[4] >= 0) ? msg.axes[4] * 2.0f - 1.0f : 0.0f;
-        msg.axes[VTOL_ELEVATORS] = (msg.axes[5] >= 0) ? msg.axes[5] * 2.0f - 1.0f : 0.0f;
-        msg.axes[VTOL_RUDDERS] = (msg.axes[6] >= 0) ? msg.axes[6] * 2.0f - 1.0f : 0.0f;
+int8_t PX4_V_1_12_1_Airframe_13070_to_VTOL::init() {
+    actuatorsPub = _node.advertise<sensor_msgs::Joy>(MAPPED_ACTUATOR_TOPIC, 5);
+    motorsSub = _node.subscribe(MOTORS_TOPIC, 2, &PX4_V_1_12_1_Airframe_13070_to_VTOL::motorsCallback, this);
 
-        msg.axes[VTOL_THROTLE] = msg.axes[7] / 0.75f;
-        actuatorsPub.publish(msg);
-    } else if (msg.axes.size() == 4) {
-        msg.axes.push_back(0.0);
-        msg.axes.push_back(0.0);
-        msg.axes.push_back(0.0);
-        msg.axes.push_back(0.0);
-        actuatorsPub.publish(msg);
+    sp_to_dynamics.axes.push_back(0.0f);
+    sp_to_dynamics.axes.push_back(0.0f);
+    sp_to_dynamics.axes.push_back(0.0f);
+    sp_to_dynamics.axes.push_back(0.0f);
+    sp_to_dynamics.axes.push_back(0.0f);
+    sp_to_dynamics.axes.push_back(0.0f);
+    sp_to_dynamics.axes.push_back(0.0f);
+    sp_to_dynamics.axes.push_back(0.0f);
+
+    return 0;
+}
+void PX4_V_1_12_1_Airframe_13070_to_VTOL::motorsCallback(sensor_msgs::Joy sp_from_px4) {
+    if (!(sp_from_px4.axes.size() == 4 || sp_from_px4.axes.size() == 8)) {
+        return;
     }
+
+    auto& out = sp_to_dynamics.axes;
+
+    if (sp_from_px4.axes.size() == 8) {
+        out[VTOL_AILERONS] = clamp_float(sp_from_px4.axes[INPUT_AILERONS], 0.0f, 1.0f) * 2.0f - 1.0f;
+        out[VTOL_ELEVATORS] = 1.0f - clamp_float(sp_from_px4.axes[INPUT_ELEVATORS], 0.0f, 1.0f) * 2.0f;
+        out[VTOL_RUDDERS] = clamp_float(sp_from_px4.axes[INPUT_RUDDERS], 0.0f, 1.0f) * 2.0f - 1.0f;
+        out[VTOL_THROTLE] = sp_from_px4.axes[INPUT_THROTLE] / 0.75f;
+    } else if (sp_from_px4.axes.size() == 4) {
+        out[VTOL_AILERONS] = 0.0f;
+        out[VTOL_ELEVATORS] = 0.0f;
+        out[VTOL_RUDDERS] = 0.0f;
+        out[VTOL_THROTLE] = 0.0f;
+    }
+
+    actuatorsPub.publish(sp_from_px4);
 }
 
 class PX4_V_1_14_0_Airframe_13000_to_VTOL : public BaseReverseMixer {
@@ -154,6 +180,14 @@ class PX4_V_1_14_0_Airframe_13000_to_VTOL : public BaseReverseMixer {
         int8_t init() override;
         ros::Subscriber servosSub;
     protected:
+        enum InputAirframe : uint8_t {
+            INPUT_THROTLE   = 4,    ///< [ 0.0; +1.0]
+            INPUT_AILERON_1 = 5,    ///< [-1.0; +1.0]
+            INPUT_AILERON_2 = 6,    ///< [-1.0; +1.0]
+            INPUT_ELEVATORS = 7,    ///< [-1.0; +1.0]
+            INPUT_RUDDERS   = 8,    ///< [-1.0; +1.0]
+        };
+
         void motorsCallback(sensor_msgs::Joy msg) override;
         void servosCallback(sensor_msgs::Joy msg);
         sensor_msgs::Joy actuatorsMsg;
@@ -179,17 +213,19 @@ void PX4_V_1_14_0_Airframe_13000_to_VTOL::motorsCallback(sensor_msgs::Joy msg) {
         axes[VTOL_MOTOR_3_REAR_RIGHT] = clamp_float(msg.axes[3], 0.0, 1.0);
     }
     if (msg.axes.size() >= 5) {
-        axes[VTOL_THROTLE] = clamp_float(msg.axes[4], 0.0, 1.0);
+        axes[VTOL_THROTLE] = clamp_float(msg.axes[INPUT_THROTLE], 0.0, 1.0);
     }
     if (msg.axes.size() >= 9) {
-        if (abs(msg.axes[6]) < 0.001 && abs(msg.axes[7]) < 0.001 && abs(msg.axes[8]) < 0.001) {
+        if (abs(msg.axes[INPUT_AILERON_2]) < 0.001 &&
+                abs(msg.axes[INPUT_ELEVATORS]) < 0.001 &&
+                abs(msg.axes[INPUT_RUDDERS]) < 0.001) {
             axes[VTOL_AILERONS] = 0.0;
             axes[VTOL_ELEVATORS] = 0.0;
             axes[VTOL_RUDDERS] = 0.0;
         } else {
-            axes[VTOL_AILERONS] = 2.0 * clamp_float(msg.axes[6], 0.0, 1.0) - 1.0;
-            axes[VTOL_ELEVATORS] = -2.0 * clamp_float(msg.axes[7], 0.0, 1.0) + 1.0;
-            axes[VTOL_RUDDERS] = 2.0 * clamp_float(msg.axes[8], 0.0, 1.0) - 1.0;
+            axes[VTOL_AILERONS] = 2.0 * clamp_float(msg.axes[INPUT_AILERON_2], 0.0, 1.0) - 1.0;
+            axes[VTOL_ELEVATORS] = 2.0 * clamp_float(msg.axes[INPUT_ELEVATORS], 0.0, 1.0) - 1.0;
+            axes[VTOL_RUDDERS] = 2.0 * clamp_float(msg.axes[INPUT_RUDDERS], 0.0, 1.0) - 1.0;
         }
     }
 
@@ -198,7 +234,7 @@ void PX4_V_1_14_0_Airframe_13000_to_VTOL::motorsCallback(sensor_msgs::Joy msg) {
 void PX4_V_1_14_0_Airframe_13000_to_VTOL::servosCallback(sensor_msgs::Joy msg) {
     ///< ignore left aileron msg.axes[0] here
     actuatorsMsg.axes[VTOL_AILERONS] = clamp_float(msg.axes[1], -1.0, 1.0);
-    actuatorsMsg.axes[VTOL_ELEVATORS] = clamp_float(-msg.axes[2], -1.0, 1.0);
+    actuatorsMsg.axes[VTOL_ELEVATORS] = clamp_float(msg.axes[2], -1.0, 1.0);
     actuatorsMsg.axes[VTOL_RUDDERS] = clamp_float(msg.axes[3], -1.0, 1.0);
 }
 
@@ -207,7 +243,7 @@ class DirectMixer : public BaseReverseMixer {
     public:
         explicit DirectMixer(const ros::NodeHandle& nh) : BaseReverseMixer(nh) {
             for (size_t channel = 0; channel < MAX_CHANNELS; channel++) {
-                actuatorMsg.axes.push_back(0);
+                sp_to_dynamics.axes.push_back(0);
             }
         }
         ~DirectMixer() final = default;
@@ -222,14 +258,13 @@ void DirectMixer::motorsCallback(sensor_msgs::Joy msg) {
 
     auto channels_amount = std::min(MAX_CHANNELS, (uint8_t)msg.axes.size());
     for (uint8_t idx = 0; idx < channels_amount; idx++) {
-        actuatorMsg.axes[idx] = msg.axes[idx];
+        sp_to_dynamics.axes[idx] = msg.axes[idx];
     }
 
-    actuatorMsg.header = msg.header;
-    actuatorsPub.publish(actuatorMsg);
+    sp_to_dynamics.header = msg.header;
+    actuatorsPub.publish(sp_to_dynamics);
 }
 constexpr uint8_t DirectMixer::MAX_CHANNELS;
-
 
 int main(int argc, char **argv){
     ros::init(argc, argv, "mixer_node");
