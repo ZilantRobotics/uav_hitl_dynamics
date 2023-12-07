@@ -24,21 +24,27 @@
 #include <std_msgs/Bool.h>
 
 enum MulticopterMapping {
-    MC_MOTOR_0_FRONT_RIGHT = 0,     ///< [ 0.0; +1.0]
-    MC_MOTOR_1_REAR_LEFT,           ///< [ 0.0; +1.0]
-    MC_MOTOR_2_FRONT_LEFT,          ///< [ 0.0; +1.0]
-    MC_MOTOR_3_REAR_RIGHT,          ///< [ 0.0; +1.0]
+    MC_MOTOR_0_FRONT_RIGHT      = 0,    ///< [ 0.0; +1.0]
+    MC_MOTOR_1_REAR_LEFT,               ///< [ 0.0; +1.0]
+    MC_MOTOR_2_FRONT_LEFT,              ///< [ 0.0; +1.0]
+    MC_MOTOR_3_REAR_RIGHT,              ///< [ 0.0; +1.0]
 };
 
 enum VtolDynamicsMapping {
-    VTOL_MOTOR_0_FRONT_RIGHT = 0,   ///< [ 0.0; +1.0]
-    VTOL_MOTOR_1_REAR_LEFT,         ///< [ 0.0; +1.0]
-    VTOL_MOTOR_2_FRONT_LEFT,        ///< [ 0.0; +1.0]
-    VTOL_MOTOR_3_REAR_RIGHT,        ///< [ 0.0; +1.0]
-    VTOL_THROTLE,                   ///< [ 0.0; +1.0]
-    VTOL_AILERONS,                  ///< [-1.0; +1.0]
-    VTOL_ELEVATORS,                 ///< [-1.0; +1.0]
-    VTOL_RUDDERS,                   ///< [-1.0; +1.0]
+    VTOL_MOTOR_0_FRONT_RIGHT    = 0,    ///< [ 0.0; +1.0]
+    VTOL_MOTOR_1_REAR_LEFT,             ///< [ 0.0; +1.0]
+    VTOL_MOTOR_2_FRONT_LEFT,            ///< [ 0.0; +1.0]
+    VTOL_MOTOR_3_REAR_RIGHT,            ///< [ 0.0; +1.0]
+    VTOL_THROTLE,                       ///< [ 0.0; +1.0]
+    VTOL_AILERONS,                      ///< [-1.0; +1.0]
+    VTOL_ELEVATORS,                     ///< [-1.0; +1.0]
+    VTOL_RUDDERS,                       ///< [-1.0; +1.0]
+};
+
+enum VtolOctoplaneDynamicsMapping {
+    VTOL_OP_AILERONS            = 9,    ///< [-1.0; +1.0]
+    VTOL_OP_ELEVATORS           = 10,   ///< [-1.0; +1.0]
+    VTOL_OP_RUDDERS             = 11,   ///< [-1.0; +1.0]
 };
 
 class BaseReverseMixer {
@@ -59,5 +65,6 @@ class BaseReverseMixer {
 };
 
 float clamp_float(float value, float min, float max);
+float rawcommand_to_servo(float value);
 
 #endif  // SRC_MIXERS_BASE_MIXER_HPP

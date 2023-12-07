@@ -110,6 +110,8 @@ int8_t Uav_Dynamics::initDynamicsSimulator(){
 
     if(info.loggingTypeName == "standard_vtol"){
         info.loggingType = LoggingType::STANDARD_VTOL;
+    }else if(info.loggingTypeName == "vtol_8_motors_logger"){
+        info.loggingType = LoggingType::VTOL_8_MOTORS;
     }else if(info.loggingTypeName == "quadcopter"){
         info.loggingType = LoggingType::QUADCOPTER;
     }else{

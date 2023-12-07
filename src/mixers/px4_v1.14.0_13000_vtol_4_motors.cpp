@@ -16,13 +16,13 @@
  * Author: Dmitry Ponomarev <ponomarevda96@gmail.com>
  */
 
-#include "px4_v1.14.0_13000_vtol_quadplane.hpp"
+#include "px4_v1.14.0_13000_vtol_4_motors.hpp"
 
-int8_t PX4_V_1_14_0_Airframe_13000_to_VTOL::init() {
+int8_t PX4_V_1_14_0_Airframe_13000_4_motors::init() {
     actuatorsPub = _node.advertise<sensor_msgs::Joy>(MAPPED_ACTUATOR_TOPIC, 5);
 
-    motorsSub = _node.subscribe(MOTORS_TOPIC, 2, &PX4_V_1_14_0_Airframe_13000_to_VTOL::motorsCallback, this);
-    servosSub = _node.subscribe(SERVOS_TOPIC, 2, &PX4_V_1_14_0_Airframe_13000_to_VTOL::servosCallback, this);
+    motorsSub = _node.subscribe(MOTORS_TOPIC, 2, &PX4_V_1_14_0_Airframe_13000_4_motors::motorsCallback, this);
+    servosSub = _node.subscribe(SERVOS_TOPIC, 2, &PX4_V_1_14_0_Airframe_13000_4_motors::servosCallback, this);
 
     for (uint_fast8_t idx = 0; idx < 8; idx++) {
         actuatorsMsg.axes.push_back(0);
@@ -30,7 +30,7 @@ int8_t PX4_V_1_14_0_Airframe_13000_to_VTOL::init() {
 
     return 0;
 }
-void PX4_V_1_14_0_Airframe_13000_to_VTOL::motorsCallback(sensor_msgs::Joy msg) {
+void PX4_V_1_14_0_Airframe_13000_4_motors::motorsCallback(sensor_msgs::Joy msg) {
     auto& axes = actuatorsMsg.axes;
     if (msg.axes.size() >= 4) {
         axes[VTOL_MOTOR_0_FRONT_RIGHT] = clamp_float(msg.axes[0], 0.0, 1.0);
@@ -57,7 +57,7 @@ void PX4_V_1_14_0_Airframe_13000_to_VTOL::motorsCallback(sensor_msgs::Joy msg) {
 
     actuatorsPub.publish(actuatorsMsg);
 }
-void PX4_V_1_14_0_Airframe_13000_to_VTOL::servosCallback(sensor_msgs::Joy msg) {
+void PX4_V_1_14_0_Airframe_13000_4_motors::servosCallback(sensor_msgs::Joy msg) {
     ///< ignore left aileron msg.axes[0] here
     actuatorsMsg.axes[VTOL_AILERONS] = clamp_float(msg.axes[1], -1.0, 1.0);
     actuatorsMsg.axes[VTOL_ELEVATORS] = clamp_float(msg.axes[2], -1.0, 1.0);

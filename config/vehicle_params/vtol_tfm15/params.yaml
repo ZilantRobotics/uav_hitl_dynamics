@@ -1,0 +1,28 @@
+mass:                   7.0         # kg
+gravity:                9.80665     # n/sec^2
+atmoRho:                1.2         # air density (kg/m^3)
+wingArea:               0.37        # m^2
+characteristicLength:   1.50        # m
+
+inertia:                [0.62684, 0,      0,
+                         0,       0.6444, 0,
+                         0,       0,      1.26242]  # kg*m^2
+
+# Actuator Geometry is similar to PX4:
+motorAxisX:             [0.00,    0.00,     0.00,     0.00,     0.00,    0.00,     0.00,     0.00,     1.00]
+motorAxisZ:             [-1.00,   -1.00,    -1.00,    -1.00,    -1.00,   -1.00,    -1.00,    -1.00,    0.000]
+motorDirectionCCW:      [True,    True,     False,    False,    True,    True,     False,    False,    True]
+motorPositionX:         [+0.275,  -0.275,   +0.275,   -0.275,   +0.275,  -0.275,   +0.275,   -0.275,   0.445]
+motorPositionY:         [+0.290,  -0.290,   -0.290,   +0.290,   +0.290,  -0.290,   -0.290,   +0.290,   0.000]
+motorPositionZ:         [-0.031,  -0.031,   -0.031,   -0.031,   -0.031,  -0.031,   -0.031,   -0.031,   0.000]
+motorMaxSpeed:          [500,     500,      500,      500,      500,     500,      500,      500,      1000]
+
+
+# Servo models
+servoRange:             [20,      20,       20]
+
+actuatorTimeConstants:  [0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01]
+
+
+accVariance:            0.0005
+gyroVariance:           0.0005

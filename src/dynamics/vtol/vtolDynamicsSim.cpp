@@ -26,14 +26,13 @@
 #include "cs_converter.hpp"
 #include "common_math.hpp"
 
-static constexpr const size_t MOTORS_AMOUNT = 5;
-
 static constexpr const size_t AILERONS_INDEX = 0;
 static constexpr const size_t ELEVATORS_INDEX = 1;
 static constexpr const size_t RUDDERS_INDEX = 2;
 static constexpr const size_t SERVOS_AMOUNT = 3;
 
-static constexpr const size_t ACTUATORS_AMOUNT = 8;
+static constexpr const size_t ACTUATORS_MIN_AMOUNT = 8;
+static constexpr const size_t ACTUATORS_MAX_AMOUNT = 12;
 
 VtolDynamics::VtolDynamics(){
     _state.angularVel.setZero();
@@ -44,10 +43,6 @@ VtolDynamics::VtolDynamics(){
     _params.accelBias.setZero();
     _params.gyroBias.setZero();
     _state.forces.specific << 0, 0, -_environment.gravity;
-    for(size_t idx = 0; idx < ACTUATORS_AMOUNT; idx++){
-        _state.prevActuators.push_back(0);
-        _state.crntActuators.push_back(0);
-    }
 }
 
 int8_t VtolDynamics::init(){
@@ -85,9 +80,6 @@ void VtolDynamics::loadTables(const std::string& path){
     _tables.CmyElevator = getTableNew<8, 20, Eigen::RowMajor>(path, "CmyElevator");
     _tables.CmzRudder = getTableNew<8, 20, Eigen::RowMajor>(path, "CmzRudder");
     _tables.prop = getTableNew<40, 5, Eigen::RowMajor>(path, "prop");
-    if(ros::param::get(path + "actuatorTimeConstants", _tables.actuatorTimeConstants) == false){
-        throw std::invalid_argument(std::string("Wrong parameter name: ") + "actuatorTimeConstants");
-    }
 }
 
 void VtolDynamics::loadParams(const std::string& path){
@@ -123,15 +115,24 @@ void VtolDynamics::loadMotorsGeometry(const std::string& path) {
     ros::param::get(path + "motorDirectionCCW", motorDirectionCCW);
     ros::param::get(path + "motorAxisX", motorAxisX);
     ros::param::get(path + "motorAxisZ", motorAxisZ);
+    ros::param::get(path + "actuatorTimeConstants", _tables.actuatorTimeConstants);
 
-    assert(motorPositionX.size() >= MOTORS_AMOUNT);
-    assert(motorPositionY.size() >= MOTORS_AMOUNT);
-    assert(motorPositionZ.size() >= MOTORS_AMOUNT);
-    assert(motorDirectionCCW.size() >= MOTORS_AMOUNT);
-    assert(motorAxisX.size() >= MOTORS_AMOUNT);
-    assert(motorAxisZ.size() >= MOTORS_AMOUNT);
+    size_t motors_amount = motorPositionX.size();
+    assert(motors_amount >= MOTORS_MIN_AMOUNT && motors_amount <= MOTORS_MAX_AMOUNT);
+    _motorsSpeed.resize(motors_amount, 0.0);
+    _state.prevActuators.resize(motors_amount);
+    _state.crntActuators.resize(motors_amount);
 
-    for (size_t motor_idx = 0; motor_idx < motorPositionX.size(); motor_idx++) {
+
+    assert(motorPositionX.size() == motors_amount);
+    assert(motorPositionY.size() == motors_amount);
+    assert(motorPositionZ.size() == motors_amount);
+    assert(motorDirectionCCW.size() == motors_amount);
+    assert(motorAxisX.size() == motors_amount);
+    assert(motorAxisZ.size() == motors_amount);
+    assert(_tables.actuatorTimeConstants.size() == motors_amount + SERVOS_AMOUNT);
+
+    for (size_t motor_idx = 0; motor_idx < motors_amount; motor_idx++) {
         Geometry geometry;
         geometry.position << motorPositionX[motor_idx], motorPositionY[motor_idx], motorPositionZ[motor_idx];
         geometry.axis << motorAxisX[motor_idx], 0.0, motorAxisZ[motor_idx];
@@ -300,59 +301,54 @@ void VtolDynamics::process(double dtSecs, const std::vector<double>& unitless_se
     double AoS = calculateAnglesOfSideslip(_state.airspeedFrd);
     calculateAerodynamics(_state.airspeedFrd, AoA, AoS, _servosValues,
                           _state.forces.aero, _state.moments.aero);
-    calculateNewState(_state.moments.aero, _state.forces.aero, _motorsRadPerSec, dtSecs);
+    calculateNewState(_state.moments.aero, _state.forces.aero, _motorsSpeed, dtSecs);
 }
 
 
 /**
- * @note Map motors indexes from InnoVTOL mixer into internal representation
- * @param cmd General VTOL actuator command is:
- * 0-3  Copter      [ 0.0, +1.0]
- * 4    Ailerons    [-1.0, +1.0]
- * 5    Elevators   [-1.0, +1.0]
- * 6    Rudders     [-1.0, +1.0]
- * 7    Throttle    [0.0,  +1.0]
- * @return Output indexes will be:
- * 0-3  Copter      [0.0,  RAD_PER_SEC_MAX]
- * 4    Throttle    [0.0,  RAD_PER_SEC_MAX]
- * 5    Ailerons    [-MAX_RANGE, +MAX_RANGE]
- * 6    Elevators   [-MAX_RANGE, +MAX_RANGE]
- * 7    Rudders     [-MAX_RANGE, +MAX_RANGE]
+ * @brief Setpoint mapping:
+ * Index        Type        Input setpoint      Internal representation
+ * [0; N-4]     Motors      [ 0.0, +1.0]    ->  [0.0,  RAD_PER_SEC_MAX]
+ * N-3          Ailerons    [-1.0, +1.0]    ->  [-MAX_RANGE, +MAX_RANGE]
+ * N-2          Elevators   [-1.0, +1.0]    ->  [-MAX_RANGE, +MAX_RANGE]
+ * N-1          Rudders     [-1.0, +1.0]    ->  [-MAX_RANGE, +MAX_RANGE]
+ * @note if setpoint size is less than required, follow the Implicit Zero Extension rule
  */
 void VtolDynamics::_mapUnitlessSetpointToInternal(const std::vector<double>& cmd) {
-    assert((cmd.size() >= ACTUATORS_AMOUNT) && "ERROR: VtolDynamics wrong setpoint size.");
+    std::vector<double> input_cmd = cmd;
+    if (input_cmd.size() < _motorsSpeed.size()) {
+        input_cmd.resize(_motorsSpeed.size());
+    }
 
-    _motorsRadPerSec[0] = cmd[0];
-    _motorsRadPerSec[1] = cmd[1];
-    _motorsRadPerSec[2] = cmd[2];
-    _motorsRadPerSec[3] = cmd[3];
-    _motorsRadPerSec[4] = cmd[4];       // ICE
-
-    _servosValues[0] = cmd[5];          // ailerons
-    _servosValues[1] = cmd[6];          // elevators
-    _servosValues[2] = cmd[7];          // rudders
-
-    for(size_t idx = 0; idx < MOTORS_AMOUNT; idx++){
-        _motorsRadPerSec[idx] = boost::algorithm::clamp(_motorsRadPerSec[idx], 0.0, +1.0);
-        _motorsRadPerSec[idx] *= _params.motorMaxSpeed[idx];
+    for (size_t motor_idx = 0; motor_idx < _motorsSpeed.size(); motor_idx++) {
+        _motorsSpeed[motor_idx] = input_cmd[motor_idx];
+        _motorsSpeed[motor_idx] = boost::algorithm::clamp(_motorsSpeed[motor_idx], 0.0, +1.0);
+        _motorsSpeed[motor_idx] *= _params.motorMaxSpeed[motor_idx];
     }
 
     for(size_t servo_idx = 0; servo_idx < SERVOS_AMOUNT; servo_idx++){
-        size_t idx = servo_idx + MOTORS_AMOUNT;
+        size_t idx = servo_idx + _motorsSpeed.size();
+        _servosValues[servo_idx] = input_cmd[idx];
         _servosValues[servo_idx] = boost::algorithm::clamp(_servosValues[servo_idx], -1.0, +1.0);
         _servosValues[servo_idx] *= _params.servoRange[servo_idx];
     }
-
     _servosValues[ELEVATORS_INDEX] *= -1;  // elevator is inverted
 }
 
 void VtolDynamics::updateActuators(double dtSecs){
-    _state.prevActuators = _state.crntActuators;
-    for(size_t idx = 0; idx < MOTORS_AMOUNT; idx++){
-        auto cmd_delta = _state.prevActuators[idx] - _motorsRadPerSec[idx];
-        _motorsRadPerSec[idx] += cmd_delta * (1 - pow(2.71, -dtSecs/_tables.actuatorTimeConstants[idx]));
-        _state.crntActuators[idx] = _motorsRadPerSec[idx];
+    assert(_motorsSpeed.size() == _state.prevActuators.size());
+    assert(_motorsSpeed.size() == _state.crntActuators.size());
+    assert(_motorsSpeed.size() + 3 == _tables.actuatorTimeConstants.size());
+
+    for(size_t idx = 0; idx < _motorsSpeed.size(); idx++){
+        _state.prevActuators[idx] = _state.crntActuators[idx];
+        auto cmd_delta = _state.prevActuators[idx] - _motorsSpeed[idx];
+        assert(_tables.actuatorTimeConstants[idx] > 0.001);
+        _motorsSpeed[idx] += cmd_delta * (1 - pow(2.71, -dtSecs/_tables.actuatorTimeConstants[idx]));
+        _state.crntActuators[idx] = _motorsSpeed[idx];
     }
+
+    assert(_state.crntActuators.size() == _state.prevActuators.size());
 }
 
 Eigen::Vector3d VtolDynamics::calculateWind(){
@@ -519,13 +515,13 @@ void VtolDynamics::thruster(double actuator,
 
 void VtolDynamics::calculateNewState(const Eigen::Vector3d& Maero,
                                      const Eigen::Vector3d& Faero,
-                                     const std::vector<double>& actuator,
+                                     const std::vector<double>& motors,
                                      double dt_sec){
-    assert((actuator.size() >= MOTORS_AMOUNT) && "ERROR: VtolDynamics wrong motors number.");
-    for(size_t idx = 0; idx < MOTORS_AMOUNT; idx++){
+    assert(motors.size() >= MOTORS_MIN_AMOUNT && motors.size() <= _motorsSpeed.size());
+    for(size_t idx = 0; idx < motors.size(); idx++){
         double thrust;
         double torque;
-        thruster(actuator[idx], thrust, torque, _state.motorsRpm[idx]);
+        thruster(motors[idx], thrust, torque, _state.motorsRpm[idx]);
         _state.forces.motors[idx] = _params.geometry[idx].axis * thrust;
 
         // Cunterclockwise rotation means positive torque, clockwise - negative
@@ -536,7 +532,7 @@ void VtolDynamics::calculateNewState(const Eigen::Vector3d& Maero,
         _state.moments.motors[idx] = motorTorquesInBodyCS + MdueToArmOfForceInBodyCS;
     }
 
-    auto MtotalInBodyCS = std::accumulate(&_state.moments.motors[0], &_state.moments.motors[MOTORS_AMOUNT], Maero);
+    auto MtotalInBodyCS = std::accumulate(&_state.moments.motors[0], &_state.moments.motors[motors.size()], Maero);
     _state.angularAccel = calculateAngularAccel(_params.inertia, MtotalInBodyCS, _state.angularVel);
     _state.angularVel += _state.angularAccel * dt_sec;
     Eigen::Quaterniond quaternion(0, _state.angularVel(0), _state.angularVel(1), _state.angularVel(2));
@@ -546,7 +542,7 @@ void VtolDynamics::calculateNewState(const Eigen::Vector3d& Maero,
 
     Eigen::Matrix3d rotationMatrix = calculateRotationMatrix();
     auto& Fmotors = _state.forces.motors;
-    Eigen::Vector3d Fspecific = std::accumulate(&Fmotors[0], &Fmotors[MOTORS_AMOUNT], Faero) / _params.mass;
+    Eigen::Vector3d Fspecific = std::accumulate(&Fmotors[0], &Fmotors[motors.size()], Faero) / _params.mass;
     Eigen::Vector3d Ftotal = (Fspecific + rotationMatrix * Eigen::Vector3d(0, 0, _environment.gravity)) * _params.mass;
 
     _state.forces.total = Ftotal;

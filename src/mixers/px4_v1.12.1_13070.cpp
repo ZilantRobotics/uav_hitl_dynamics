@@ -22,14 +22,7 @@ int8_t PX4_V_1_12_1_Airframe_13070_to_VTOL::init() {
     actuatorsPub = _node.advertise<sensor_msgs::Joy>(MAPPED_ACTUATOR_TOPIC, 5);
     motorsSub = _node.subscribe(MOTORS_TOPIC, 2, &PX4_V_1_12_1_Airframe_13070_to_VTOL::motorsCallback, this);
 
-    sp_to_dynamics.axes.push_back(0.0f);
-    sp_to_dynamics.axes.push_back(0.0f);
-    sp_to_dynamics.axes.push_back(0.0f);
-    sp_to_dynamics.axes.push_back(0.0f);
-    sp_to_dynamics.axes.push_back(0.0f);
-    sp_to_dynamics.axes.push_back(0.0f);
-    sp_to_dynamics.axes.push_back(0.0f);
-    sp_to_dynamics.axes.push_back(0.0f);
+    sp_to_dynamics.axes.resize(8, 0.0f);
 
     return 0;
 }
