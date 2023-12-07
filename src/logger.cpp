@@ -92,19 +92,38 @@ void StateLogger::createStringStream(std::stringstream& logStream,
     logStream << ".\n";
 
     addBold(logStream, "mc");
-    logStream << std::setprecision(2) << std::fixed << " ["
-                << actuators[0] << ", "
-                << actuators[1] << ", "
-                << actuators[2] << ", "
-                << actuators[3] << "] ";
+    if (_info.loggingType != LoggingType::VTOL_8_MOTORS) {
+        logStream << std::setprecision(2) << std::fixed << " ["
+                    << actuators[0] << ", "
+                    << actuators[1] << ", "
+                    << actuators[2] << ", "
+                    << actuators[3] << "] ";
+    } else {
+        logStream << std::setprecision(2) << std::fixed << " ["
+                    << actuators[0] << ", "
+                    << actuators[1] << ", "
+                    << actuators[2] << ", "
+                    << actuators[3] << ", "
+                    << actuators[4] << ", "
+                    << actuators[5] << ", "
+                    << actuators[6] << ", "
+                    << actuators[7] << "] ";
+    }
 
-    if(_info.loggingType == LoggingType::STANDARD_VTOL){
+    if (_info.loggingType == LoggingType::STANDARD_VTOL) {
         addBold(logStream, "fw rpy");
         logStream << " [" << actuators[5] << ", "
                             << actuators[6] << ", "
                             << actuators[7] << "]";
         addBold(logStream, " throttle");
         logStream << " [" << actuators[4] << "] ";
+    } else if (_info.loggingType == LoggingType::VTOL_8_MOTORS) {
+        addBold(logStream, "fw rpy");
+        logStream << " [" << actuators[9] << ", "
+                            << actuators[10] << ", "
+                            << actuators[11] << "]";
+        addBold(logStream, " throttle");
+        logStream << " [" << actuators[8] << "] ";
     }
 
     auto enuPosition = (_info.notation == DynamicsNotation_t::PX4_NED_FRD) ? Converter::nedToEnu(pose) : pose;

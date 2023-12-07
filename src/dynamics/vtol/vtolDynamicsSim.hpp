@@ -26,6 +26,9 @@
 #include <random>
 #include "uavDynamicsSimBase.hpp"
 
+inline constexpr size_t MOTORS_MIN_AMOUNT = 5;
+inline constexpr size_t MOTORS_MAX_AMOUNT = 9;
+
 struct Geometry {
     Eigen::Vector3d position;                       // Meters
     Eigen::Vector3d axis;                           // Unitless
@@ -40,8 +43,6 @@ struct VtolParameters{
 
     std::vector<double> actuatorMin;                // rad/sec
     std::vector<double> actuatorMax;                // rad/sec
-    std::array<double, 8> deltaControlMax;          // rad/sec^2
-    std::array<double, 8> timeConstant;             // sec
 
     std::vector<double> motorMaxSpeed;              // rad/sec
     std::vector<double> servoRange;
@@ -65,7 +66,7 @@ struct Forces{
     Eigen::Vector3d drug;
     Eigen::Vector3d side;
     Eigen::Vector3d aero;
-    std::array<Eigen::Vector3d, 5> motors;
+    std::array<Eigen::Vector3d, MOTORS_MAX_AMOUNT> motors;
     Eigen::Vector3d specific;
     Eigen::Vector3d total;
 };
@@ -74,7 +75,7 @@ struct Moments{
     Eigen::Vector3d aero;
     Eigen::Vector3d steer;
     Eigen::Vector3d airspeed;
-    std::array<Eigen::Vector3d, 5> motors;
+    std::array<Eigen::Vector3d, MOTORS_MAX_AMOUNT> motors;
     Eigen::Vector3d total;
 };
 
@@ -99,7 +100,7 @@ struct State{
     Forces forces;
     Moments moments;
 
-    std::array<double, 5> motorsRpm;                // rpm
+    std::array<double, MOTORS_MAX_AMOUNT> motorsRpm;  // rpm
     Eigen::Vector3d bodylinearVel;                  // m/sec (just for debug only)
     std::vector<double> prevActuators;              // rad/sec
     std::vector<double> crntActuators;              // rad/sec
@@ -190,7 +191,7 @@ class VtolDynamics : public UavDynamicsSimBase{
         void thruster(double actuator, double& thrust, double& torque, double& rpm) const;
         void calculateNewState(const Eigen::Vector3d& Maero,
                                const Eigen::Vector3d& Faero,
-                               const std::vector<double>& actuator,
+                               const std::vector<double>& motors,
                                double dt_sec);
 
         void calculateAerodynamics(const Eigen::Vector3d& airspeed,
@@ -231,7 +232,7 @@ class VtolDynamics : public UavDynamicsSimBase{
                                           const Eigen::Vector3d& estimatedVelocity,
                                           const Eigen::Vector3d& windSpeed) const;
 
-        std::vector<double> _motorsRadPerSec{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+        std::vector<double> _motorsSpeed;
         std::array<double, 3> _servosValues{0.0, 0.0, 0.0};
 
         VtolParameters _params;

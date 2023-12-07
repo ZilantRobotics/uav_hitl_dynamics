@@ -51,8 +51,8 @@ private:
     uint64_t _maxDelayUsec{0};
     uint64_t _msgCounter{0};
 
-    ArmingStatus _armingStatus{ArmingStatus::UNKNOWN};
-    double _lastArmingStatusTimestampSec;
+    ArmingStatus _armingStatus{ArmingStatus::DISARMED};
+    double _lastArmingStatusTimestampSec{ros::Time::now().toSec()};
 };
 
 #endif  // SRC_ACTUATORS_HPP

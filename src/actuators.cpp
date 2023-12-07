@@ -32,9 +32,8 @@ void Actuators::retriveStats(uint64_t* msg_counter, uint64_t* max_delay_us) {
 }
 
 ArmingStatus Actuators::getArmingStatus() {
-    if (ros::Time::now().toSec() > _lastArmingStatusTimestampSec + 2.0) {
+    if (ros::Time::now().toSec() > _lastArmingStatusTimestampSec + 1.0) {
         _armingStatus = ArmingStatus::UNKNOWN;
-        return ArmingStatus::UNKNOWN;
     }
 
     return _armingStatus;

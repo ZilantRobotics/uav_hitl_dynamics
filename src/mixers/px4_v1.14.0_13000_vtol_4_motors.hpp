@@ -16,15 +16,15 @@
  * Author: Dmitry Ponomarev <ponomarevda96@gmail.com>
  */
 
-#ifndef SRC_MIXERS_MIXER_PX4_V_1_14_0_13000_VTOL_QUADPLANE_HPP
-#define SRC_MIXERS_MIXER_PX4_V_1_14_0_13000_VTOL_QUADPLANE_HPP
+#ifndef SRC_MIXERS_MIXER_PX4_V_1_14_0_13000_VTOL_4_MOTORS_HPP
+#define SRC_MIXERS_MIXER_PX4_V_1_14_0_13000_VTOL_4_MOTORS_HPP
 
 #include "base_mixer.hpp"
 
-class PX4_V_1_14_0_Airframe_13000_to_VTOL : public BaseReverseMixer {
+class PX4_V_1_14_0_Airframe_13000_4_motors : public BaseReverseMixer {
     public:
         using BaseReverseMixer::BaseReverseMixer;
-        ~PX4_V_1_14_0_Airframe_13000_to_VTOL() final = default;
+        ~PX4_V_1_14_0_Airframe_13000_4_motors() final = default;
         int8_t init() override;
         ros::Subscriber servosSub;
     protected:
@@ -41,4 +41,4 @@ class PX4_V_1_14_0_Airframe_13000_to_VTOL : public BaseReverseMixer {
         sensor_msgs::Joy actuatorsMsg;
 };
 
-#endif  // SRC_MIXERS_MIXER_PX4_V_1_14_0_13000_VTOL_QUADPLANE_HPP
+#endif  // SRC_MIXERS_MIXER_PX4_V_1_14_0_13000_VTOL_4_MOTORS_HPP

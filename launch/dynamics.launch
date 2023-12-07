@@ -11,7 +11,7 @@
     <arg name="sitl_vehicle"                default="iris"              doc="[innopolis_vtol, iris]"/>
     <arg name="mixer"                       default="vtol_13070_mixer"  doc="[vtol_13070_mixer, babyshark_standard_vtol_mixer, direct_mixer]"/>
     <arg name="dynamics"                    default="vtol_dynamics"     doc="[vtol_dynamics, quadcopter]"/>
-    <arg name="vehicle_params"              doc="[quadrotor, octorotor, vtol_7kg]"/>
+    <arg name="vehicle_params"              doc="[quadrotor, octorotor, vtol_7kg, vtol_tfm15]"/>
     <arg name="run_rviz"                    default="false"             doc="[true, false]"/>
     <arg name="run_sitl_flight_stack"       default="true"              doc="[true means sitl, false means do nothing]"/>
     <arg name="run_sitl_communicator"       default="false"             doc="[true means run mavlink communicator, false means do nothing]"/>

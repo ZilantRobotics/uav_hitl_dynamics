@@ -32,3 +32,7 @@ float clamp_float(float value, float min, float max) {
     }
     return value;
 }
+
+float rawcommand_to_servo(float value) {
+    return 2.0 * clamp_float(value, 0.0, 1.0) - 1.0;
+}

@@ -20,7 +20,8 @@
 #include <sensor_msgs/Joy.h>
 #include "mixer_babyshark.hpp"
 #include "px4_v1.12.1_13070.hpp"
-#include "px4_v1.14.0_13000_vtol_quadplane.hpp"
+#include "px4_v1.14.0_13000_vtol_4_motors.hpp"
+#include "px4_v1.14.0_13000_vtol_8_motors.hpp"
 #include "mixer_direct.hpp"
 
 
@@ -43,7 +44,9 @@ int main(int argc, char **argv){
     } else if (mixer == "vtol_13070_mixer") {
         reverseMixer = std::make_unique<PX4_V_1_12_1_Airframe_13070_to_VTOL>(node_handler);
     } else if (mixer == "px4_v1_14_0_vtol_13000_mixer") {
-        reverseMixer = std::make_unique<PX4_V_1_14_0_Airframe_13000_to_VTOL>(node_handler);
+        reverseMixer = std::make_unique<PX4_V_1_14_0_Airframe_13000_4_motors>(node_handler);
+    } else if (mixer == "px4_v1_14_0_vtol_13000_8_motors_mixer") {
+        reverseMixer = std::make_unique<PX4_V_1_14_0_Airframe_13000_8_motors>(node_handler);
     } else if (mixer == "direct_mixer") {
         reverseMixer = std::make_unique<DirectMixer>(node_handler);
     } else {
@@ -55,7 +58,7 @@ int main(int argc, char **argv){
     if (reverseMixer->init() == -1){
         ROS_ERROR("Shutdown.");
         ros::shutdown();
-        return 0;
+        return -1;
     }
 
     ros::spin();

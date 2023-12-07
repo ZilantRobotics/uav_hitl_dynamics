@@ -522,7 +522,7 @@ TEST(thruster, thrusterThird){
  * it is directed to the top, so we perform invertion.
  */
 void calculateNewState(double dt,
-                    std::vector<double> actuators,
+                    std::vector<double> motors,
                     Eigen::Vector3d Maero,
                     Eigen::Vector3d Faero,
                     Eigen::Vector3d initialLinearVelocity,
@@ -538,14 +538,14 @@ void calculateNewState(double dt,
     vtolDynamicsSim.setInitialVelocity(initialLinearVelocity, initialAngularVelocity);
     vtolDynamicsSim.setInitialPosition(initialPosition, initialAttitude);
 
-    vtolDynamicsSim.calculateNewState(Maero, Faero, actuators, dt);
+    vtolDynamicsSim.calculateNewState(Maero, Faero, motors, dt);
     angularAcceleration = vtolDynamicsSim.getAngularAcceleration();
     linearAcceleration = vtolDynamicsSim.getLinearAcceleration();
 }
 
-TEST(VtolDynamics, calculateNewStateFirstCaseOnlyAttitude){
+TEST(VtolDynamics, calculateNewState_1_OnlyAttitude){
     double dt = 0.002500;
-    std::vector<double> actuators{0, 0, 0, 0, 0, 0, 0, 0};
+    std::vector<double> motors{0, 0, 0, 0, 0};
     Eigen::Quaterniond initAttitude(1, 0.2, 0.10, 0.05);
     Eigen::Vector3d angAccel, linAccel, diff,
                     Faero(0.0, 0.0, 0.0),
@@ -556,7 +556,7 @@ TEST(VtolDynamics, calculateNewStateFirstCaseOnlyAttitude){
                     expectedAngAccel(0.0, 0.0, 0.0),
                     expectedLinAccel(2.5377e-16, -5.0753e-16, 9.8066e+00);
 
-    calculateNewState(dt, actuators,  Maero, Faero,
+    calculateNewState(dt, motors,  Maero, Faero,
                       initialLinVel, initAngVel, initPose, initAttitude,
                       expectedAngAccel, expectedLinAccel,
                       angAccel, linAccel);
@@ -567,9 +567,9 @@ TEST(VtolDynamics, calculateNewStateFirstCaseOnlyAttitude){
     }
 }
 
-TEST(VtolDynamics, calculateNewStateSecondCaseOnlyAngularVelocity){
+TEST(VtolDynamics, calculateNewState_2_OnlyAngularVelocity){
     double dt = 0.002500;
-    std::vector<double> actuators{0, 0, 0, 0, 0, 0, 0, 0};
+    std::vector<double> motors{0, 0, 0, 0, 0};
     Eigen::Quaterniond initAttitude(1, 0.00, 0.00, 0.00);
     Eigen::Vector3d angAccel, linAccel, diff,
                     Faero(0.0, 0.0, 0.0),
@@ -580,7 +580,7 @@ TEST(VtolDynamics, calculateNewStateSecondCaseOnlyAngularVelocity){
                     expectedAngAccel(-1.9719e-02,   2.9589e-02,     -8.3459e-04),
                     expectedLinAccel(9.9127e-19,    1.9825e-18,     9.8066e+00);
 
-    calculateNewState(dt, actuators,  Maero, Faero,
+    calculateNewState(dt, motors,  Maero, Faero,
                       initialLinVel, initAngVel, initPose, initAttitude,
                       expectedAngAccel, expectedLinAccel,
                       angAccel, linAccel);
@@ -591,9 +591,9 @@ TEST(VtolDynamics, calculateNewStateSecondCaseOnlyAngularVelocity){
     }
 }
 
-TEST(VtolDynamics, calculateNewStateThirdCaseOnlyFaero){
+TEST(VtolDynamics, calculateNewState_3_OnlyFaero){
     double dt = 0.002500;
-    std::vector<double> actuators{0, 0, 0, 0, 0, 0, 0, 0};
+    std::vector<double> motors{0, 0, 0, 0, 0};
     Eigen::Quaterniond initAttitude(1, 0.00, 0.00, 0.00);
     Eigen::Vector3d angAccel, linAccel, diff,
                     Faero(5.7448e-01, 2.9513e+01, 6.1333e-01),
@@ -604,7 +604,7 @@ TEST(VtolDynamics, calculateNewStateThirdCaseOnlyFaero){
                     expectedAngAccel(0.0,       0.0,        0.0),
                     expectedLinAccel(0.082069,  4.216143,   9.894269);
 
-    calculateNewState(dt, actuators,  Maero, Faero,
+    calculateNewState(dt, motors,  Maero, Faero,
                       initialLinVel, initAngVel, initPose, initAttitude,
                       expectedAngAccel, expectedLinAccel,
                       angAccel, linAccel);
@@ -615,9 +615,9 @@ TEST(VtolDynamics, calculateNewStateThirdCaseOnlyFaero){
     }
 }
 
-TEST(VtolDynamics, calculateNewStateFourthCaseOnlyMaero){
+TEST(VtolDynamics, calculateNewState_4_OnlyMaero){
     double dt = 0.002500;
-    std::vector<double> actuators{0, 0, 0, 0, 0, 0, 0, 0};
+    std::vector<double> motors{0, 0, 0, 0, 0};
     Eigen::Quaterniond initAttitude(1, 0.00, 0.00, 0.00);
     Eigen::Vector3d angAccel, linAccel, diff,
                     Faero(0.0, 0.0, 0.0),
@@ -628,7 +628,7 @@ TEST(VtolDynamics, calculateNewStateFourthCaseOnlyMaero){
                     expectedAngAccel(-0.34251,      -1.07821,       -0.25057),
                     expectedLinAccel(7.7443e-21,    -3.8722e-21,    9.8066e+00);
 
-    calculateNewState(dt, actuators,  Maero, Faero,
+    calculateNewState(dt, motors,  Maero, Faero,
                       initialLinVel, initAngVel, initPose, initAttitude,
                       expectedAngAccel, expectedLinAccel,
                       angAccel, linAccel);
@@ -639,9 +639,9 @@ TEST(VtolDynamics, calculateNewStateFourthCaseOnlyMaero){
     }
 }
 
-TEST(VtolDynamics, calculateNewStateFifthCaseOnlyCopterMotorsWithEqualPower){
+TEST(VtolDynamics, calculateNewState_5_OnlyCopterMotorsWithEqualPower){
     double dt = 0.002500;
-    std::vector<double> actuators{700, 700, 700, 700, 0, 0, 0, 0};
+    std::vector<double> motors{700, 700, 700, 700, 0};
     Eigen::Quaterniond initAttitude(1, 0.00, 0.00, 0.00);
     Eigen::Vector3d angAccel, linAccel, diff,
                     Faero(0.0, 0.0, 0.0),
@@ -652,7 +652,7 @@ TEST(VtolDynamics, calculateNewStateFifthCaseOnlyCopterMotorsWithEqualPower){
                     expectedAngAccel(0.00000,       0.00000,        0.00000),
                     expectedLinAccel(0.00000,       0.00000,        -6.36769);
 
-    calculateNewState(dt, actuators,  Maero, Faero,
+    calculateNewState(dt, motors,  Maero, Faero,
                       initialLinVel, initAngVel, initPose, initAttitude,
                       expectedAngAccel, expectedLinAccel,
                       angAccel, linAccel);
@@ -663,9 +663,9 @@ TEST(VtolDynamics, calculateNewStateFifthCaseOnlyCopterMotorsWithEqualPower){
     }
 }
 
-TEST(VtolDynamics, calculateNewStateSixthCaseOnlyCopterMotorsWithNotEqualPower){
+TEST(VtolDynamics, calculateNewState_6_OnlyCopterMotorsWithNotEqualPower){
     double dt = 0.002500;
-    std::vector<double> actuators{700, 680, 660, 640, 0, 0, 0, 0};
+    std::vector<double> motors{700, 680, 660, 640, 0};
     Eigen::Quaterniond initAttitude(1, 0.00, 0.00, 0.00);
     Eigen::Vector3d angAccel, linAccel, diff,
                     Faero(0.0, 0.0, 0.0),
@@ -676,7 +676,7 @@ TEST(VtolDynamics, calculateNewStateSixthCaseOnlyCopterMotorsWithNotEqualPower){
                     expectedAngAccel(0.1354,        1.2944,         0.10723),
                     expectedLinAccel(-1.3753e-04,   1.2938e-05,     -5.0505e+00);
 
-    calculateNewState(dt, actuators,  Maero, Faero,
+    calculateNewState(dt, motors,  Maero, Faero,
                       initialLinVel, initAngVel, initPose, initAttitude,
                       expectedAngAccel, expectedLinAccel,
                       angAccel, linAccel);
@@ -687,9 +687,9 @@ TEST(VtolDynamics, calculateNewStateSixthCaseOnlyCopterMotorsWithNotEqualPower){
     }
 }
 
-TEST(VtolDynamics, calculateNewStateSeventhCaseOnlyICE){
+TEST(VtolDynamics, calculateNewState_7_OnlyICE){
     double dt = 0.002500;
-    std::vector<double> actuators{0, 0, 0, 0, 500, 0, 0, 0};
+    std::vector<double> motors{0, 0, 0, 0, 500};
     Eigen::Quaterniond initAttitude(1, 0.00, 0.00, 0.00);
     Eigen::Vector3d angAccel, linAccel, diff,
                     Faero(0.0, 0.0, 0.0),
@@ -700,7 +700,7 @@ TEST(VtolDynamics, calculateNewStateSeventhCaseOnlyICE){
                     expectedAngAccel(-0.43508,      0.00000,        0.00000),
                     expectedLinAccel(2.2705e+00,    3.8722e-21,     9.8066e+00);
 
-    calculateNewState(dt, actuators,  Maero, Faero,
+    calculateNewState(dt, motors,  Maero, Faero,
                       initialLinVel, initAngVel, initPose, initAttitude,
                       expectedAngAccel, expectedLinAccel,
                       angAccel, linAccel);
@@ -711,9 +711,9 @@ TEST(VtolDynamics, calculateNewStateSeventhCaseOnlyICE){
     }
 }
 
-TEST(VtolDynamics, calculateNewStateEightComplexWithoutInitialAttitude){
+TEST(VtolDynamics, calculateNewState_8_ComplexWithoutInitialAttitude){
     double dt = 0.002500;
-    std::vector<double> actuators{600, 550, 450, 500, 650, 0, 0, 0};
+    std::vector<double> motors{600, 550, 450, 500, 650};
     Eigen::Quaterniond initAttitude(1, 0, 0, 0);
 
     Eigen::Vector3d angAccel, linAccel, diff,
@@ -725,7 +725,7 @@ TEST(VtolDynamics, calculateNewStateEightComplexWithoutInitialAttitude){
                     expectedAngAccel(5.1203, 16.15784, 11.9625),
                     expectedLinAccel(5.60908, 1.44474, 0.80233);
 
-    calculateNewState(dt, actuators,  Maero, Faero,
+    calculateNewState(dt, motors,  Maero, Faero,
                       initialLinVel, initAngVel, initPose, initAttitude,
                       expectedAngAccel, expectedLinAccel,
                       angAccel, linAccel);
@@ -736,9 +736,9 @@ TEST(VtolDynamics, calculateNewStateEightComplexWithoutInitialAttitude){
     }
 }
 
-TEST(VtolDynamics, calculateNewStateEightComplexFull){
+TEST(VtolDynamics, calculateNewState_9_EightComplexFull){
     double dt = 0.002500;
-    std::vector<double> actuators{600, 550, 450, 500, 650, 4, 7, 11};
+    std::vector<double> motors{600, 550, 450, 500, 650};
     Eigen::Quaterniond initAttitude(0.9833, 0.1436, 0.106, 0.03427);
 
     Eigen::Vector3d angAccel, linAccel, diff,
@@ -750,7 +750,7 @@ TEST(VtolDynamics, calculateNewStateEightComplexFull){
                     expectedAngAccel(5.1202, 16.15784, 11.9625),
                     expectedLinAccel(3.45031, 4.40765, 0.68005);
 
-    calculateNewState(dt, actuators,  Maero, Faero,
+    calculateNewState(dt, motors,  Maero, Faero,
                       initialLinVel, initAngVel, initPose, initAttitude,
                       expectedAngAccel, expectedLinAccel,
                       angAccel, linAccel);

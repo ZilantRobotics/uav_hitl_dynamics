@@ -28,6 +28,7 @@ enum class DynamicsType{
 enum class LoggingType{
     QUADCOPTER = 0,
     STANDARD_VTOL,
+    VTOL_8_MOTORS,
 };
 
 enum class DynamicsNotation_t{
