@@ -1,10 +1,26 @@
-# UAV HITL dynamics [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=RaccoonlabDev_uav_hitl_dynamics&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=RaccoonlabDev_uav_hitl_dynamics) [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=RaccoonlabDev_uav_hitl_dynamics&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=RaccoonlabDev_uav_hitl_dynamics) [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=RaccoonlabDev_uav_hitl_dynamics&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=RaccoonlabDev_uav_hitl_dynamics) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=RaccoonlabDev_uav_hitl_dynamics&metric=coverage)](https://sonarcloud.io/summary/new_code?id=RaccoonlabDev_uav_hitl_dynamics)
+# Zilant UAV dynamics [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=RaccoonlabDev_uav_hitl_dynamics&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=RaccoonlabDev_uav_hitl_dynamics) [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=RaccoonlabDev_uav_hitl_dynamics&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=RaccoonlabDev_uav_hitl_dynamics) [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=RaccoonlabDev_uav_hitl_dynamics&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=RaccoonlabDev_uav_hitl_dynamics) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=RaccoonlabDev_uav_hitl_dynamics&metric=coverage)](https://sonarcloud.io/summary/new_code?id=RaccoonlabDev_uav_hitl_dynamics)
 
 This package is the core of the [UAV HITL dynamics simulator](https://github.com/RaccoonlabDev/innopolis_vtol_dynamics). It has an implementation of custom quadcopter vertical takeoff and landing aircraft dynamics.
 
 ![VTOL plane](img/inno_vtol.png?raw=true "VTOL plane")
 
 Innopolis VTOL has UAVCAN onboard electronics based on [RaccoonLab Cyphal/DroneCAN sensors and actuators](https://raccoonlab.co/store) (so it's a good example of full UAVCAN-based onboard control and object for new UAVCAN-HITL simulation approach).
+
+**Purpose**
+
+- Modeling of UAV onboard systems at a low hardware level
+- Development and testing of intelligent automatic control systems for UAVs.
+- Training in the development and use of drones, including creating datasets and automated testing.
+
+**Minimal technical requirements**
+
+- Operating System: We've tailored the simulator for modern versions of Windows, Linux, and Mac. Choose the build that matches your OS.
+
+- CPU: Aim for an Intel i7 from the 11th or 12th generation. For those using AMD, any equivalent processor will suffice.
+
+- RAM: 16GB is a recommended minimum, but more is always better for performance.
+
+**Design**
 
 This package contains Innopolis VTOL simulation based on rigid body kinematics and dynamics, CFD analysis and actuators simulation.
 
