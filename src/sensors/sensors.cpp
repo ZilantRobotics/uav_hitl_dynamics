@@ -17,6 +17,9 @@
  */
 
 #include "sensors.hpp"
+#include <cstdlib>
+#include <ctime>
+#include <boost/algorithm/clamp.hpp>
 #include "sensors_isa_model.hpp"
 #include "cs_converter.hpp"
 
@@ -31,7 +34,7 @@ Sensors::Sensors(ros::NodeHandle* nh) :
     gpsSensor(nh,           "/uav/gps_point",           0.1),
     magSensor(nh,           "/uav/mag",                 0.03),
     escStatusSensor(nh,     "/uav/esc_status",          0.25),
-    fuelTankSensor(nh,      "/uav/fuel_tank",           2.0),
+    fuelTankSensor(nh,      "/uav/fuel_tank",           1.0),
     batteryInfoSensor(nh,   "/uav/battery",             1.0)
 {
 }
@@ -154,14 +157,16 @@ void Sensors::publishStateToCommunicator(uint8_t dynamicsNotation) {
         }
     }
 
-    static double fuelLevelPercentage = 100.0;
-    if(motorsRpm.size() == 5 && motorsRpm[4] >= 1) {
-        fuelLevelPercentage -= 0.002;
-        if(fuelLevelPercentage < 0) {
-            fuelLevelPercentage = 0;
+    static double trueFuelLevelPct = 80.0;
+    if(motorsRpm[4] > 0.0) {
+        trueFuelLevelPct -= 0.0000002 * motorsRpm[4];
+        if(trueFuelLevelPct < 0) {
+            trueFuelLevelPct = 0;
         }
     }
-    fuelTankSensor.publish(fuelLevelPercentage);
+    auto fuelNoise = (float)(std::rand() % 26 - 13);
+    float measuredFuelLevelPct = boost::algorithm::clamp(trueFuelLevelPct + fuelNoise, 0.0, 100.0);
+    fuelTankSensor.publish(measuredFuelLevelPct);
 
     batteryInfoSensor.publish(1.00f);
 }
