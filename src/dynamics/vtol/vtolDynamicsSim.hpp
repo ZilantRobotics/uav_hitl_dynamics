@@ -154,7 +154,7 @@ class VtolDynamics : public UavDynamicsSimBase{
                                 const Eigen::Quaterniond& attitudeXYZW) override;
         void land() override;
         int8_t calibrate(SimMode_t calibrationType) override;
-        void process(double dt_secs, const std::vector<double>& setpoint) override;
+        void process(double dt_secs, const std::vector<double>& unitless_setpoint) override;
 
         /**
          * @note These methods should return in NED format
