@@ -290,9 +290,9 @@ int8_t VtolDynamics::calibrate(SimMode_t calType){
     return 1;
 }
 
-void VtolDynamics::process(double dtSecs, const std::vector<double>& unitless_setpoint){
+void VtolDynamics::process(double dt_secs, const std::vector<double>& unitless_setpoint){
     _mapUnitlessSetpointToInternal(unitless_setpoint);
-    updateActuators(dtSecs);
+    updateActuators(dt_secs);
 
     Eigen::Vector3d windNed = calculateWind();
     Eigen::Matrix3d rotationMatrix = calculateRotationMatrix();
@@ -301,18 +301,21 @@ void VtolDynamics::process(double dtSecs, const std::vector<double>& unitless_se
     double AoS = calculateAnglesOfSideslip(_state.airspeedFrd);
     calculateAerodynamics(_state.airspeedFrd, AoA, AoS, _servosValues,
                           _state.forces.aero, _state.moments.aero);
-    calculateNewState(_state.moments.aero, _state.forces.aero, _motorsSpeed, dtSecs);
+    calculateNewState(_state.moments.aero, _state.forces.aero, _motorsSpeed, dt_secs);
 }
 
 
 /**
- * @brief Setpoint mapping:
+ * @brief cmd is flexible, but it follows these rules:
+ * - first 5 values are reserved for motors
+ * - if we have >= 8 values then 3 last values are reserved for servos
+ * - if setpoint size is less than required, follow the Implicit Zero Extension rule
+ * @note Setpoint mapping table:
  * Index        Type        Input setpoint      Internal representation
  * [0; N-4]     Motors      [ 0.0, +1.0]    ->  [0.0,  RAD_PER_SEC_MAX]
  * N-3          Ailerons    [-1.0, +1.0]    ->  [-MAX_RANGE, +MAX_RANGE]
  * N-2          Elevators   [-1.0, +1.0]    ->  [-MAX_RANGE, +MAX_RANGE]
  * N-1          Rudders     [-1.0, +1.0]    ->  [-MAX_RANGE, +MAX_RANGE]
- * @note if setpoint size is less than required, follow the Implicit Zero Extension rule
  */
 void VtolDynamics::_mapUnitlessSetpointToInternal(const std::vector<double>& cmd) {
     std::vector<double> input_cmd = cmd;
