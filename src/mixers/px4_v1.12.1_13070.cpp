@@ -27,23 +27,28 @@ int8_t PX4_V_1_12_1_Airframe_13070_to_VTOL::init() {
     return 0;
 }
 void PX4_V_1_12_1_Airframe_13070_to_VTOL::motorsCallback(sensor_msgs::Joy sp_from_px4) {
-    if (!(sp_from_px4.axes.size() == 4 || sp_from_px4.axes.size() == 8)) {
+    if (sp_from_px4.axes.size() != 4 && sp_from_px4.axes.size() != 8) {
         return;
     }
 
-    auto& out = sp_to_dynamics.axes;
+    auto& axes = sp_to_dynamics.axes;
+
+    axes[VTOL_MOTOR_0_FRONT_RIGHT] = sp_from_px4.axes[0];
+    axes[VTOL_MOTOR_1_REAR_LEFT] = sp_from_px4.axes[1];
+    axes[VTOL_MOTOR_2_FRONT_LEFT] = sp_from_px4.axes[2];
+    axes[VTOL_MOTOR_3_REAR_RIGHT] = sp_from_px4.axes[3];
 
     if (sp_from_px4.axes.size() == 8) {
-        out[VTOL_AILERONS] = clamp_float(sp_from_px4.axes[INPUT_AILERONS], 0.0f, 1.0f) * 2.0f - 1.0f;
-        out[VTOL_ELEVATORS] = 1.0f - clamp_float(sp_from_px4.axes[INPUT_ELEVATORS], 0.0f, 1.0f) * 2.0f;
-        out[VTOL_RUDDERS] = clamp_float(sp_from_px4.axes[INPUT_RUDDERS], 0.0f, 1.0f) * 2.0f - 1.0f;
-        out[VTOL_THROTLE] = sp_from_px4.axes[INPUT_THROTLE] / 0.75f;
+        axes[VTOL_AILERONS] = clamp_float(sp_from_px4.axes[INPUT_AILERONS], 0.0f, 1.0f) * 2.0f - 1.0f;
+        axes[VTOL_ELEVATORS] = 1.0f - clamp_float(sp_from_px4.axes[INPUT_ELEVATORS], 0.0f, 1.0f) * 2.0f;
+        axes[VTOL_RUDDERS] = clamp_float(sp_from_px4.axes[INPUT_RUDDERS], 0.0f, 1.0f) * 2.0f - 1.0f;
+        axes[VTOL_THROTLE] = sp_from_px4.axes[INPUT_THROTLE] / 0.75f;
     } else if (sp_from_px4.axes.size() == 4) {
-        out[VTOL_AILERONS] = 0.0f;
-        out[VTOL_ELEVATORS] = 0.0f;
-        out[VTOL_RUDDERS] = 0.0f;
-        out[VTOL_THROTLE] = 0.0f;
+        axes[VTOL_AILERONS] = 0.0f;
+        axes[VTOL_ELEVATORS] = 0.0f;
+        axes[VTOL_RUDDERS] = 0.0f;
+        axes[VTOL_THROTLE] = 0.0f;
     }
 
-    actuatorsPub.publish(sp_from_px4);
+    actuatorsPub.publish(sp_to_dynamics);
 }
