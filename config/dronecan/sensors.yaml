@@ -3,6 +3,6 @@ uavcan_node_name:         "hitl.sensors"
 bridges:                  ["DiffPressureRosToUavcan",           "/uav/raw_air_data",
 
                            "EscStatusRosToUavcan",              "/uav/esc_status",
-                           "IceReciprocatingStatusRosToUavcan", "/uav/ice",
+                           "IceReciprocatingStatusRosToUavcan", "/uav/ice_rpm",
                            "IceFuelTankStatusRosToUavcan",      "/uav/fuel_tank"
 ]

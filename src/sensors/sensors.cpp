@@ -152,7 +152,7 @@ void Sensors::publishStateToCommunicator(uint8_t dynamicsNotation) {
     std::vector<double> motorsRpm;
     if(_uavDynamicsSim->getMotorsRpm(motorsRpm)){
         escStatusSensor.publish(motorsRpm);
-        if(motorsRpm.size() == 5){
+        if(motorsRpm.size() >= 5){
             iceStatusSensor.publish(motorsRpm[4]);
         }
     }
