@@ -26,11 +26,6 @@ jobs:
       - name: Install requirements
         run: ./catkin_ws/src/uav_hitl_dynamics/install_requirements.sh
 
-      - name: Install dependencies
-        run: |
-          git clone https://github.com/RaccoonlabDev/geographiclib_conversions.git catkin_ws/src/geographiclib_conversions
-          ./catkin_ws/src/geographiclib_conversions/scripts/install.sh
-
       - run: apt install -y curl unzip
       - name: Install sonar-scanner and build-wrapper
         uses: SonarSource/sonarcloud-github-c-cpp@v2

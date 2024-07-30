@@ -21,7 +21,6 @@
 #include <iostream>
 #include <Eigen/Geometry>
 #include <random>
-#include <geographiclib_conversions/geodetic_conv.hpp>
 #include "vtolDynamicsSim.hpp"
 #include "common_math.hpp"
 
