@@ -4,9 +4,9 @@ clockscale: 1.0                         # only 1.0 is supported yet
 
 # 2. Vehicle initial geodetic position
 # Kazanexpress point:
-lat_ref : 55.7503992494
-lon_ref : 48.7481202714
-alt_ref : -6.5
+lat_ref : 47.3985954655945
+lon_ref : 8.546044093305426
+alt_ref : 10
 
 # 3. Vehicle initial local position
 # X, Y, Z, roll, pitch, yaw, weight

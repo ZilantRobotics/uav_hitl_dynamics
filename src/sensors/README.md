@@ -50,6 +50,4 @@ Each sensor is initialized as an attribute of the `Sensors` class, allowing easy
 
 - **Sensor objects**: `Sensors` has a number of sensor objects as its attributes, including `AttitudeSensor`, `PressureSensor`, `TemperatureSensor`, `DiffPressureSensor`, `IceStatusSensor`, `ImuSensor`, `VelocitySensor_`, `GpsSensor`, `MagSensor`, `EscStatusSensor`, `FuelTankSensor`, `BatteryInfoSensor`. These represent the various sensors that are part of the UAV or VTOL aircraft simulation.
 
-- **GeodeticConverter**: `geodeticConverter` is an instance of `geodetic_converter::GeodeticConverter`. This class is used for converting between ENU (East-North-Up) and geodetic (latitude-longitude-altitude) coordinates.
-
 - **UavDynamicsSimBase pointer**: `_uavDynamicsSim` is a shared pointer to a `UavDynamicsSimBase` object. This object represents the UAV's dynamics simulator, providing access to the vehicle's current state.

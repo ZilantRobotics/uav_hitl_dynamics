@@ -14,7 +14,6 @@ find_package(catkin REQUIRED COMPONENTS
     mavros_msgs
     tf2
     tf2_ros
-    geographiclib_conversions
     message_generation
 )
 
