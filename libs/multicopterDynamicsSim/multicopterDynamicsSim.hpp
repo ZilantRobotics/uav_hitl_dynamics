@@ -12,7 +12,6 @@
 #include <Eigen/Geometry>
 #include <vector>
 #include "inertialMeasurementSim.hpp"
-#include <geographiclib_conversions/geodetic_conv.hpp>
 
 /**
  * @brief Multicopter dynamics simulator class
@@ -71,9 +70,6 @@ class MulticopterDynamicsSim{
         /// @name IMU simulator
         inertialMeasurementSim imu_ = inertialMeasurementSim(0.,0.,0.,0.);
 
-        /// Geodetic coordinates converter for GPS simulation
-        geodetic_converter::GeodeticConverter geodetic_converter_;
-        
     private:
         /// @name  Number of rotors
         int numCopter_;
