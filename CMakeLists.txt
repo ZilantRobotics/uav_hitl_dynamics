@@ -54,6 +54,7 @@ add_library(${PROJECT_NAME} src/dynamics/vtol/vtolDynamicsSim.cpp
                             libs/multicopterDynamicsSim/inertialMeasurementSim.cpp
                             libs/multicopterDynamicsSim/multicopterDynamicsSim.cpp
                             libs/UavDynamics/src/math/wmm.cpp
+                            libs/UavDynamics/src/math/geodetic.cpp
 
                             src/actuators.cpp
                             src/common_math.cpp

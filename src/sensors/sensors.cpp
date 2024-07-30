@@ -80,7 +80,7 @@ int8_t Sensors::init(const std::shared_ptr<UavDynamicsSimBase>& uavDynamicsSim) 
     pressureSensor.enable();
     gpsSensor.enable();
 
-    geodeticConverter.initialiseReference(latRef, lonRef, altRef);
+    geodeticConverter.setInitialValues(latRef, lonRef, altRef);
 
     return 0;
 }
@@ -129,8 +129,8 @@ void Sensors::publishStateToCommunicator(uint8_t dynamicsNotation) {
         attitudeFrdToNed = Converter::fluEnuToFrdNed(attitude);
         airspeedFrd = Converter::fluToFrd(airspeed);
     }
-    geodeticConverter.enu2Geodetic(enuPosition[0], enuPosition[1], enuPosition[2],
-                                   &gpsPosition[0], &gpsPosition[1], &gpsPosition[2]);
+    geodeticConverter.enuToGeodetic(enuPosition[0], enuPosition[1], enuPosition[2],
+                                    &gpsPosition[0], &gpsPosition[1], &gpsPosition[2]);
 
     // 3. Calculate temperature, abs pressure and diff pressure using ISA model
     float temperatureKelvin;

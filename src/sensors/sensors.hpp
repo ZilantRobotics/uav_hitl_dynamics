@@ -32,6 +32,7 @@
 #include "velocity.hpp"
 
 #include "uavDynamicsSimBase.hpp"
+#include "UavDynamics/math/geodetic.hpp"
 
 struct Sensors {
     explicit Sensors(ros::NodeHandle* nh);
@@ -53,7 +54,7 @@ struct Sensors {
     BatteryInfoSensor batteryInfoSensor;
 
 private:
-    geodetic_converter::GeodeticConverter geodeticConverter;
+    CoordinateConverter geodeticConverter;
     std::shared_ptr<UavDynamicsSimBase> _uavDynamicsSim;
 };
 

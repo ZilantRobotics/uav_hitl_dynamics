@@ -22,7 +22,6 @@
 
 #include <thread>
 #include <random>
-#include <geographiclib_conversions/geodetic_conv.hpp>
 
 #include <ros/ros.h>
 #include <ros/time.h>
