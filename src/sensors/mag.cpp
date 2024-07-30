@@ -19,6 +19,7 @@
 #include "mag.hpp"
 #include <sensor_msgs/MagneticField.h>
 #include "cs_converter.hpp"
+#include "UavDynamics/math/wmm.hpp"
 
 static const double MAG_NOISE = 0.0002;
 
@@ -34,9 +35,13 @@ bool MagSensor::publish(const Eigen::Vector3d& geoPosition, const Eigen::Quatern
 
     sensor_msgs::MagneticField msg;
     Eigen::Vector3d magEnu;
-    geographiclib_conversions::MagneticField(
+    calculateMagneticFieldStrengthGauss(
         geoPosition.x(), geoPosition.y(), geoPosition.z(),
-        magEnu.x(), magEnu.y(), magEnu.z());
+        magEnu.x(), magEnu.y(), magEnu.z()
+    );
+
+    magEnu.z() = -1 * magEnu.z();
+
     Eigen::Vector3d magFrd = attitudeFrdToNed.inverse() * Converter::enuToNed(magEnu);
     msg.header.stamp = ros::Time();
     msg.magnetic_field.x = magFrd[0] + MAG_NOISE * normalDistribution_(randomGenerator_);

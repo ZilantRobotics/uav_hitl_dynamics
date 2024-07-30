@@ -42,6 +42,7 @@ include_directories(
     ${catkin_INCLUDE_DIRS}
     ${mavlink_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIRS}
+    libs/UavDynamics/include
 )
 
 add_library(${PROJECT_NAME} src/dynamics/vtol/vtolDynamicsSim.cpp
@@ -52,6 +53,7 @@ add_library(${PROJECT_NAME} src/dynamics/vtol/vtolDynamicsSim.cpp
 
                             libs/multicopterDynamicsSim/inertialMeasurementSim.cpp
                             libs/multicopterDynamicsSim/multicopterDynamicsSim.cpp
+                            libs/UavDynamics/src/math/wmm.cpp
 
                             src/actuators.cpp
                             src/common_math.cpp
