@@ -21,7 +21,6 @@
 
 #include <ros/ros.h>
 #include <random>
-#include <geographiclib_conversions/geodetic_conv.hpp>
 
 class BaseSensor{
     public:
