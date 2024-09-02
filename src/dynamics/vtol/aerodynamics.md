@@ -59,7 +59,7 @@ So, here is a list of all aerodynamics coefficients:
 
 # Aerodynamics Configuration File
 
-File [aerodynamics_coeffs.yaml](../config/aerodynamics_coeffs.yaml) is an example of aerodynamics data used by Innopolis VTOL model.
+File [aerodynamics_coeffs.yaml](../../../config/aerodynamics_coeffs.yaml) is an example of aerodynamics data used by Innopolis VTOL model.
 
 We use CFD to find the values of above coefficients for several airspeeds and AoS, AoA (for each values in `airspeed_table` and `AoS`, `AoA` tables).
 
