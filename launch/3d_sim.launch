@@ -1,0 +1,4 @@
+<launch>
+    <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch"/>
+    <node pkg="inno_sim_interface" name="innosim_vtol_bridge" type="dynamics3d_relay_node.py"/>
+</launch>

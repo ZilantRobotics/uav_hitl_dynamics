@@ -1,7 +1,7 @@
 <launch>
     <!--
         Prerequirements for SITL:
-        DONT_RUN=1 make px4_sitl gazebo_innopolis_vtol  // for InnoVTOL dynamics
+        DONT_RUN=1 make px4_sitl gazebo_standard_vtol   // for VTOL dynamics
         DONT_RUN=1 make px4_sitl gazebo_iris            // for FlightGoggles dynamics
 
         Prerequirements for HITL, for example for cuav v5:
@@ -16,7 +16,7 @@
     <arg name="run_sitl_flight_stack"       default="true"              doc="[true means sitl, false means do nothing]"/>
     <arg name="run_sitl_communicator"       default="false"             doc="[true means run mavlink communicator, false means do nothing]"/>
     <arg name="run_hitl_communicator"       default="false"             doc="[true means run uavcan  communicator, false means do nothing]"/>
-    <arg name="run_inno_sim_bridge"         default="false"             doc="[true, false]"/>
+    <arg name="run_3d_sim_bridge"           default="false"             doc="[true, false]"/>
     <arg name="run_cyphal_communicator"     default="false"             doc="[true, false]"/>
     <arg name="run_dronecan_communicator"   default="false"             doc="[true, false]"/>
 
@@ -66,8 +66,8 @@
         <include file="$(find innopolis_vtol_dynamics)/launch/rviz.launch"/>
     </group>
 
-    <!-- 5. (optional) Inno sim bridge -->
-    <group if="$(arg run_inno_sim_bridge)">
-        <include file="$(find innopolis_vtol_dynamics)/launch/inno_sim.launch"/>
+    <!-- 5. (optional) 3D sim bridge -->
+    <group if="$(arg run_3d_sim_bridge)">
+        <include file="$(find innopolis_vtol_dynamics)/launch/3d_sim.launch"/>
     </group>
 </launch>
