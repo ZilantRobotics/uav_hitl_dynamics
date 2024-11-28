@@ -3,10 +3,31 @@ use_sim_time: true
 clockscale: 1.0                         # only 1.0 is supported yet
 
 # 2. Vehicle initial geodetic position
-# Kazanexpress point:
+
+# Zurich
 lat_ref : 47.3985954655945
 lon_ref : 8.546044093305426
 alt_ref : 10
+
+# Key point 1. Yard
+# lat_ref : 55.7487847875
+# lon_ref : 48.7430507069
+# alt_ref : 5.9
+
+# Key point 2. Delivery point (Magnet)
+# lat_ref : 55.7503962494
+# lon_ref : 48.7480952714
+# alt_ref : 7.85
+
+# Key point 3. Technopark office parking
+# lat_ref : 55.7517506178
+# lon_ref : 48.7506804476
+# alt_ref : +8.5
+
+# Key point 4. Buildings
+# lat_ref : 55.7531869667
+# lon_ref : 48.7510098844
+# alt_ref : +5.5
 
 # 3. Vehicle initial local position
 # X, Y, Z, roll, pitch, yaw, weight
