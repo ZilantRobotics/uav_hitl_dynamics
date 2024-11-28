@@ -4,7 +4,7 @@
     <arg name="mixer"                       default="vtol_13070_mixer"  doc="[vtol_13070_mixer, babyshark_standard_vtol_mixer, direct_mixer]"/>
     <arg name="dynamics"                    default="vtol_dynamics"     doc="[vtol_dynamics, quadcopter]"/>
     <arg name="run_rviz"                    default="false"             doc="[true, false]"/>
-    <arg name="run_inno_sim_bridge"         default="false"             doc="[true, false]"/>
+    <arg name="run_3d_sim_bridge"           default="false"             doc="[true, false]"/>
     <arg name="run_cyphal_communicator"     default="false"             doc="[true, false]"/>
     <arg name="run_dronecan_communicator"   default="false"             doc="[true, false]"/>
 
@@ -14,7 +14,7 @@
         <arg name="mixer"                   value="$(arg mixer)"/>
         <arg name="dynamics"                value="$(arg dynamics)"/>
         <arg name="run_rviz"                value="$(arg run_rviz)"/>
-        <arg name="run_inno_sim_bridge"     value="$(arg run_inno_sim_bridge)"/>
+        <arg name="run_3d_sim_bridge"       value="$(arg run_3d_sim_bridge)"/>
         <arg name="run_cyphal_communicator" value="$(arg run_cyphal_communicator)"/>
         <arg name="run_dronecan_communicator" value="$(arg run_dronecan_communicator)"/>
 
