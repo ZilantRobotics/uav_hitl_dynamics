@@ -53,6 +53,10 @@ void PX4_V_1_14_0_Airframe_13000_4_motors::motorsCallback(sensor_msgs::Joy msg) 
             axes[VTOL_ELEVATORS] = 2.0 * clamp_float(msg.axes[INPUT_ELEVATORS], 0.0, 1.0) - 1.0;
             axes[VTOL_RUDDERS] = 2.0 * clamp_float(msg.axes[INPUT_RUDDERS], 0.0, 1.0) - 1.0;
         }
+    } else if (msg.axes.size() >= 8) {
+        axes[VTOL_AILERONS] = msg.axes[5];
+        axes[VTOL_ELEVATORS] = msg.axes[6];
+        axes[VTOL_RUDDERS] = msg.axes[7];
     }
 
     actuatorsPub.publish(actuatorsMsg);
