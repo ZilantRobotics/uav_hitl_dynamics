@@ -21,7 +21,7 @@ esac
 
 # Run tests
 roscore &
-roslaunch innopolis_vtol_dynamics load_parameters.launch vehicle_params:=vtol_7kg --wait
+roslaunch innopolis_vtol_dynamics load_parameters.launch vehicle_params:=config/vehicle_params/vtol_7kg/params.yaml --wait
 catkin run_tests --no-deps innopolis_vtol_dynamics
 
 # catkin_tools issue #245. catkin run_tests may return 0 when fail.
