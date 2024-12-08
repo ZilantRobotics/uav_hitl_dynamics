@@ -46,3 +46,16 @@ wind_ned: [5.0, 0.0, 0.0]
 wind_variance: 0.0
 gust_ned: [0.0, 0.0, 0.0]
 gust_variance: 0.0
+
+# This is the standard acceleration due to gravity on Earth's surface.
+# If you are simulating in a different planetary context or need slight
+# variations due to altitude changes, you might adjust it slightly.
+gravity: 9.80665  # m/s^2
+
+# This is the standard atmospheric density at sea level at 15°C under
+# International Standard Atmosphere (ISA) conditions. Atmospheric density
+# decreases with altitude, so if you are simulating high-altitude UAV
+# operations, you might use a lower value. For example:
+# At 5000 m altitude: ~0.736 kg/m^3
+# At 10,000 m altitude: ~0.413 kg/m^3
+atmoRho: 1.2  # air density (kg/m^3)

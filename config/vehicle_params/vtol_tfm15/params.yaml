@@ -1,6 +1,4 @@
 mass:                   7.0         # kg
-gravity:                9.80665     # n/sec^2
-atmoRho:                1.2         # air density (kg/m^3)
 wingArea:               0.37        # m^2
 characteristicLength:   1.50        # m
 
