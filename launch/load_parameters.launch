@@ -1,7 +1,7 @@
 <launch>
-    <arg name="vehicle_params" doc="[quadrotor, octorotor, vtol_7kg, vtol_tfm15]"/>
+    <arg name="vehicle_params" doc="Path to yaml file with parameters"/>
 
-    <rosparam file="$(find innopolis_vtol_dynamics)/config/vehicle_params/$(arg vehicle_params)/params.yaml" command="load" ns="uav/aerodynamics_coeffs" />
+    <rosparam file="$(arg vehicle_params)" command="load" ns="uav/aerodynamics_coeffs" />
     <rosparam file="$(find innopolis_vtol_dynamics)/config/sim_params.yaml" command="load" ns="uav/sim_params" />
     <rosparam file="$(find innopolis_vtol_dynamics)/config/aerodynamics_coeffs.yaml" command="load" ns="uav/aerodynamics_coeffs" />
 </launch>
