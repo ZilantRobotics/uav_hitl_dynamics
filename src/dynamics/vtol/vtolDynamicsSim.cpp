@@ -46,6 +46,15 @@ VtolDynamics::VtolDynamics(){
 }
 
 int8_t VtolDynamics::init(){
+    if (!ros::param::get("/uav/sim_params/gravity", _environment.gravity)){
+        ROS_ERROR("gravity in not present.");
+        return -1;
+    }
+    if (!ros::param::get("/uav/sim_params/atmoRho", _environment.atmoRho)){
+        ROS_ERROR("atmoRho in not present.");
+        return -1;
+    }
+
     loadTables("/uav/aerodynamics_coeffs/");
     loadParams("/uav/aerodynamics_coeffs/");
     return 0;
@@ -84,8 +93,6 @@ void VtolDynamics::loadTables(const std::string& path){
 
 void VtolDynamics::loadParams(const std::string& path){
     if(!ros::param::get(path + "mass", _params.mass) ||
-        !ros::param::get(path + "gravity", _environment.gravity) ||
-        !ros::param::get(path + "atmoRho", _environment.atmoRho) ||
         !ros::param::get(path + "wingArea", _params.wingArea) ||
         !ros::param::get(path + "characteristicLength", _params.characteristicLength) ||
 
