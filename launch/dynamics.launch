@@ -36,12 +36,13 @@
     <group if="$(arg run_sitl_communicator)">
         <node pkg="mavlink_communicator" type="mavlink_communicator_node" name="mavlink_communicator" output="screen" required="true">
             <param name="vehicle"   value="$(arg sitl_vehicle)"  />
+            <remap from="/uav/actuators" to="/uav/actuators_raw" />
         </node>
     </group>
+    <node pkg="innopolis_vtol_dynamics" type="mixer_node" name="inno_vtol_reverse_mixer" output="screen">
+        <param name="mixer"     value="$(arg mixer)" />
+    </node>
     <group if="$(arg run_hitl_communicator)">
-        <node pkg="innopolis_vtol_dynamics" type="mixer_node" name="inno_vtol_reverse_mixer" output="screen">
-            <param name="mixer"     value="$(arg mixer)" />
-        </node>
         <group if="$(arg run_dronecan_communicator)">
             <include file="$(find innopolis_vtol_dynamics)/launch/uavcan_communicator.launch">
                 <arg name="partial_cyphal" value="$(arg run_cyphal_communicator)" />
